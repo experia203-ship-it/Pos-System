@@ -1,0 +1,104 @@
+<div hx-ext="response-targets">
+    <h2>All Products Exist</h2>
+
+    <form action="/products/import" method="post" enctype="multipart/form-data">
+        <label for="file">Upload Inventory CSV:</label>
+        <input type="file" id="file" name="file" accept=".csv" required>
+        <button type="submit">import bulk products</button>
+    </form>
+
+    <h4>search for a product</h4>
+
+    <div id="search-div">
+        <label>
+            <input th:value="${param.keyword}" type="search" name="keyword"
+                   hx-get="/products/search"
+                   hx-target="#table-container"
+                   hx-trigger="keyup changed delay:500ms"
+                   hx-swap="outerHTML"
+                   hx-replace-url="true"
+                   placeholder="search for any parts ......">
+        </label>
+    </div>
+
+    <div>
+        <button hx-get="/products/create" hx-target="#modal-container" hx-swap="innerHTML">create product</button>
+    </div>
+
+    <div id="table-container" th:fragment="table-wrapper">
+        <table>
+            <thead>
+            <tr>
+                <th>id</th>
+                <th>partNumber</th>
+                <th>name</th>
+                <th>description</th>
+                <th>sellingPrice</th>
+                <th>purchasePrice</th>
+                <th>stock</th>
+                <th>category_name</th>
+                <th>created_At</th>
+                <th>updated_At</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+
+            <tbody id="tbody" th:fragment="product-table-body">
+            <tr th:each="product : ${allProducts.content}">
+                <td th:text="${product.id}"></td>
+                <td th:text="${product.partNumber}"></td>
+                <td th:text="${product.name}"></td>
+                <td th:text="${product.description}"></td>
+                <td th:text="${product.sellingPrice}"></td>
+                <td th:text="${product.purchasePrice}"></td>
+                <td th:text="${product.stock}"></td>
+                <td th:text="${catMap!=null and product.categoryId !=null ?  ( catMap[product.categoryId] ?: 'No Category Assigned') : 'No Category Assigned'}"></td>
+                <td th:text="${product.createdAt}"></td>
+                <td th:text="${product.updatedAt}"></td>
+                <td>
+                    <button th:hx-delete="@{/products/{id}(id=${product.id})}"
+                            hx-target="closest tr"
+                            hx-swap="outerHTML swap:1s"
+                            th:hx-confirm="'are you sure to delete ' + ${product.name} + ' for ever ?!!'">
+                        delete🗑️
+                    </button>
+                </td>
+                <td>
+                    <button th:hx-get="@{/products/{id}(id=${product.id})}"
+                            hx-target="#modal-container"
+                            hx-swap="innerHTML">
+                        update
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <nav style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+            <button th:if="${allProducts.hasPrevious()}"
+                    th:hx-get="@{/products(page=${allProducts.number-1})}"
+                    hx-target="#table-container"
+                    hx-swap="outerHTML"
+                    hx-push-url="true"
+                    class="secondary small">
+                previous
+            </button>
+
+            <span>page [[${allProducts.number+1}]] of [[${allProducts.totalPages}]]</span>
+
+            <button th:if="${allProducts.hasNext()}"
+                    th:hx-get="@{/products(page=${allProducts.number+1})}"
+                    hx-target="#table-container"
+                    hx-swap="outerHTML"
+                    hx-push-url="true"
+                    class="secondary small">
+                next
+            </button>
+        </nav>
+    </div>
+
+    <div id="modal-container" hx-on:close-modal="this.innerHTML=''"></div>
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px;"></div>
+
+</div>
+

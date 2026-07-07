@@ -1,0 +1,40 @@
+<div class="pos-layout">
+
+    <!-- 1. Order Search Input -->
+    <div class="zone" id="orderSearch">
+        <h4>Search for an Order</h4>
+        <label for="orderSearchIn">Search for an order</label>
+        <input id="orderSearchIn" hx-get="/pos/search" th:value="${param.orderNum}" name="orderNum" type="text" hx-target="#orderSearchArea" hx-trigger="keyup changed delay:500ms" placeholder="Type order number....." >
+    </div>
+
+    <!-- 2. Order Search Results -->
+    <div class="zone" id="orderSearchArea"></div>
+
+    <!-- 3. Product Search Input -->
+    <div class="zone" id="searchbar">
+        <h2>Create an order</h2>
+        <label for="search-bar">Search for items to add</label>
+        <input id="search-bar" th:value="${param.keyword}" name="keyword" type="text" hx-get="/products/search-pos" hx-target="#search-results-area" hx-swap="innerHTML" hx-trigger="keyup changed delay:500ms" placeholder="Type product name.....">
+    </div>
+
+    <!-- 4. Product Search Results -->
+    <div class="zone" id="search-results-area"></div>
+
+    <!-- 5. The Cart (Right Side) -->
+    <div class="zone" id="cart-zone"></div>
+
+</div>
+
+<!-- Customer Modal Container -->
+<div id="modal-container-cust" hx-on:close-modal="this.innerHTML=''"></div>
+
+<!-- Print Listener -->
+<script>
+    if (!window.printListenerAdded) {
+        document.body.addEventListener("orderCompleted", function(evt) {
+            const orderId = evt.detail.orderId;
+            window.open('/pos/print/' + orderId, '_blank', 'width=800,height=600');
+        });
+        window.printListenerAdded = true;
+    }
+</script>

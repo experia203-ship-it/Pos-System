@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+
+>
+<head>
+    <meta charset="UTF-8">
+    <title>pos system</title>
+
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/response-targets.js"></script>    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+
+
+    <style>
+        /* --- POS LAYOUT CSS MOVED HERE --- */
+        .pos-layout {
+            display: grid;
+            grid-template-columns: .5fr 1fr;
+            /* Create 4 rows on the left, and let the last one stretch */
+            grid-template-rows: auto auto auto 1fr;
+            grid-template-areas:
+                "order-search     cart"
+                "order-results    cart"
+                "product-search   cart"
+                "product-results  cart";
+            gap: 15px;
+            height: 100%;
+        }
+
+        /* Assign each HTML ID to its new unique spot on the map */
+        #orderSearch         { grid-area: order-search; }
+        #orderSearchArea     { grid-area: order-results; }
+        #searchbar           { grid-area: product-search; }
+        #search-results-area { grid-area: product-results; }
+        #cart-zone           { grid-area: cart; }
+
+        .zone {
+            border: 1px solid #000000;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-y: auto;
+        }
+
+        #search-results-area table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        #search-results-area th,
+        #search-results-area td {
+            padding: 8px 4px;
+            text-align: left;
+            vertical-align: middle;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .truncate-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .clickable-row:hover {
+            background-color: #00ffff;
+        }
+        .clickable-row:hover td {
+            color: #000000;
+        }
+    </style>
+
+
+</head>
+<body style="display: flex; height: 100vh; margin: 0; overflow: hidden;">
+<aside style="width: 250px; background: #f4f4f4; padding: 20px; flex-shrink: 0; overflow-y: auto;">
+<h2>pos menu</h2>
+    <nav>
+
+        <ul style="list-style: none; padding: 0;">
+
+            <li>
+                <button
+                hx-get="/pos"
+                hx-target="#main-window"
+                hx-swap="innerHTML"
+
+                >pos</button>
+            </li>
+<li>
+    <button
+    hx-get="/products"
+    hx-target="#main-window"
+    hx-swap="innerHTML"
+    >
+        inventory
+    </button>
+
+</li>
+
+            <li>
+                <button
+                hx-get="/statics"
+                hx-target="#main-window"
+                hx-swap="innerHTML"
+                >
+                    statics
+                </button>
+            </li>
+            <li>
+                <button
+                hx-post="/auth/logout"
+                hx-target="#main-window"
+                hx-swap="innerHTML"
+                >logOut</button>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<main id="main-window" style="flex-grow: 1; padding: 20px; overflow-y: auto;">
+
+    <h1>welcome to the main page</h1>
+</main>
+</body>
+</html>

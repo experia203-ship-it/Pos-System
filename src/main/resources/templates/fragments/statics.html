@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <title>statistics</title>
+</head>
+<body>
+<h2>statistics</h2>
+
+
+<form>
+    <div>
+        <label for="time-range">
+select timeframe:
+        </label>
+<input id="time-range"  type="text"
+name="dateRange"
+       placeholder="select date....."
+       hx-get="/statics/custom"
+       hx-target="#stat-res"
+       hx-swap="innerHTML"
+       hx-trigger="change"
+>
+
+
+</input>
+
+    </div>
+
+</form>
+
+<div id="stat-res">
+    select dates to view stats
+</div>
+</body>
+
+<script>
+    flatpickr("#time-range", {
+        mode: "range",
+        dateFormat: "Y-m-d", // Formats the date as 2026-07-01
+        showMonths: 2        // Shows two months side-by-side, exactly like Facebook Ads
+    });
+</script>
+
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en"    xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div   th:fragment="search-results-fragment" >
+
+<table th:if="${results.hasContent()}">
+    <thead>
+    <tr>
+        <th style="width: 15%;">partNumber</th>
+        <th style="width: 30%;">name</th>
+        <th style="width: 15%;">sellingPrice</th>
+        <th style="width: 10%;">stock</th>
+        <th style="width: 15%;">purchasePrice</th>
+
+
+
+    </tr>
+    </thead>
+    <tbody>
+<tr th:each="product :${results.content}"
+
+    th:hx-post="|/pos/cart/add/${product.id}|"
+    hx-include="#active-cart-form , #paid ,#disc"
+    hx-target="#cart-zone"
+    hx-swap="innerHTML"
+    class="clickable-row"
+    tabindex="0"
+
+>
+ <td class="truncate-text" th:text="${product.partNumber}" th:title="${product.partNumber}"></td>
+    <td class="truncate-text" th:text="${product.name}" th:title="${product.name}"></td>
+    <td th:text="${product.sellingPrice}"></td>
+    <td th:text="${product.stock}"></td>
+    <td th:text="${product.purchasePrice}"></td>
+
+</tr>
+    </tbody>
+
+</table>
+</div>
+
+</body>
+</html>

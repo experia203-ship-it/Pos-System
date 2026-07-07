@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div th:fragment="stat-res">
+    <form th:object="${res}" >
+    <h2>statistics</h2>
+    totalSales: <span th:text="${res.totalSales != null ? res.totalSales : 'no results to show'}"></span>
+    totalProfit: <span th:text="${res.totalProfit != null ? res.totalProfit : 'no results to show'}"></span>
+    </form>
+</div>
+</body>
+</html>

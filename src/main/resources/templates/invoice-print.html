@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html  lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <style>
+        /* Base styling for the screen preview */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .invoice-box {
+            max-width: 148mm; /* A5 width */
+            margin: auto;
+            padding: 15mm;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+        }
+
+        @media print {
+            body {
+                background-color: white; /* remove gray background when printing */
+                padding: 0;
+            }
+            .invoice-box {
+                box-shadow: none; /* remove shadows for print */
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important; /* Hides buttons on the actual paper */
+            }
+        }
+
+        @page {
+            size: A5 portrait; /* Forces the browser to default to A5 */
+            margin: 10mm;
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f8f8f8; }
+        .text-right { text-align: right; }
+        </style>
+
+</head>
+<div class="invoice-box">
+<h2 th:text="${coporation}">co-operation name</h2>
+</div>
+
+<div style="display: flex; justify-content: space-between; margin-top: 15px;">
+    <div>
+        <strong>Order ID:</strong> <span th:text="${order.orderNumber}"></span><br>
+        <strong>Date:</strong> <span th:text="${#temporals.format(order.createdAt, 'dd-MM-yyyy HH:mm')}"></span>
+    </div>
+    <div class="text-right">
+        <strong>Customer:</strong> <span th:text="${customerName}"></span>
+    </div>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>Item</th>
+        <th>Qty</th>
+        <th class="text-right">Price</th>
+        <th class="text-right">Total</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item : ${order.items}">
+        <td th:text="${item.productName}">Brake Pad Set</td>
+        <td th:text="${item.quantity}">2</td>
+        <td class="text-right" th:text="${item.productSellingPrice}">45.00</td>
+        <td class="text-right" th:text="${item.subTotal}">90.00</td>
+    </tr>
+    </tbody>
+</table>
+
+<div style="margin-top: 20px; text-align: right;">
+    <p><strong>Discount:</strong> <span th:text="${order.discount}">0.00</span></p>
+    <p><strong>Grand Total:</strong> <span th:text="${order.total}"></span></p>
+    <p><strong>Paid:</strong> <span th:text="${order.paid}"></span></p>
+    <p><strong>Remaining:</strong> <span th:text="${order.remaining}"></span></p>
+</div>
+
+<div style="text-align: center; margin-top: 30px; font-size: 12px; color: #777;">
+    <p>Thank you for your business!</p>
+</div>
+
+<div class="no-print" style="text-align: center; margin-top: 20px;">
+    <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px;">Print Invoice</button>
+</div>
+</div>
+
+<script>
+    window.onload = function() {
+        window.print();
+    };
+</script>
+
+
+
+<body>
+
+</body>
+</html>

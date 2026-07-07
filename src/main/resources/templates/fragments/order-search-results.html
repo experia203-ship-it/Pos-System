@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+</head>
+<body>
+
+<div th:fragment="order-results-fragment">
+
+
+    <table th:if="${not orderResults.empty}">
+
+        <thead>
+        <tr>
+            <th>Number</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Date</th>
+
+        </tr>
+
+        </thead>
+        <tbody>
+<tr th:each=" order: ${orderResults}"
+
+th:hx-get="|/pos/order/${order.id}|"
+hx-target="#cart-zone"
+  hx-swap="innerHTML"
+    class="clickable-row"
+    tabindex="0"
+>
+
+    <td class="truncate-text" th:text="${order.orderNumber}"  th:title="${order.orderNumber}"></td>
+    <td th:text="${order.customerName}"></td>
+    <td th:text="${order.total}"></td>
+    <td class="truncate-text" th:text="${order.createdAt}" th:title="${order.createdAt}"></td>
+
+
+
+
+</tr>
+
+        </tbody>
+
+    </table>
+</div>
+
+
+
+</body>
+</html>

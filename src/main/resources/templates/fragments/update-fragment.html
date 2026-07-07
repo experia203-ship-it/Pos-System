@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<dialog open th:fragment="update-popup">
+<article>
+<form id="form-update" th:object="${updateProduct}" th:hx-patch="@{/products/{id}(id=${prodId})}" hx-target="#tbody" hx-swap="outerHTML">
+    <label for="name">name:</label>
+    <input id="name" type="text" th:field="*{name}" th:value="*{name}" th:placeholder="*{name}" required>
+
+    <label for="partNumber">partNumber:</label>
+    <input id="partNumber" type="text" th:field="*{partNumber}" th:value="*{partNumber}" th:placeholder="*{partNumber}" required>
+
+    <label for="description">description:</label>
+    <input id="description" type="text" th:field="*{description}" th:value="*{description}" th:placeholder="*{description}" required>
+
+    <label for="sellingPrice">sellingPrice:</label>
+    <input id="sellingPrice" type="text" th:field="*{sellingPrice}" th:value="*{sellingPrice}" th:placeholder="*{sellingPrice}" required>
+
+    <label for="purchasePrice">purchasePrice:</label>
+    <input id="purchasePrice" type="text" th:field="*{purchasePrice}" th:value="*{purchasePrice}" th:placeholder="*{purchasePrice}" required>
+
+    <label for="stock">stock:</label>
+    <input id="stock" type="text" th:field="*{stock}" th:value="*{stock}" th:placeholder="*{stock}" required>
+
+
+    <div id="category-wrapper">
+        <label   for="category-list">category:</label>
+        <select th:field="*{categoryId}"  id="category-list"  name="categoryId" >
+
+            <option th:each="cat :${categories}"
+                    th:value="${cat.id}"
+                    th:text="${cat.name}"
+            > category name</option>
+
+        </select>
+    </div>
+
+
+
+
+<button type="submit">Update</button>
+
+</form>
+<button hx-get="/categories/new" hx-target="#modal-container2" hx-swap="innerHTML" >create category</button>
+
+    <form method="dialog">
+        <button class="secondary">close</button>
+    </form>
+</article>
+    <div id="modal-container2" hx-on:close-modal="this.innerHTML=''"></div>
+
+</dialog>
+
+</body>
+</html>

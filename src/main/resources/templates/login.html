@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head >
+
+    <title>pos system -login</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"> </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+
+
+
+
+</head>
+
+<body>
+<h2>login here!</h2>
+
+<form th:object="${loginForm}"  hx-post="/auth/login" hx-target="#form-message" hx-swap="innerHTML">
+
+    <div>
+        <label>email:
+        <input type="email" th:field="*{email}" required></input>
+        </label>
+    </div>
+    <div>
+        <label>password:
+        <input type="password" th:field="*{password}" required></input>
+        </label>
+
+    </div>
+
+        <button type="submit"> login </button>
+
+</form>
+<div id ="form-message"></div>
+
+
+
+
+
+</body>
+
+</html>
