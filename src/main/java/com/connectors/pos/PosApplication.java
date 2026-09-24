@@ -27,7 +27,7 @@ public class PosApplication {
 		builder.headless(false).run(args);
 	}
 
-	@EventListener(ApplicationReadyEvent.class)
+	/**@EventListener(ApplicationReadyEvent.class)
 	public void openBrowser() {
 		if (!GraphicsEnvironment.isHeadless()) {
 			try {
@@ -41,6 +41,6 @@ public class PosApplication {
 				e.printStackTrace();
 			}
 		}
-	}
+	} */
 }
 
