@@ -15,13 +15,17 @@
     <div>
         <label>
             <span th:text="#{login.label.email}">email:</span>
-            <input type="email" th:field="*{email}" required>
+            <input id="email" name="email" type="email"
+                   th:value="${#strings.isEmpty(loginForm.email) ? 'user123@Gmail.com' : loginForm.email}"
+                   autocomplete="username" required>
         </label>
     </div>
     <div>
         <label>
             <span th:text="#{login.label.password}">password:</span>
-            <input type="password" th:field="*{password}" required>
+            <input id="password" name="password" type="password"
+                   th:value="${#strings.isEmpty(loginForm.password) ? 'A@123456' : loginForm.password}"
+                   autocomplete="current-password" required>
         </label>
     </div>
 
