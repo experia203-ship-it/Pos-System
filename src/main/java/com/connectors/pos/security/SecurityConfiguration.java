@@ -44,7 +44,7 @@ public SecurityFilterChain filterChain(HttpSecurity http){
             .formLogin(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth->auth.requestMatchers("/","/auth/**" ,"/pos/print/**","/error").permitAll()
                     .anyRequest().authenticated())
-            .formLogin(form->form.loginPage("/auth/login").permitAll())
+            //.formLogin(form->form.loginPage("/auth/login").permitAll())
              .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
 
