@@ -29,14 +29,17 @@ public class PosApplication {
 
 	@EventListener(ApplicationReadyEvent.class)
 	public void openBrowser() {
-		try {
-			String url = "http://localhost:8080/auth/login";			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-				Desktop.getDesktop().browse(new URI(url));
-			} else {
-				Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
+		if (!GraphicsEnvironment.isHeadless()) {
+			try {
+				String url = "http://localhost:8080/auth/login";
+				if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+					Desktop.getDesktop().browse(new URI(url));
+				} else {
+					Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 }
