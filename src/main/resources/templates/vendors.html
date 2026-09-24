@@ -1,0 +1,94 @@
+<div id="vevid">
+    <h2 th:text="#{vendor.title}">Vendors</h2>
+    <div id="vendor-search-bar">
+        <label for="ven-search"></label>
+        <input id="ven-search" name="name" type="text" hx-get="/suppliers/search" hx-target="#vtable" hx-trigger="keyup change 300ms"
+               hx-swap="outerHTML"
+               th:placeholder="#{vendor.search.placeholder}"
+        />
+
+        <button type="button"   hx-get="/suppliers/create2" hx-target="#modal-container-vendor"
+                hx-swap="innerHTML"
+                th:text="#{vendor.btn.create}">Create</button>
+    </div>
+    <div id="vtable" th:fragment="vendor-fragment">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col" th:text="#{vendor.table.id}">ID</th>
+                <th scope="col" th:text="#{vendor.table.name}">Name</th>
+                <th scope="col" th:text="#{vendor.table.location}">Location</th>
+                <th scope="col" th:text="#{vendor.table.landline}">Landline</th>
+                <th scope="col" th:text="#{vendor.table.mobile}">Mobile</th>
+                <th></th> <!-- Added empty header for the update button -->
+                <th></th> <!-- Added empty header for the delete button -->
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="vendor : ${vendors.content}">
+                <td th:text="${vendor.id}"></td>
+                <td th:text="${vendor.name}"></td>
+                <td th:text="${vendor.location}"></td>
+                <td th:text="${vendor.landline}"></td>
+                <td th:text="${vendor.mobile}"></td>
+                <td>
+                    <button type="button" th:hx-get="@{/suppliers/update/{id}(id=${vendor.id})}"
+                            hx-target="#modal-container-vendor" hx-swap="innerHTML" th:text="#{vendor.btn.update}">Update</button>
+                </td>
+                <td>
+                    <button type="button" th:hx-delete="@{/suppliers/{id}(id=${vendor.id})}"
+                               hx-swap="innerHTML" hx-target="#vtable"
+                            th:hx-confirm="#{vendors.confirm.delete(${vendor.name})}"
+                            th:text="#{vendor.btn.delete}"
+
+                    >Delete</button>
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination & View Numbers -->
+        <div th:if="${vendors.totalElements > 0}" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 10px 0;">
+
+            <!-- View Numbers -->
+            <div style="font-size: 0.9em; color: #64748b;">
+                <span th:text="#{pagination.showing}">Showing</span>
+                <span th:text="${vendors.totalElements > 0 ? (vendors.number * vendors.size + 1) : 0}"></span>
+                <span th:text="#{pagination.to}">to</span>
+                <span th:text="${vendors.number * vendors.size + vendors.numberOfElements}"></span>
+                <span th:text="#{pagination.of}">of</span>
+                <strong th:text="${vendors.totalElements}"></strong> <span th:text="#{pagination.entries}">entries</span>
+            </div>
+
+            <!-- Page Controllers -->
+            <nav style="display: flex; align-items: center; gap: 10px;">
+                <button th:if="${vendors.hasPrevious()}"
+                        th:hx-get="@{/suppliers(page=${vendors.number-1}, name=${param.name})}"
+                        hx-target="#vtable"
+                        hx-swap="outerHTML"
+                        hx-push-url="true"
+                        class="secondary small"
+                        th:text="#{pagination.previous}">
+                    Previous
+                </button>
+
+                <span style="font-size: 0.9em; font-weight: 500;">
+                    <span th:text="#{pagination.page}">Page</span> [[${vendors.number+1}]] <span th:text="#{pagination.of}">of</span> [[${vendors.totalPages == 0 ? 1 : vendors.totalPages}]]
+                </span>
+
+                <button th:if="${vendors.hasNext()}"
+                        th:hx-get="@{/suppliers(page=${vendors.number+1}, name=${param.name})}"
+                        hx-target="#vtable"
+                        hx-swap="outerHTML"
+                        hx-push-url="true"
+                        class="secondary small"
+                        th:text="#{pagination.next}">
+                    Next
+                </button>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div id="modal-container-vendor" hx-on:close-modal="this.innerHTML=''"> </div>

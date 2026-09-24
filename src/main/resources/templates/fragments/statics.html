@@ -1,52 +1,60 @@
-<!DOCTYPE html>
-<html lang="en"
-      xmlns:th="http://www.thymeleaf.org"
->
-<head>
-    <meta charset="UTF-8">
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <!-- Flatpickr CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <!-- Flatpickr JS -->
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <title>statistics</title>
-</head>
-<body>
-<h2>statistics</h2>
+<div>
+    <h2 th:text="#{stat.title}">Statistics</h2>
 
+    <form   hx-get="/statics/custom"
+            hx-target="#stat-res"
+            hx-swap="innerHTML"
+            hx-trigger="change[document.getElementById('time-range').value !=='']"
+    >
+        <div>
+            <label for="time-range" th:text="#{stat.select.timeframe}">Select timeframe:</label>
+            <input id="time-range"
+                   type="text"
+                   name="dateRange"
+                   th:placeholder="#{stat.placeholder.date}"
+                   readonly>
+        </div>
+        <div style="margin-top: 15px;">
+            <label for="top-size" th:text="#{stat.label.topSellers}">show-top-sellers</label>
+            <select id="top-size" name="size" style="padding: 5px; border-radius: 4px;">
+                <option value="1" th:text="#{stat.option.top('1')}">top-1</option>
+                <option value="5" selected th:text="#{stat.option.top('5')}">top-5 </option>
+                <option value="10" th:text="#{stat.option.top('10')}">top-10 </option>
+                <option value="20" th:text="#{stat.option.top('20')}">top-20 </option>
+                <option value="50" th:text="#{stat.option.top('50')}">top-50 </option>
+            </select>
+        </div>
+        <div style="margin-top: 15px;">
+            <label for="least-items" th:text="#{stat.label.leastSellers}">show-least-sellers</label>
+            <select id="least-items" name="leastSize" style="padding: 5px; border-radius: 4px;">
+                <option value="1" selected th:text="#{stat.option.least('1')}">least-1</option>
+                <option value="5" th:text="#{stat.option.least('5')}">least-5</option>
+                <option value="10" th:text="#{stat.option.least('10')}">least-10</option>
+                <option value="20" th:text="#{stat.option.least('20')}">least-20</option>
+                <option value="50" th:text="#{stat.option.least('50')}">least-50</option>
+            </select>
+        </div>
 
-<form>
-    <div>
-        <label for="time-range">
-select timeframe:
-        </label>
-<input id="time-range"  type="text"
-name="dateRange"
-       placeholder="select date....."
-       hx-get="/statics/custom"
-       hx-target="#stat-res"
-       hx-swap="innerHTML"
-       hx-trigger="change"
->
+    </form>
 
-
-</input>
-
+    <div id="stat-res" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;" th:text="#{stat.initial.message}">
+        Select dates to view stats
     </div>
-
-</form>
-
-<div id="stat-res">
-    select dates to view stats
 </div>
-</body>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-    flatpickr("#time-range", {
-        mode: "range",
-        dateFormat: "Y-m-d", // Formats the date as 2026-07-01
-        showMonths: 2        // Shows two months side-by-side, exactly like Facebook Ads
-    });
+    (function () {
+        flatpickr("#time-range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            showMonths: 2,
+            allowInput: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                document.getElementById('time-range').dispatchEvent(new Event('change',{bubbles:true}));
+            }
+        });
+    })();
 </script>
-
-</html>

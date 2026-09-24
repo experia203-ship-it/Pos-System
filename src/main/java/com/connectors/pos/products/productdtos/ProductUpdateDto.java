@@ -5,6 +5,8 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 public record ProductUpdateDto(
 
@@ -20,7 +22,22 @@ public record ProductUpdateDto(
         BigDecimal purchasePrice,
         @PositiveOrZero(message ="stock can't be below zero ")
         Long stock,
-        Long categoryId
+        Long categoryId,
+        String barcode,
+        @PositiveOrZero(message="orderPoint can't be below zero")
+        Long reorderPoint,
+        Map<String,String> customFields
+
 
 ) {
+
+        public  ProductUpdateDto{
+
+                if(customFields==null){
+
+                        customFields = new HashMap<>();
+                }
+
+
+        }
 }

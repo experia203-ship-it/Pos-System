@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS order_number_sequence (
+    id INTEGER PRIMARY KEY AUTOINCREMENT
+);

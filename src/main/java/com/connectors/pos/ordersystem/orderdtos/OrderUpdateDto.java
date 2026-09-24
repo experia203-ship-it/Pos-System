@@ -15,7 +15,6 @@ public record OrderUpdateDto(
         BigDecimal discount,
 
 
-        @NotNull(message="customerId is required")
         Long customerId,
 
         @NotEmpty(message="at least on item is required")

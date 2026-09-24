@@ -14,6 +14,27 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+
+  # 2. The Redis Cache
+  redis:
+    image: redis:alpine
+
+  # 3. Your Spring Boot POS App
+  app:
+    build: . # Tells Docker to read your Dockerfile
+    ports:
+      - "80:8080" # Maps the server's port 80 (web standard) to your app's port 8080
+    environment:
+      # We pass the live database credentials to Spring Boot here
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/pos_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_CACHE_REDIS_HOST=redis
+    depends_on:
+      - db
+      - redis
+
+
 volumes:
   postgres_data:
     driver: local

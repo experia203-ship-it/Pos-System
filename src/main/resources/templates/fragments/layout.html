@@ -1,55 +1,121 @@
 <!DOCTYPE html>
-<html lang="en"
+<html
+      th:lang="${#locale.language}"
+      th:dir="${#locale.language == 'ar' ? 'rtl' : 'ltr'}"
       xmlns:th="http://www.thymeleaf.org"
-
->
+      th:data-theme="${#strings.toLowerCase(globalSettings.theme)}">
 <head>
     <meta charset="UTF-8">
-    <title>pos system</title>
-
-    <meta charset="UTF-8">
+    <title th:text="${globalSettings.companyName}"></title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/response-targets.js"></script>    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
-
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/response-targets.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <style>
-        /* --- POS LAYOUT CSS MOVED HERE --- */
+        /* --- POS LAYOUT CSS --- */
         .pos-layout {
             display: grid;
-            grid-template-columns: .5fr 1fr;
-            /* Create 4 rows on the left, and let the last one stretch */
-            grid-template-rows: auto auto auto 1fr;
+            grid-template-columns: 320px 1fr; /* Slimmer left column */
+            grid-template-rows: auto auto 1fr;
             grid-template-areas:
-                "order-search     cart"
-                "order-results    cart"
+                "shift-widget     cart"
                 "product-search   cart"
-                "product-results  cart";
-            gap: 15px;
+                "order-search     cart"
+        ;
+            gap: 12px;
             height: 100%;
         }
 
-        /* Assign each HTML ID to its new unique spot on the map */
-        #orderSearch         { grid-area: order-search; }
-        #orderSearchArea     { grid-area: order-results; }
-        #searchbar           { grid-area: product-search; }
-        #search-results-area { grid-area: product-results; }
-        #cart-zone           { grid-area: cart; }
+        #shift-widget { grid-area: shift-widget; }
+        #cart-zone    { grid-area: cart; }
 
         .zone {
             border: 1px solid #000000;
-            padding: 15px;
+            padding: 10px; /* Reduced padding to make inputs look compact */
             border-radius: 8px;
             overflow-y: auto;
         }
 
-        #search-results-area table {
+        /* --- EXCEL-STYLE DROPDOWN STYLES --- */
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        /* Z-INDEX FIXES: Dynamic layering so active zone is always on top */
+        #searchbar, #orderSearch {
+            position: relative;
+            z-index: 10; /* Base layer */
+            overflow: visible !important;
+        }
+
+        /* MAGICAL FIX: Bring the box to the very front ONLY when you click inside it */
+        #searchbar:focus-within,
+        #orderSearch:focus-within {
+            z-index: 999 !important;
+        }
+
+        /* Ensure the dropdown itself has a 100% solid, opaque background */
+        /* Ensure the dropdown is completely hidden by default and completely solid when active */
+        .dropdown-results {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            background-color: var(--pico-background-color) !important;
+            border: 1px solid var(--pico-primary);
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 10000;
+        }
+
+        /* Force table rows and elements inside to be completely opaque */
+        .dropdown-results table,
+        .dropdown-results tr,
+        .dropdown-results td,
+        .dropdown-results th {
+            background-color: var(--pico-background-color) !important;
+        }
+
+        /* Show only when it has content */
+        .dropdown-results:not(:empty) {
+            display: block;
+        }
+        /* Make ALL dropdowns drop DOWNWARDS */
+        .dropdown-results {
+            position: absolute;
+            left: 0;
+            top: calc(100% + 4px);
+            width: 100%;
+            background-color: var(--pico-background-color) !important;
+            border: 1px solid var(--pico-primary);
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 10000;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        /* Make the table headers sticky inside the dropdown */
+        .dropdown-results th {
+            position: sticky;
+            top: 0;
+            background-color: var(--pico-background-color);
+            z-index: 2;
+        }
+
+        .dropdown-results table {
             width: 100%;
             table-layout: fixed;
             border-collapse: collapse;
         }
 
-        #search-results-area th,
-        #search-results-area td {
+        .dropdown-results th,
+        .dropdown-results td {
             padding: 8px 4px;
             text-align: left;
             vertical-align: middle;
@@ -69,64 +135,145 @@
             transition: background-color 0.2s ease-in-out;
         }
 
-        .clickable-row:hover {
-            background-color: #00ffff;
+        .clickable-row:hover, .clickable-row:hover td {
+            background-color: var(--pico-background-color);
+            color: var(--pico-color);
+            border: 1px solid var(--pico-primary);
         }
-        .clickable-row:hover td {
-            color: #000000;
+
+        /* --- SIDEBAR COLLAPSE CSS --- */
+        #sidebar {
+            transition: width 0.3s ease;
+            overflow-x: hidden;
+        }
+        #sidebar.collapsed {
+            width: 30px !important;
+            padding: 20px 2px !important;
+        }
+        #sidebar.collapsed .hide-on-collapse { display: none; }
+
+        #toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--pico-primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+        #sidebar.collapsed #toggle-btn { justify-content: center; }
+
+        /* --- COMPACT TOGGLE SWITCH CSS --- */
+        .hidden-checkbox { display: none; }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 4px !important;
+            flex-shrink: 0;
+        }
+
+        .toggle-container span {
+            font-size: 0.65rem !important;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .toggle-label {
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+            background-color: green;
+            border-radius: 22px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .toggle-label::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .hidden-checkbox:checked + .toggle-label {
+            background-color: blue;
+        }
+
+        .hidden-checkbox:checked + .toggle-label::after {
+            transform: translateX(18px);
         }
     </style>
-
-
 </head>
 <body style="display: flex; height: 100vh; margin: 0; overflow: hidden;">
-<aside style="width: 250px; background: #f4f4f4; padding: 20px; flex-shrink: 0; overflow-y: auto;">
-<h2>pos menu</h2>
-    <nav>
 
-        <ul style="list-style: none; padding: 0;">
-
-            <li>
-                <button
-                hx-get="/pos"
-                hx-target="#main-window"
-                hx-swap="innerHTML"
-
-                >pos</button>
-            </li>
-<li>
-    <button
-    hx-get="/products"
-    hx-target="#main-window"
-    hx-swap="innerHTML"
-    >
-        inventory
-    </button>
-
-</li>
-
-            <li>
-                <button
-                hx-get="/statics"
-                hx-target="#main-window"
-                hx-swap="innerHTML"
-                >
-                    statics
-                </button>
-            </li>
-            <li>
-                <button
-                hx-post="/auth/logout"
-                hx-target="#main-window"
-                hx-swap="innerHTML"
-                >logOut</button>
-            </li>
-        </ul>
-    </nav>
+<!-- Sidebar -->
+<aside id="sidebar" style="width: 250px; background-color: var(--pico-background-color); color: var(--pico-color); border: 1px solid var(--pico-primary); padding: 20px; flex-shrink: 0; overflow-y: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 class="hide-on-collapse" style="margin: 0;" th:text="#{sidebar.name}"></h2>
+        <button id="toggle-btn" th:title="#{sidebar.btn.toggle}">
+            <span id="arrow-icon">◀</span>
+        </button>
+    </div>
+    <div class="hide-on-collapse">
+        <nav>
+            <ul style="list-style: none; padding: 0;">
+                <li><button hx-get="/pos/sales" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.pos}"></button></li>
+                <li><button hx-get="/products" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.inventory}"></button></li>
+                <li><button hx-get="/products/reorder-point" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.products}"></button></li>
+                <li><button hx-get="/pos/summary" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.summary}"></button></li>
+                <li><button hx-get="/statics" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.statics}"></button></li>
+                <li><button hx-get="/customers" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.customers}"></button></li>
+                <li><button hx-get="/suppliers" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.vendors}"></button></li>
+                <li><button hx-get="/settings" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.settings}"></button></li>
+                <li><button hx-post="/auth/logout" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.logout}"></button></li>
+            </ul>
+        </nav>
+    </div>
 </aside>
-<main id="main-window" style="flex-grow: 1; padding: 20px; overflow-y: auto;">
 
-    <h1>welcome to the main page</h1>
+<!-- Main Window Shell -->
+<main id="main-window" style="flex-grow: 1; padding: 20px; overflow-y: auto;">
+    <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; user-select: none;">
+        <th:block th:if="${globalSettings.logo != null}">
+            <img th:src="@{/settings/logo}" th:alt="#{layout.logo.alt}" style="max-width: 700px; max-height: 600px; margin-bottom: 1rem; object-fit: contain;" />
+        </th:block>
+        <th:block th:unless="${globalSettings.logo != null}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.1; margin-bottom: 1rem; color: var(--pico-color);">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+            </svg>
+        </th:block>
+        <h1 th:text="${globalSettings.companyName} ?: #{layout.title.fallback}" style="margin-bottom: 0.5rem; color: var(--pico-muted-color);"></h1>
+        <p style="color: var(--pico-muted-color);" th:text="#{layout.message}"></p>
+    </div>
 </main>
+
+<script>
+    document.body.addEventListener('htmx:beforeSwap', function(evt) {
+        if (evt.detail.target.id === 'main-window') {
+            document.querySelectorAll('.flatpickr-calendar').forEach(function(calendar) {
+                calendar.remove();
+            });
+        }
+    });
+
+    document.getElementById('toggle-btn').addEventListener('click', function() {
+        const sidebar = document.getElementById('sidebar');
+        const arrowIcon = document.getElementById('arrow-icon');
+        sidebar.classList.toggle('collapsed');
+        arrowIcon.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+    });
+</script>
 </body>
 </html>

@@ -1,0 +1,24 @@
+<div id="customer-update" th:fragment="customer-update-fragment">
+    <dialog open id="customer-dialog" th:fragment="customer-update-dialog">
+        <article>
+            <form id="form-cust-update" th:object="${customer}" th:hx-patch="@{/customers/{id}(id=${customerId})}" hx-swap="outerHTML" hx-target="#main-window">
+                <label for="name" th:text="#{customer.update.label.name}">name:</label>
+                <input type="text" id="name" th:field="*{name}" />
+
+                <label for="location" th:text="#{customer.update.label.location}">location:</label>
+                <input type="text" id="location" th:field="*{location}" />
+
+                <label for="shippingCompany" th:text="#{customer.update.label.shippingCompany}">shippingCompany:</label>
+                <input type="text" id="shippingCompany" th:field="*{shippingCompany}" />
+
+                <label for="phoneNumber" th:text="#{customer.update.label.phoneNumber}">phoneNumber:</label>
+                <input type="text" id="phoneNumber" th:field="*{phoneNumber}" />
+
+                <div style="margin-top: 15px;">
+                    <button type="submit" th:text="#{customer.update.btn.save}">save</button>
+                    <button type="button" onclick="document.getElementById('customer-dialog').close()" th:text="#{customer.update.btn.close}">close</button>
+                </div>
+            </form>
+        </article>
+    </dialog>
+</div>

@@ -40,7 +40,6 @@ model.addAttribute("userForm",new CreateUserDto("","",""));
     public String processRegistration(@Valid @ModelAttribute("userForm") CreateUserDto dto,
                                       BindingResult bindingResult, Model model, HttpServletResponse response){
 
-     System.out.println("reached the register controller");
 if(bindingResult.hasErrors()) {
     String defaultMessage = bindingResult.getFieldError().getDefaultMessage();
 
@@ -64,6 +63,11 @@ response.setHeader("HX-Redirect","/auth/login");
     public String showLoginPage(Model model){
 model.addAttribute("loginForm",new UserLoginDto("",""));
         return "login";
+    }
+
+    @GetMapping("/trial-expired")
+    public String showTrialExpiredPage() {
+        return "trial-expired";
     }
 
     @PostMapping("/login")
@@ -92,7 +96,6 @@ model.addAttribute("loginForm",new UserLoginDto("",""));
 
     @PostMapping("/logout")
     public String logOut(HttpServletResponse response){
-System.out.println("reached");
         SecurityContextHolder.clearContext();
 
         Cookie jwtCookie = new Cookie("jwt",null);

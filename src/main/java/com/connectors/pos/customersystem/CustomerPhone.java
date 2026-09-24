@@ -1,6 +1,5 @@
 package com.connectors.pos.customersystem;
 
-import com.connectors.pos.ordersystem.Type;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -23,7 +22,6 @@ public class CustomerPhone {
     @Column(name ="phone_number",length = 50,nullable = false)
     private String phoneNumber;
     @NotNull
-    @Size(max=50)
     @Column(name="type",length = 50)
 @Enumerated(EnumType.STRING)
     private Type type;

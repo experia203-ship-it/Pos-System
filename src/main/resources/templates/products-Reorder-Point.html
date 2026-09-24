@@ -1,0 +1,93 @@
+<div id="reorder-div">
+
+    <!-- 1. Use hgroup to bind the title and count cleanly together -->
+    <hgroup style="margin-bottom: 2rem;">
+        <h2 th:text="#{reorder.title}">Restock Required</h2>
+        <p>
+            <span th:text="#{reorder.totalBelowThreshold}">Total items below minimum threshold:</span>
+            <strong th:text="${count}" style="color: var(--pico-primary);">0</strong>
+        </p>
+    </hgroup>
+
+    <!-- 2. Make the empty state look like a positive dashboard alert -->
+    <article th:if="${!products.hasContent()}" style="text-align: center; padding: 3rem 1rem;">
+        <h3 style="margin-bottom: 0.5rem;" th:text="#{reorder.healthy.title}">✅ Inventory Healthy</h3>
+        <p style="color: var(--pico-muted-color); margin: 0;" th:text="#{reorder.healthy.desc}">No restock is needed for now. Check back later.</p>
+    </article>
+
+    <!-- 3. Wrap the table in a <figure> so Pico makes it responsive and scrollable on small screens -->
+    <figure th:if="${products.hasContent()}">
+        <!-- 4. role="grid" gives Pico's beautiful hover states and borders -->
+        <table role="grid" class="striped">
+            <thead>
+            <tr>
+                <th scope="col" th:text="#{reorder.table.id}">ID</th>
+                <th scope="col" th:text="#{products.table.name}">Name</th>
+                <th scope="col" th:text="#{reorder.table.partNumber}">Part #</th>
+                <th scope="col" th:text="#{products.table.stock}">Stock</th>
+                <th scope="col" th:text="#{reorder.table.reorderPoint}">Reorder Point</th>
+                <th scope="col" th:text="#{products.table.category}">Category</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="product : ${products.content}">
+                <td th:text="${product.id}" style="color: var(--pico-muted-color);"></td>
+
+                <!-- Emphasize the name -->
+                <td><strong th:text="${product.name}"></strong></td>
+
+                <!-- Monospace font looks great for part numbers -->
+                <td th:text="${product.partNumber}" style="font-family: monospace;"></td>
+
+                <!-- Highlight the low stock in red/warning color so the cashier notices immediately -->
+                <td th:text="${product.stock}" style="color: var(--pico-del-color); font-weight: bold;"></td>
+
+                <td th:text="${product.reorderPoint}"></td>
+
+                <td th:text="${catMap != null and product.categoryId != null ? (catMap.get(product.categoryId) ?: #messages.msg('reorder.category.none')) : #messages.msg('reorder.category.none')}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </figure>
+
+    <!-- Pagination Footer -->
+    <div th:if="${products.hasContent()}" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 10px 0;">
+
+        <!-- View Numbers -->
+        <div style="font-size: 0.9em; color: #64748b;">
+            <span th:text="#{pagination.showing}">Showing</span>
+            <span th:text="${products.totalElements > 0 ? (products.number * products.size + 1) : 0}"></span>
+            <span th:text="#{pagination.to}">to</span>
+            <span th:text="${products.number * products.size + products.numberOfElements}"></span>
+            <span th:text="#{pagination.of}">of</span>
+            <strong th:text="${products.totalElements}"></strong> <span th:text="#{pagination.entries}">entries</span>
+        </div>
+
+        <!-- Page Controllers -->
+        <nav style="display: flex; align-items: center; gap: 10px;">
+            <button th:if="${products.hasPrevious()}"
+                    th:hx-get="@{/products/reorder-point(page=${products.number-1})}"
+                    hx-target="#reorder-div"
+                    hx-swap="outerHTML"
+                    hx-push-url="true"
+                    class="secondary small"
+                    th:text="#{pagination.previous}">
+                previous
+            </button>
+
+            <span style="font-size: 0.9em; font-weight: 500;">
+                <span th:text="#{pagination.page}">page</span> [[${products.number+1}]] <span th:text="#{pagination.of}">of</span> [[${products.totalPages == 0 ? 1 : products.totalPages}]]
+            </span>
+
+            <button th:if="${products.hasNext()}"
+                    th:hx-get="@{/products/reorder-point(page=${products.number+1})}"
+                    hx-target="#reorder-div"
+                    hx-swap="outerHTML"
+                    hx-push-url="true"
+                    class="secondary small"
+                    th:text="#{pagination.next}">
+                next
+            </button>
+        </nav>
+    </div>
+</div>

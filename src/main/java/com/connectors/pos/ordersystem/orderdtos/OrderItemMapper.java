@@ -13,6 +13,7 @@ public interface OrderItemMapper {
 
 
         @Mapping(target = "productId", source="product.id")
+        @Mapping(target="barcode",source="product.barcode")
         OrderItemResponseDto toResponse (OrderItem item);
 
 

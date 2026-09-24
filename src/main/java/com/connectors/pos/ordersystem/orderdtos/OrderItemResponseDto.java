@@ -10,6 +10,7 @@ public record OrderItemResponseDto(
         int quantity,
         BigDecimal subTotal,
         BigDecimal subDiscount,
+        String barcode,
         Long productId
 
 

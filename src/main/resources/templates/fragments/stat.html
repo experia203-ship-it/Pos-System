@@ -1,17 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Stat Results</title>
 </head>
 <body>
 
-<div th:fragment="stat-res">
-    <form th:object="${res}" >
-    <h2>statistics</h2>
-    totalSales: <span th:text="${res.totalSales != null ? res.totalSales : 'no results to show'}"></span>
-    totalProfit: <span th:text="${res.totalProfit != null ? res.totalProfit : 'no results to show'}"></span>
-    </form>
+<div th:fragment="stat-res" th:object="${res}" style="margin-top: 30px;">
+
+    <h3 style="margin-bottom: 20px;" th:text="#{stat.timeframe.results.title}">Timeframe Results</h3>
+
+    <div th:if="${res != null}" class="grid">
+
+        <article style="text-align: center; padding: 20px;">
+            <p style="margin-bottom: 10px; font-weight: bold; color: gray;" th:text="#{stat.totalSales}">
+                Total Sales
+            </p>
+            <h2 style="margin: 0;" th:text="*{totalSales != null ? totalSales : '0.00'}"></h2>
+        </article>
+
+        <article style="text-align: center; padding: 20px;">
+            <p style="margin-bottom: 10px; font-weight: bold; color: gray;" th:text="#{stat.totalProfit}">
+                Total Profit
+            </p>
+            <h2 style="margin: 0; color: #2e7d32;" th:text="*{totalProfit != null ? totalProfit : '0.00'}"></h2>
+        </article>
+
+
+        <article style="text-align: center; padding: 20px;">
+            <p style="margin-bottom: 10px; font-weight: bold; color: gray;" th:text="#{stat.topSellingItems}">
+                top Selling items
+            </p>
+            <table>
+                <thead>
+                <tr>
+                    <th th:text="#{stat.itemName}">itemName</th>
+                    <th th:text="#{stat.totalQuantitySold}">totalQuantitySold</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${top}">
+                    <td th:text="${item.itemName}"></td>
+                    <td th:text="${item.totalQuantitySold}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+
+
+        <article style="text-align: center; padding: 20px;">
+            <p style="margin-bottom: 10px; font-weight: bold; color: gray;" th:text="#{stat.leastSellingItems}">
+                least Selling items
+            </p>
+            <table>
+                <thead>
+                <tr>
+                    <th th:text="#{stat.itemName}">itemName</th>
+                    <th th:text="#{stat.totalQuantitySold}">totalQuantitySold</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${least}">
+                    <td th:text="${item.itemName}"></td>
+                    <td th:text="${item.totalSoldQuantity}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+
+    </div>
+
+    <div th:if="${res == null}" th:text="#{stat.invalidDateRange}">
+        please select a valid date range
+    </div>
 </div>
 </body>
 </html>

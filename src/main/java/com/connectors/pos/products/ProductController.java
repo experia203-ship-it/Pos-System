@@ -1,9 +1,11 @@
 package com.connectors.pos.products;
 
+import com.connectors.pos.exceptions.ProductNotFoundException;
 import com.connectors.pos.products.categorydtos.CategoryResponseDto;
 import com.connectors.pos.products.productdtos.CreateProductDto;
 import com.connectors.pos.products.productdtos.ProductResponseDto;
 import com.connectors.pos.products.productdtos.ProductUpdateDto;
+import com.connectors.pos.products.productdtos.ProductsReorderPoint;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -32,11 +36,14 @@ public class ProductController {
     private final CategoryService catServo;
     private final CategoryRepository catRepo;
 
+
     @GetMapping
     public String viewProductsPage(Model model,
     @PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.DESC) Pageable pageable ,
                                    @RequestHeader(value = "Hx-Request",required = false) String hxRequest){
 
+
+        System.out.println("prods");
         Page<ProductResponseDto> result= productServo.viewAllProducts(pageable);
 
         List<Long> allCatIds = result.stream().map(ProductResponseDto::categoryId)
@@ -89,7 +96,7 @@ return "products :: table-wrapper";
 
         CreateProductDto create = new CreateProductDto(null,
                 null,null,null,null,null,
-                null
+                null,null,null,null
                 );
 
         List<CategoryResponseDto> listOfCategories = catServo.viewAllCategories();
@@ -140,7 +147,7 @@ return "products :: product-table-body";
 
       ProductUpdateDto update= new ProductUpdateDto(product.name(),product.partNumber(),
               product.description(),product.sellingPrice(),product.purchasePrice(),
-              product.stock(),product.categoryId());
+              product.stock(),product.categoryId(),product.barcode(),product.reorderPoint(),product.customFields());
 
     List<CategoryResponseDto> allCats=catServo.viewAllCategories();
     model.addAttribute("categories",allCats);
@@ -198,7 +205,7 @@ if(product.categoryId()!=null) {
 
     @GetMapping("/search-pos")
     public String searchForPos(@PageableDefault(page = 0,size = 10,sort = "name",direction = Sort.Direction.ASC) Pageable pageable,
-                               Model model , @RequestParam(name = "keyword" ,defaultValue = "") String keyword){
+                               Model model , @RequestParam(name = "keyword" ,defaultValue = "") String keyword ,@RequestParam(name="mode",defaultValue = "sales") String mode){
 
 
         Page<ProductResponseDto> results;
@@ -212,6 +219,8 @@ else {
       }
         model.addAttribute("results",results);
 
+       model.addAttribute("mode",mode);
+
         return "fragments/search-results :: search-results-fragment";
 
 
@@ -222,10 +231,8 @@ else {
 
   public String importCsvFiles(@RequestParam(name="file") MultipartFile file, RedirectAttributes redirect){
 
-        System.out.println("reached 1");
 
         if(file.isEmpty()){
-            System.out.println("reached error");
 
             redirect.addFlashAttribute("error","please select a file for the import");
 
@@ -233,10 +240,10 @@ else {
         }
 
         try{
-     int count =productServo.processFile(file);
+     ProductService.ImportResult result = productServo.processFile(file);
 
-redirect.addFlashAttribute("success",count + "products was imported successfully");
-            System.out.println("reached success");
+redirect.addFlashAttribute("success",result.imported() + " products imported successfully"
+        + (result.skipped() == 0 ? "" : "; " + result.skipped() + " rows skipped"));
 
 
         } catch (Exception e) {
@@ -248,6 +255,53 @@ redirect.addFlashAttribute("success",count + "products was imported successfully
 
   }
 
+@GetMapping("/generate-barcode")
+    @ResponseBody
+
+    public String generateBarcode(){
+
+        String prefix="200";
+
+        String timeStamp = String.valueOf(System.currentTimeMillis());
+        timeStamp = timeStamp.substring(timeStamp.length()-8);
+        int randomPart = new Random().nextInt(90)+10;
+String generatedBarcode= prefix+timeStamp+randomPart;
+
+    String html = """
+        <input id='barcode' name='barcode' class='form-control barcode-input' type='text' value='%s' readonly />
+        """;
+
+return String.format(html,generatedBarcode);
+
+}
+    @GetMapping("/print-label/{id}")
+    public String printBarcodeLabel(@PathVariable Long id, Model model) {
+        ProductResponseDto prod = productServo.findById(id);
+        model.addAttribute("product", prod);
+        return "barcode-label";
+    }
+
+    @GetMapping("/reorder-point")
+    public String viewReorderPointsProducts(@PageableDefault(page = 0,size = 10) Pageable pageable ,Model model){
+
+        ProductsReorderPoint point = productServo.viewAndCountReorderPoints(pageable);
+
+        Page<ProductResponseDto> results = point.products();
+        Long count = point.count();
+List<Long> allCatIds = results.stream().map(ProductResponseDto::categoryId).filter(Objects::nonNull).toList();
+List<Categories> getAllCatsWithIds = catRepo.findAllById(allCatIds);
+
+Map<Long,String> catMap=getAllCatsWithIds.stream().collect(Collectors.toMap(Categories::getId,Categories::getName ));
+       model.addAttribute("catMap",catMap);
+        model.addAttribute("products",results);
+        model.addAttribute("count",count);
+
+        return "products-Reorder-Point";
+    }
+    @GetMapping("/custom-field-row")
+    public String getCustomRow(){
 
 
+        return"fragments/custom-field-row";
+    }
 }

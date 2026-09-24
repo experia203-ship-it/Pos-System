@@ -1,0 +1,101 @@
+<div class="pos-layout" th:fragment="content">
+
+    <!-- 1. Shift Management Widget -->
+    <th:block   th:if="${allow_shift}">
+    <div class="zone" id="shift-widget" th:fragment="shift-widget">
+
+        <!-- STATE A: No Active Shift -->
+        <th:block th:if="${activeShift == null}">
+            <form hx-post="/shift/open" hx-target="#shift-widget" hx-swap="outerHTML" style="margin: 0;">
+                <div>
+                    <span style="font-weight: bold; font-size: 0.95rem; white-space: nowrap;" th:text="#{pos.shift.open}"></span>
+                    <input type="number" name="startingFloat" min="0" step="0.01" required th:placeholder="#{pos.shift.startingFloat.placeholder}" style="flex: 1;">
+                    <button type="submit" style="white-space: nowrap;" th:text="#{pos.shift.btn.open}"></button>
+                </div>
+            </form>
+        </th:block>
+
+        <!-- STATE B: Active Shift -->
+        <th:block th:if="${activeShift != null}">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <span style="font-weight: bold; font-size: 0.95rem;" th:text="#{pos.shift.active}"></span>
+                    <span style="color: green; font-weight: bold; font-size: 0.95rem;"><span th:text="#{pos.shift.id}"></span> <span th:text="${activeShift.id}"></span></span>
+                </div>
+
+                <form hx-post="/shift/close" hx-target="#shift-widget" hx-swap="outerHTML" style="margin: 0; display: flex; gap: 8px; align-items: center;">
+                    <input type="number" name="actualCount" min="0" step="0.01" required th:placeholder="#{pos.shift.blindCount.placeholder}" style="width: 170px;">
+                    <button type="submit" style="background-color: #d9534f; border-color: #d43f3a; white-space: nowrap;" th:text="#{pos.shift.btn.close}"></button>
+                </form>
+            </div>
+        </th:block>
+    </div>
+    </th:block>
+
+    <!-- 2. Order Search Zone (Left Column: Search by Number AND Search by Name) -->
+    <div class="zone" id="orderSearch">
+        <div style="display: flex; gap: 8px;">
+            <!-- Order Number Search -->
+            <div class="dropdown-anchor" style="flex: 1;">
+                <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 2px;" th:text="#{pos.order.numsearch}"></div>
+                <input id="orderSearchIn" hx-get="/pos/search" th:value="${param.orderNum}" name="orderNum" type="text"
+                       hx-target="#orderSearchArea" hx-trigger="keyup changed delay:500ms" th:placeholder="#{pos.search.number.placeholder}">
+                <div id="orderSearchArea" class="dropdown-results"></div>
+            </div>
+
+            <!-- Order Name / Customer Name Search -->
+            <div class="dropdown-anchor" style="flex: 1;">
+                <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 2px;" th:text="#{pos.order.namesearch}"></div>
+                <input id="orderNameSearchIn" hx-get="/pos/customer" th:value="${param.custName}" name="custName" type="text"
+                       hx-target="#orderNameSearchArea" hx-trigger="keyup changed delay:500ms" th:placeholder="#{pos.search.name.placeholder}">
+                <div id="orderNameSearchArea" class="dropdown-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Product Search Input & Mode Toggle (Right Column) -->
+    <div class="zone" id="searchbar">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <div style="font-weight: 600; font-size: 0.8rem;" th:text="#{pos.order.create}"></div>
+
+            <!-- Mode Toggle Switch -->
+            <div class="toggle-container" style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 0.75rem; font-weight: bold;" th:text="#{pos.mode.sales}"></span>
+                <input id="mode" th:checked="${mode == 'purchase'}" hx-trigger="change" type="checkbox" class="hidden-checkbox"
+                       th:hx-get="${mode == 'sales' ? '/pos/purchase' : '/pos/sales'}" hx-target="#main-window" hx-swap="innerHTML">
+                <label for="mode" class="toggle-label"></label>
+                <span style="font-size: 0.75rem; font-weight: bold;" th:text="#{pos.mode.purchases}"></span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+            <button type="button" id="custom-item" style="width: auto; white-space: nowrap;"
+                    th:hx-post="${mode == 'sales' ? '/pos/custom' : '/purchase/custom'}"
+                    hx-include="#active-cart-form, #disc, #paid, #customerInfo ,#remaining ,#supplierInfo"
+                    hx-target="#cart-zone" th:text="#{pos.bttn.custom}"></button>
+
+            <div class="dropdown-anchor" style="flex: 1;">
+                <input id="search-bar" th:value="${param.keyword}" name="keyword" type="text"
+                       th:hx-get="@{/products/search-pos(mode=${mode})}" hx-target="#search-results-area"
+                       hx-swap="innerHTML" hx-trigger="keyup changed delay:500ms" th:placeholder="#{pos.products.search.placeholder}">
+                <div id="search-results-area" class="dropdown-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. The Cart Area (Takes up the rest of the screen) -->
+    <div class="zone" id="cart-zone"></div>
+
+</div>
+
+<div id="modal-container-cust" hx-on:close-modal="this.innerHTML=''"></div>
+
+<script>
+    if (!window.printListenerAdded) {
+        document.body.addEventListener("orderCompleted", function(evt) {
+            const orderId = evt.detail.orderId;
+            window.open('/pos/print/' + orderId, '_blank', 'width=800,height=600');
+        });
+        window.printListenerAdded = true;
+    }
+</script>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{receipt.title}">Thermal Receipt</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Monospace looks best on thermal */
+            color: #000;
+            margin: 0;
+            padding: 10px;
+            background-color: #f4f4f4;
+            font-size: 12px;
+        }
+
+        .receipt-box {
+            width: 72mm; /* slightly less than 80mm to account for printer margins */
+            margin: auto;
+            background: #fff;
+            padding: 2mm;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .receipt-box {
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        @page {
+            margin: 0;
+            size: 80mm 297mm; /* 80mm width, auto height */
+        }
+
+        .center { text-align: center; }
+        .right { text-align: right; }
+        .bold { font-weight: bold; }
+
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 5px 0;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+<div class="receipt-box">
+    <!-- Header -->
+    <div class="center">
+        <h3 style="margin-bottom: 2px;" th:text="${globalSettings.companyName}"></h3>
+        <div th:if="${not #strings.isEmpty(globalSettings.address)}" th:text="${globalSettings.address}"></div>
+        <div th:if="${not #strings.isEmpty(globalSettings.phoneNumber)}" th:text="${globalSettings.phoneNumber}"></div>
+        <div th:if="${not #strings.isEmpty(globalSettings.taxRegistrationNumber)}" th:text="#{invoice.taxId(${globalSettings.taxRegistrationNumber})}"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Order Info -->
+    <div>
+        <div><span th:text="#{receipt.orderNumber}">Order #:</span> <span th:text="${order.orderNumber}"></span></div>
+        <div><span th:text="#{invoice.date}">Date:</span> <span th:text="${#temporals.format(order.createdAt, 'dd-MM-yyyy HH:mm')}"></span></div>
+        <div><span th:text="#{invoice.customer}">Customer:</span> <span th:text="${customerName}"></span></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Items (Stacked for narrow width) -->
+    <div th:each="item : ${order.items}" style="margin-bottom: 8px;">
+        <div class="bold" th:text="${item.productName}">Brake Pad Set</div>
+        <div class="item-row">
+            <div th:text="|${item.quantity} x ${globalSettings.currencySymbol} ${item.productSellingPrice}|">2 x 45.00</div>
+            <div class="bold right" th:text="|${globalSettings.currencySymbol} ${item.subTotal}|">90.00</div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Totals -->
+    <div class="item-row">
+        <div th:text="#{invoice.totals.discount}">Discount:</div>
+        <div class="right" th:text="|${globalSettings.currencySymbol} ${order.discount}|">0.00</div>
+    </div>
+    <div class="item-row bold" style="font-size: 14px;">
+        <div th:text="#{receipt.total}">Total:</div>
+        <div class="right" th:text="|${globalSettings.currencySymbol} ${order.total}|"></div>
+    </div>
+    <div class="item-row">
+        <div th:text="#{invoice.totals.paid}">Paid:</div>
+        <div class="right" th:text="|${globalSettings.currencySymbol} ${order.paid}|"></div>
+    </div>
+    <div class="item-row">
+        <div th:text="#{invoice.totals.remaining}">Remaining:</div>
+        <div class="right" th:text="|${globalSettings.currencySymbol} ${order.remaining}|"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="center" style="margin-top: 10px;" th:text="#{invoice.footer.thankYou}">
+        Thank you for your business!
+    </div>
+
+    <div class="no-print center" style="margin-top: 20px;">
+        <button onclick="window.print()" style="padding: 10px; font-size: 14px; width: 100%; cursor: pointer;" th:text="#{receipt.btn.print}">Print Receipt</button>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        window.print();
+    };
+</script>
+</body>
+</html>

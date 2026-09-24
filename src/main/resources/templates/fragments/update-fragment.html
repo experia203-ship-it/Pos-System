@@ -1,58 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <title>Update Product</title>
 </head>
 <body>
 <dialog open th:fragment="update-popup">
-<article>
-<form id="form-update" th:object="${updateProduct}" th:hx-patch="@{/products/{id}(id=${prodId})}" hx-target="#tbody" hx-swap="outerHTML">
-    <label for="name">name:</label>
-    <input id="name" type="text" th:field="*{name}" th:value="*{name}" th:placeholder="*{name}" required>
+    <article>
+        <form id="form-update" th:object="${updateProduct}" th:hx-patch="@{/products/{id}(id=${prodId})}" hx-target="#tbody" hx-swap="outerHTML">
+            <label for="name" th:text="#{product.update.label.name}">name:</label>
+            <input id="name" type="text" th:field="*{name}" th:value="*{name}" th:placeholder="*{name}" required>
 
-    <label for="partNumber">partNumber:</label>
-    <input id="partNumber" type="text" th:field="*{partNumber}" th:value="*{partNumber}" th:placeholder="*{partNumber}" required>
+            <label for="partNumber" th:text="#{product.update.label.partNumber}">partNumber:</label>
+            <input id="partNumber" type="text" th:field="*{partNumber}" th:value="*{partNumber}" th:placeholder="*{partNumber}" required>
 
-    <label for="description">description:</label>
-    <input id="description" type="text" th:field="*{description}" th:value="*{description}" th:placeholder="*{description}" required>
+            <label for="description" th:text="#{product.update.label.description}">description:</label>
+            <input id="description" type="text" th:field="*{description}" th:value="*{description}" th:placeholder="*{description}" required>
 
-    <label for="sellingPrice">sellingPrice:</label>
-    <input id="sellingPrice" type="text" th:field="*{sellingPrice}" th:value="*{sellingPrice}" th:placeholder="*{sellingPrice}" required>
+            <label for="sellingPrice" th:text="#{product.update.label.sellingPrice}">sellingPrice:</label>
+            <input id="sellingPrice" type="text" th:field="*{sellingPrice}" th:value="*{sellingPrice}" th:placeholder="*{sellingPrice}" required>
 
-    <label for="purchasePrice">purchasePrice:</label>
-    <input id="purchasePrice" type="text" th:field="*{purchasePrice}" th:value="*{purchasePrice}" th:placeholder="*{purchasePrice}" required>
+            <label for="purchasePrice" th:text="#{product.update.label.purchasePrice}">purchasePrice:</label>
+            <input id="purchasePrice" type="text" th:field="*{purchasePrice}" th:value="*{purchasePrice}" th:placeholder="*{purchasePrice}" required>
 
-    <label for="stock">stock:</label>
-    <input id="stock" type="text" th:field="*{stock}" th:value="*{stock}" th:placeholder="*{stock}" required>
+            <label for="stock" th:text="#{product.update.label.stock}">stock:</label>
+            <input id="stock" type="text" th:field="*{stock}" th:value="*{stock}" th:placeholder="*{stock}" required>
 
+            <label for="reorderPoint" th:text="#{product.update.label.reorderPoint}">reorderPoint:</label>
+            <input id="reorderPoint" type="text" th:field="*{reorderPoint}" th:value="*{reorderPoint}" th:placeholder="*{reorderPoint}" required>
 
-    <div id="category-wrapper">
-        <label   for="category-list">category:</label>
-        <select th:field="*{categoryId}"  id="category-list"  name="categoryId" >
+            <div id="category-wrapper">
+                <label for="category-list" th:text="#{product.update.label.category}">category:</label>
+                <select th:field="*{categoryId}" id="category-list" name="categoryId">
+                    <option th:each="cat : ${categories}"
+                            th:value="${cat.id}"
+                            th:text="${cat.name}"
+                    >category name</option>
+                </select>
 
-            <option th:each="cat :${categories}"
-                    th:value="${cat.id}"
-                    th:text="${cat.name}"
-            > category name</option>
+                <label for="barcode" th:text="#{product.update.label.barcode}">barcode:</label>
+                <input id="barcode" type="text" th:field="*{barcode}" th:value="*{barcode}" th:placeholder="*{barcode}"/>
+            </div>
 
-        </select>
-    </div>
+            <div id="custom-fields-container">
+                <h3 th:text="#{product.update.heading.customFields}">Custom Fields</h3>
 
+                <div id="custom-fields-list">
+                    <div th:if="*{customFields != null}" th:each="entry : *{customFields}" class="custom-field-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text"
+                               th:value="${entry.key}"
+                               class="field-key"
+                               onchange="this.nextElementSibling.name = 'customFields[' + this.value + ']'"
+                               required>
+                        <input type="text"
+                               th:name="'customFields[' + ${entry.key} + ']'"
+                               th:value="${entry.value}"
+                               required>
+                        <button type="button" onclick="this.parentElement.remove()" th:text="#{btn.remove}">X</button>
+                    </div>
+                </div>
 
+                <button type="button"
+                        hx-get="/products/custom-field-row"
+                        hx-target="#custom-fields-list"
+                        hx-swap="beforeend"
+                        th:text="#{product.update.btn.addCustomField}">
+                    + Add Custom Field
+                </button>
+            </div>
 
+            <button type="submit" th:text="#{product.update.btn.submit}">Update</button>
 
-<button type="submit">Update</button>
+        </form>
+        <button hx-get="/categories/new" hx-target="#modal-container2" hx-swap="innerHTML" th:text="#{product.update.btn.createCategory}">create category</button>
 
-</form>
-<button hx-get="/categories/new" hx-target="#modal-container2" hx-swap="innerHTML" >create category</button>
-
-    <form method="dialog">
-        <button class="secondary">close</button>
-    </form>
-</article>
+        <form method="dialog">
+            <button class="secondary" th:text="#{btn.close}">close</button>
+        </form>
+    </article>
     <div id="modal-container2" hx-on:close-modal="this.innerHTML=''"></div>
 
 </dialog>
-
 </body>
 </html>

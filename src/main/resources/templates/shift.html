@@ -1,0 +1,29 @@
+<div th:fragment="shift-summary" id="shift-widget" class="zone">
+    <h3 th:text="#{shift.summary.title}">Shift Summary Report</h3>
+
+    <div style="font-size: 0.9rem; margin-bottom: 15px;">
+        <p style="margin: 4px 0;">
+            <strong th:text="#{shift.summary.expectedCash}">Expected Cash:</strong>
+            <span th:text="|${closedShift.expectedCash} #{shift.currency.egp}|">0.00 EGP</span>
+        </p>
+        <p style="margin: 4px 0;">
+            <strong th:text="#{shift.summary.countedCash}">Actual Count:</strong>
+            <span th:text="|${closedShift.countedCash} #{shift.currency.egp}|">0.00 EGP</span>
+        </p>
+
+        <!-- Calculate Variance safely using T() for BigDecimal -->
+        <p style="margin: 4px 0;">
+            <strong th:text="#{shift.summary.difference}">Difference:</strong>
+            <span th:with="diff=${(closedShift.countedCash != null ? closedShift.countedCash : T(java.math.BigDecimal).ZERO).subtract(closedShift.expectedCash != null ? closedShift.expectedCash : T(java.math.BigDecimal).ZERO)}"
+                  th:style="${diff.compareTo(T(java.math.BigDecimal).ZERO) < 0 ? 'color: #d9534f; font-weight: bold;' : (diff.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'color: #f0ad4e; font-weight: bold;' : 'color: #5cb85c; font-weight: bold;')}"
+                  th:text="|${diff} #{shift.currency.egp}|">
+                0.00 EGP
+            </span>
+        </p>
+    </div>
+
+    <!-- Button to acknowledge and return to the Open Shift screen -->
+    <form hx-get="/shift/reset-widget" hx-target="#shift-widget" hx-swap="outerHTML">
+        <button type="submit" class="secondary" style="width: 100%; margin-bottom: 0;" th:text="#{shift.btn.acknowledge}"></button>
+    </form>
+</div>

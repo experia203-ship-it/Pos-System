@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <title th:text="#{purchase.cart.title}">Purchase Order Cart</title>
+</head>
+<body>
+
+<div id="cart-zone" th:fragment="cart-zone">
+
+    <!-- SUPPLIER SECTION -->
+    <div id="supplier-fragment" th:fragment="supplier-fragment">
+        <form id="supplierInfo">
+            <label for="supplier-list" th:text="#{purchase.cart.supplier}">Supplier: </label>
+            <select id="supplier-list" name="supplierId" form="active-cart-form"
+                    hx-post="/purchase/update"
+                    hx-trigger="change"
+                    hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
+                    hx-target="#cart-zone"
+                    hx-swap="outerHTML">
+
+                <option value="" th:selected="${currentSupplierId == null}" th:text="#{purchase.cart.supplier.general}">General Vendor</option>
+                <option th:each="sup : ${suppliers}"
+                        th:value="${sup.id}"
+                        th:text="${sup.name}"
+                        th:selected="${sup.id == currentSupplierId}">Supplier Name</option>
+            </select>
+            <div id="supplier-error" style="color: red; font-weight: bold; margin-top: 5px;"></div>
+        </form>
+
+        <button hx-get="/suppliers/create"
+                hx-target="#modal-container-sup"
+                hx-swap="innerHTML" th:text="#{purchase.btn.createSupplier}">Create Supplier</button>
+
+        <!-- MUST EXIST IN THE DOM FOR HTMX TO INJECT THE MODAL -->
+        <div id="modal-container-sup"></div>
+    </div>
+
+    <!-- CART FORM -->
+    <form id="active-cart-form">
+        <input type="hidden" name="ordId" th:value="${ordId}">
+
+        <table role="grid" id="cart-table">
+            <thead>
+            <tr>
+                <th th:text="#{purchase.table.itemName}">Item Name</th>
+                <th th:text="#{purchase.table.quantity}">Quantity</th>
+                <th th:text="#{purchase.table.subDiscount}">Sub-Disc</th>
+                <th th:text="#{purchase.table.purchasePrice}">Purchase Price</th>
+                <th th:text="#{purchase.table.subTotal}">SubTotal</th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="item, stat : ${cartItems}">
+                <td>
+                    <input type="hidden" th:name="|itemsList[${stat.index}].productId|" th:value="${item.productId}"/>
+                    <input type="hidden" th:name="|itemsList[${stat.index}].barcode|" th:value="${item.barcode}"/>
+
+                    <input type="text" th:name="|itemsList[${stat.index}].customName|"
+                           th:value="${item.productName}"
+                           hx-post="/purchase/update"
+                           hx-trigger="change delay:500ms"
+                           hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
+                           hx-target="#cart-zone"
+                           hx-swap="outerHTML" />
+                </td>
+
+                <td>
+                    <input type="number" th:name="|itemsList[${stat.index}].quantity|" th:value="${item.quantity}"
+                           hx-post="/purchase/update"
+                           hx-trigger="change, keyup[key=='Enter']"
+                           hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
+                           hx-target="#cart-zone"
+                           hx-swap="outerHTML" />
+                </td>
+
+                <td>
+                    <input type="number" step="0.01" th:name="|itemsList[${stat.index}].subDiscount|" th:value="${item.subDiscount}"
+                           hx-post="/purchase/update"
+                           hx-trigger="change"
+                           hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
+                           hx-target="#cart-zone"
+                           hx-swap="outerHTML" />
+                </td>
+
+                <td>
+                    <input type="number" step="0.01" th:name="|itemsList[${stat.index}].customPurchasePrice|"
+                           th:value="${item.customPurchasePrice !=null ? item.customPurchasePrice : item.sellingPrice}"
+                           hx-post="/purchase/update"
+                           hx-trigger="change"
+                           hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
+                           hx-target="#cart-zone"
+                           hx-swap="outerHTML" />
+                </td>
+
+                <td th:text="${item.subTotal}"></td>
+
+                <td>
+                    <button type="button"
+                            th:hx-delete="|/purchase/remove/${stat.index}|"
+                            hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
+                            hx-target="#cart-zone"
+                            hx-swap="outerHTML">X</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </form>
+
+    <article>
+        <header><strong th:text="#{purchase.summary.title}">Purchase Order Summary</strong></header>
+
+        <label for="disc" th:text="#{purchase.summary.globalDiscount}">Global Order Discount:</label>
+        <input id="disc" type="number" step="0.01" name="discount" th:value="${discount != null ? discount : 0.00}"
+               hx-post="/purchase/update"
+               hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
+               hx-trigger="change delay:300ms"
+               hx-target="#cart-zone"
+               hx-swap="outerHTML">
+
+        <label for="paid" th:text="#{purchase.summary.paid}">Paid:</label>
+        <input id="paid" type="number" step="0.01" name="paid" th:value="${paid != null ? paid : 0.00}"
+               hx-post="/purchase/update"
+               hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
+               hx-trigger="change delay:300ms"
+               hx-target="#cart-zone"
+               hx-swap="outerHTML">
+
+        <h3>
+            <span th:text="#{purchase.summary.grandTotal}">Grand Total:</span>
+            <span th:text="|${grandTotal ?: '0.00'} ${globalSettings.currencySymbol}|"></span>
+        </h3>
+        <h4>
+            <span th:text="#{purchase.summary.remaining}">Remaining:</span>
+            <span id="remaining-display" th:text="|${remaining != null ? remaining : 0.00} ${globalSettings.currencySymbol}|"></span>
+        </h4>
+        <h5>
+            <span th:text="#{purchase.summary.orderId}">Order ID:</span>
+            <span id="orderNumber-display" th:text="${orderNumber}"></span>
+        </h5>
+
+        <input id="remaining" type="hidden" name="remaining" th:value="${remaining != null ? remaining : 0.00}" form="active-cart-form" />
+        <input id="orderNumber" type="hidden" name="orderNumber" th:value="${orderNumber}" form="active-cart-form" />
+
+        <div id="list-error" style="color: red; font-weight: bold; margin-top: 5px;"></div>
+
+        <button type="button" th:if="${ordId != null}" th:hx-patch="|/purchase/update/${ordId}|"
+                hx-include="#active-cart-form, #disc, #paid, #supplierInfo, #remaining" hx-target="#cart-zone" th:text="#{purchase.btn.update}">Update</button>
+
+        <button type="button" th:if="${ordId == null}" hx-post="/purchase/check-out"
+                hx-include="#active-cart-form, #disc, #paid, #supplierInfo, #remaining" hx-target="#cart-zone" th:text="#{purchase.btn.checkout}">Check Out</button>
+
+        <button type="button" hx-delete="/purchase/clear" hx-target="#cart-zone"
+                th:hx-confirm="#{purchase.alert.clear(${grandTotal})}" th:text="#{purchase.btn.clear}">Clear</button>
+    </article>
+</div>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{supplier.modal.title}">Title</title>
+</head>
+<body>
+<dialog open th:fragment="supplier-pop-up2">
+    <article>
+        <h2 th:text="#{supplier.create.heading}">Create New Supplier</h2>
+        <form id="new-sup-form" th:object="${supplierCreate}" hx-post="/suppliers/create-vendor"
+              hx-target="#vtable" hx-swap="outerHTML"
+
+        >
+            <label th:text="#{supplier.label.name}">Name:</label>
+            <input th:placeholder="#{supplier.placeholder.name}" id="sup-name"
+                   type="text" th:field="*{name}" required
+            />
+            <label for="sup-location" th:text="#{supplier.label.location}">Location:</label>
+            <input id="sup-location"
+                   type="text" th:placeholder="#{supplier.placeholder.location}"
+                   th:field="*{location}"
+            />
+            <label for="sup-phone" th:text="#{supplier.label.phone}">Phone Number:</label>
+            <input id="sup-phone" type="text"
+                   th:field="*{phoneNumber}"
+            />
+            <label for="land" th:text="#{supplier.label.landline}">landline:</label>
+            <input id="land" type="text" th:field="*{landline}"  />
+            <button type="submit" th:text="#{supplier.btn.save}">Save Supplier</button>
+        </form>
+        <form method="dialog">
+            <button class="secondary" th:text="#{supplier.btn.close}">Close</button>
+        </form>
+    </article>
+</dialog>
+</body>
+</html>

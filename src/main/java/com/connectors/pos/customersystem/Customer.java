@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,6 +15,7 @@ import java.util.Set;
 @Builder
 @Entity
 @Table(name="customer")
+@SQLRestriction("is_active = true")
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +38,9 @@ public class Customer {
     @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL,orphanRemoval = true)
    @Builder.Default
     private Set<CustomerPhone> customerPhones= new HashSet<>();
-
+    @Column(name="is_active")
+    @Builder.Default
+    private boolean isActive=true  ;
 
     public void addCustomerPhone(CustomerPhone customerPhone){
 

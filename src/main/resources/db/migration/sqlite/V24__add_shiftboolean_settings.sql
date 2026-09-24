@@ -1,0 +1,1 @@
+ALTER TABLE settings ADD COLUMN shift_management INTEGER NOT NULL DEFAULT 1;

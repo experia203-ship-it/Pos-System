@@ -1,0 +1,72 @@
+<div id="summary-result" th:fragment="summary-result" th:object="${summary}">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <strong th:text="#{summary.label.name}">Name:</strong>
+        <input type="text" th:value="*{name}" class="plaintext-input" readonly />
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <strong th:text="#{summary.label.startDate}">startDate:</strong>
+        <input type="text" th:value="*{#temporals.format(startDt,'yyyy-MM-dd')}" class="plaintext-input" readonly />
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <strong th:text="#{summary.label.endDate}">endDate:</strong>
+        <input type="text" th:value="*{#temporals.format(endDt,'yyyy-MM-dd')}" class="plaintext-input" readonly />
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <strong th:text="#{summary.label.total}">total:</strong>
+        <input type="text" th:value="*{total}" class="plaintext-input" readonly />
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <strong th:text="#{summary.label.paid}">paid:</strong>
+        <input type="text" th:value="*{paid}" class="plaintext-input" readonly />
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <strong th:text="#{summary.label.remaining}">remaining:</strong>
+        <input type="text" th:value="*{remaining}" class="plaintext-input" readonly />
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <strong th:text="#{summary.label.allOrders}">all Orders:</strong>
+        <table th:if="*{orders.hasContent()}" >
+            <thead>
+            <tr>
+                <th th:text="#{summary.order.number}">number</th>
+                <th th:text="#{summary.order.total}">total</th>
+                <th th:text="#{summary.order.paid}">paid</th>
+                <th th:text="#{summary.order.remaining}">remaining</th>
+                <th th:text="#{summary.order.createdAt}">createdAt</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="order : *{orders.content}">
+                <td th:text="${order.orderNumber}"></td>
+                <td th:text="${order.total}"></td>
+                <td th:text="${order.paid}"></td>
+                <td th:text="${order.remaining}"></td>
+                <td th:text="${order.createdAt}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="display: flex; gap: 15px; margin-top: 20px;">
+        <!-- Previous Button -->
+        <button th:if="*{orders.hasPrevious()}"
+                th:hx-get="@{/pos/CustomerOrderSummary/{id}(id=${customerId}, dateRange=${param.dateRange}, page=*{orders.number - 1})}"
+                hx-target="#summary-result"
+                hx-swap="outerHTML"
+                th:text="#{summary.btn.previousPage}">
+            Previous Page
+        </button>
+
+        <!-- Next Button -->
+        <button th:if="*{orders.hasNext()}"
+                th:hx-get="@{/pos/CustomerOrderSummary/{id}(id=${customerId}, dateRange=${param.dateRange}, page=*{orders.number + 1})}"
+                hx-target="#summary-result"
+                hx-swap="outerHTML"
+                th:text="#{summary.btn.nextPage}">
+            Next Page
+        </button>
+    </div>
+</div>

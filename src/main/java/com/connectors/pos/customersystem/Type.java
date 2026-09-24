@@ -1,4 +1,4 @@
-package com.connectors.pos.ordersystem;
+package com.connectors.pos.customersystem;
 
 public enum Type {
     MOBILE_PHONE,

@@ -1,5 +1,6 @@
 package com.connectors.pos.ordersystem;
 
+import com.connectors.pos.shift.ShiftSession;
 import com.connectors.pos.customersystem.Customer;
 import com.connectors.pos.users.Users;
 import jakarta.persistence.*;
@@ -52,7 +53,7 @@ columnDefinition = "numeric(10,2) not null default 0.00")
     private Users user;
 
 @ManyToOne(fetch=FetchType.LAZY)
-@JoinColumn(name="customer_id",nullable = false)
+@JoinColumn(name="customer_id")
    private Customer customer;
 @Builder.Default
 @OneToMany(mappedBy = "order",cascade = CascadeType.ALL,orphanRemoval = true)
@@ -69,6 +70,9 @@ private BigDecimal remaining;
 @Size(max=20)
 private String orderNumber;
 
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name="shift_id")
+private ShiftSession shiftSession;
 
 public void addOrderItem(OrderItem orderItem){
 

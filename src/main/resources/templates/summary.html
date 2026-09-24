@@ -1,0 +1,54 @@
+<div>
+    <h2 th:text="#{stats.title}">Statistics</h2>
+
+    <form   hx-get="/pos/CustomerOrderSummary"
+            hx-target="#stat-res"
+            hx-swap="innerHTML"
+
+    >
+        <div>
+            <label for="time-range" th:text="#{stats.timeframe.label}">Select timeframe:</label>
+            <input id="time-range"
+                   type="text"
+                   name="dateRange"
+                   th:placeholder="#{stats.timeframe.placeholder}"
+                   readonly>
+        </div>
+
+    </form>
+
+</div>
+
+<div style="margin-top: 15px;">
+
+    <label for="customer" th:text="#{stats.customer.label}">search for customer name:</label>
+    <input id="customer" type="text" name="name" th:value="${param.name}" hx-get="/customers/search2" hx-target="#cust-res" hx-trigger="keyup changed delay 300ms" th:placeholder="#{stats.customer.placeholder}"  />
+
+</div>
+
+<div id="cust-res">
+
+
+</div>
+
+<div id="stat-res" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;" th:text="#{stats.select.dates}">
+    Select dates to view stats
+</div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    (function () {
+        flatpickr("#time-range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            showMonths: 2,
+            allowInput: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                document.getElementById('time-range').dispatchEvent(new Event('change',{bubbles:true}));
+            }
+        });
+    })();
+</script>

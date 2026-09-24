@@ -1,0 +1,25 @@
+<table id="table-customers2" th:fragment="customers2">
+    <thead>
+    <tr>
+        <th th:text="#{customers.table.name}">name</th>
+        <th th:text="#{customers.table.location}">location</th>
+        <th th:text="#{customers.table.shippingCompany}">shipping-company</th>
+        <th th:text="#{customers.table.mobileNumber}">mobile-number</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="cust : ${custs.content}" class="clickable-row" th:hx-get="@{/pos/CustomerOrderSummary/{id}(id=${cust.id})}"
+        hx-include="#time-range"
+        hx-target="#stat-res"
+        hx-swap="innerHTML"
+        tabindex="0"
+    >
+        <td th:text="${cust.name}"></td>
+        <td th:text="${cust.location}"></td>
+        <td th:text="${cust.shippingCompany}"></td>
+        <td th:text="${cust.phoneNumber}"></td>
+        <td></td>
+
+    </tr>
+    </tbody>
+</table>

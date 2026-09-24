@@ -9,6 +9,7 @@ import java.util.List;
 , nullValueIterableMappingStrategy = NullValueMappingStrategy.RETURN_DEFAULT)
 public interface OrderMapper {
 
+     @Mapping(target = "shiftSession", ignore = true)
      @Mapping(target = "orderNumber", ignore = true)
      @Mapping(target = "userName", ignore = true)
      @Mapping(target = "user", ignore = true)

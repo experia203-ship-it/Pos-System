@@ -9,6 +9,7 @@ int quantity,
 BigDecimal subDiscount,
 BigDecimal sellingPrice,
 BigDecimal subTotal,
+String barcode,
 String customName,
 BigDecimal customSellingPrice,
 BigDecimal customPurchasePrice

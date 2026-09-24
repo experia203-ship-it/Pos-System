@@ -54,7 +54,7 @@ columnDefinition = "numeric(5,2) not null default 0.00")
     private Order order;
 
 @ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name="product_id",nullable = false)
+@JoinColumn(name="product_id")
     private Products product;
 
 

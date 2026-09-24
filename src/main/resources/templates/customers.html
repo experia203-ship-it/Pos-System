@@ -1,0 +1,104 @@
+<div>
+
+    <h2 th:text="#{customers.title}">customers</h2>
+
+    <div id="search-bar">
+
+        <label for="customer-search" th:text="#{customers.search.label}">search for customers</label>
+        <input id="customer-search" name="keyword" th:placeholder="#{customers.search.placeholder}" type="text" hx-get="/customers/part-search"
+               hx-target="#table-customers"
+               hx-swap="innerHTML"
+               hx-trigger="keyup changed delay:500ms"
+        />
+        <button hx-get="customers/create2"
+                hx-target="#modal-container-cust2"
+                hx-swap="innerHTML"
+                th:text="#{customers.btn.create}"
+        >create</button>
+    </div>
+    <h3 th:text="#{customers.viewAll}">view all customers</h3>
+    <!-- We moved the id and fragment to a wrapper div so HTMX can swap the table AND the page numbers together -->
+    <div id="table-customers" th:fragment="customers">
+        <table>
+            <thead>
+            <tr>
+                <th th:text="#{customers.table.name}">name</th>
+                <th th:text="#{customers.table.location}">location</th>
+                <th th:text="#{customers.table.shippingCompany}">shipping-company</th>
+                <th th:text="#{customers.table.mobileNumber}">mobile-number</th>
+                <th></th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="cust : ${custs.content}">
+                <td th:text="${cust.name}"></td>
+                <td th:text="${cust.location}"></td>
+                <td th:text="${cust.shippingCompany}"></td>
+                <td th:text="${cust.phoneNumber}"></td>
+                <td>
+                    <button type="button" th:hx-get="@{/customers/update/{id}(id=${cust.id})}"
+                            hx-target="#pop-customer-container"
+                            hx-swap="innerHTML"
+                            th:text="#{btn.update}">
+                        update
+                    </button>
+                </td>
+                <td>
+                    <button type="button" th:hx-delete="@{/customers/{id}(id=${cust.id})}"
+                            hx-target="#table-customers"
+                            hx-swap="innerHTML"
+                            th:hx-confirm="#{customers.confirm.delete(${cust.name})}"
+                            th:text="#{btn.delete}">
+                        delete
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination & View Numbers -->
+        <div th:if="${custs.totalElements > 0}" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 10px 0;">
+
+            <!-- View Numbers -->
+            <div style="font-size: 0.9em; color: #64748b;"
+                 th:text="#{pagination.showing(${custs.totalElements > 0 ? (custs.number * custs.size + 1) : 0}, ${custs.number * custs.size + custs.numberOfElements}, ${custs.totalElements})}">
+                Showing 1 to 10 of 20 entries
+            </div>
+
+            <!-- Page Controllers -->
+            <nav style="display: flex; align-items: center; gap: 10px;">
+                <button th:if="${custs.hasPrevious()}"
+                        th:hx-get="@{/customers(page=${custs.number-1}, keyword=${param.keyword})}"
+                        hx-target="#table-customers"
+                        hx-swap="outerHTML"
+                        hx-push-url="true"
+                        class="secondary small"
+                        th:text="#{pagination.previous}">
+                    previous
+                </button>
+
+                <span style="font-size: 0.9em; font-weight: 500;"
+                      th:text="#{pagination.page(${custs.number+1}, ${custs.totalPages == 0 ? 1 : custs.totalPages})}">
+                    page 1 of 1
+                </span>
+
+                <button th:if="${custs.hasNext()}"
+                        th:hx-get="@{/customers(page=${custs.number+1}, keyword=${param.keyword})}"
+                        hx-target="#table-customers"
+                        hx-swap="outerHTML"
+                        hx-push-url="true"
+                        class="secondary small"
+                        th:text="#{pagination.next}">
+                    next
+                </button>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div id="pop-customer-container">
+
+</div>
+<!-- Customer Modal Container -->
+<div id="modal-container-cust2" hx-on:close-modal="this.innerHTML=''"></div>

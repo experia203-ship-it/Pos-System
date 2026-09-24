@@ -1,40 +1,155 @@
-<div class="pos-layout">
+<div th:fragment="main-window">
+    <div class="pos-layout">
 
-    <!-- 1. Order Search Input -->
-    <div class="zone" id="orderSearch">
-        <h4>Search for an Order</h4>
-        <label for="orderSearchIn">Search for an order</label>
-        <input id="orderSearchIn" hx-get="/pos/search" th:value="${param.orderNum}" name="orderNum" type="text" hx-target="#orderSearchArea" hx-trigger="keyup changed delay:500ms" placeholder="Type order number....." >
+        <!-- 1. Shift Management Widget -->
+        <th:block  th:if="${allow_shift}">
+        <div  class="zone" id="shift-widget" th:fragment="shift-widget">
+            <th:block th:if="${activeShift == null}">
+                <form hx-post="/shift/open" hx-target="#shift-widget" hx-swap="outerHTML" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 0.5rem;" th:text="#{pos.shift.open}"></h4>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" inputmode="decimal" name="startingFloat" required>
+                        <button type="submit" style="margin-bottom: 5%; height: 50px; white-space: nowrap;" th:text="#{pos.shift.btn.open}"></button>
+                    </div>
+                </form>
+            </th:block>
+
+            <th:block th:if="${activeShift != null}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h4 style="margin: 0;" th:text="#{pos.shift.active}"></h4>
+                    <span style="color: green; font-weight: bold;"><span th:text="#{pos.shift.id}"></span> <span th:text="${activeShift.id}"></span></span>
+                </div>
+                <form hx-post="/shift/event" hx-target="#shift-widget" hx-swap="outerHTML">
+                    <div style="display: flex; gap: 5px; margin-bottom: 5px; align-items: center;">
+                        <select name="eventType" required style="margin-bottom: 0; flex: 1; height: 80px;">
+                            <option value="PAY_OUT" th:text="#{pos.shift.payout}"></option>
+                            <option value="PAY_IN" th:text="#{pos.shift.payin}"></option>
+                        </select>
+                        <input type="number" inputmode="decimal" name="amount" required th:placeholder="#{pos.shift.amount.placeholder}" autocomplete="off"
+                               style="margin-bottom: 0; flex: 1; height: 42px;" oninput="this.value = this.value.replace(/,/g, '.');">
+                    </div>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <input type="text" name="reason" required style="margin-bottom: 0; flex: 2; height: 42px;">
+                        <button type="submit" class="secondary" style="margin-bottom: 0; flex: 1; height: 42px;" th:text="#{pos.shift.btn.save}"></button>
+                    </div>
+                </form>
+                <form hx-post="/shift/close" hx-target="#shift-widget" hx-swap="outerHTML" style="margin-bottom: 0; margin-top: 5px;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" name="actualCount" required/>
+                        <button type="submit" style="margin-bottom: 0; height: 42px; background-color: #d9534f; border-color: #d43f3a; white-space: nowrap;" th:text="#{pos.shift.btn.close}"></button>
+                    </div>
+                </form>
+            </th:block>
+        </div>
+        </th:block>
+
+        <!-- 2. Product Search Input -->
+        <div class="zone" id="searchbar">
+            <div class="toggle-container" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-weight: bold; color: var(--pico-color);" th:text="#{pos.mode.name}"></span>
+                <span style="font-weight: bold; color: var(--pico-color);" th:text="#{pos.mode.sales}"></span>
+                <input id="mode" th:checked="${mode =='purchase'}" hx-trigger="change" type="checkbox" class="hidden-checkbox"
+                       th:hx-get="${mode=='sales' ? '/pos/purchase' : '/pos/sales'}" hx-target="#main-window" hx-swap="innerHTML">
+                <label for="mode" class="toggle-label"></label>
+                <span style="font-weight: bold; color: var(--pico-color);" th:text="#{pos.mode.purchases}"></span>
+            </div>
+
+            <h2 th:text="#{pos.order.create}"></h2>
+            <button type="button" id="custom-item" th:hx-post="${mode == 'sales' ? '/pos/custom' : '/purchase/custom'}" hx-include="#active-cart-form, #disc, #paid, #customerInfo ,#remaining ,#supplierInfo" hx-target="#cart-zone" th:text="#{pos.bttn.custom}"></button>
+            <label for="search-bar" th:text="#{pos.search.items}"></label>
+
+            <div class="search-wrapper">
+                <input id="search-bar" th:value="${param.keyword}" name="keyword" type="text" th:hx-get="|/products/search-pos?mode=${mode}|" hx-target="#search-results-area" hx-swap="innerHTML" hx-trigger="keyup changed delay:500ms" th:placeholder="#{pos.products.search.placeholder}">
+                <div id="search-results-area" class="dropdown-results"></div>
+            </div>
+        </div>
+
+        <!-- 3. Order Search Input -->
+        <div class="zone" id="orderSearch">
+            <h4 th:text="#{pos.order.numsearch}"></h4>
+            <div class="search-wrapper">
+                <input id="orderSearchIn" name="orderNum" type="text" th:value="${param.orderNum}" hx-get="/pos/search" hx-target="#orderSearchByNumberResults" hx-swap="innerHTML" hx-trigger="keyup changed delay:500ms" th:placeholder="#{pos.search.number.placeholder}">
+                <div id="orderSearchByNumberResults" class="dropdown-results"></div>
+            </div>
+
+            <div style="height: 10px;"></div>
+
+            <h4 th:text="#{pos.order.namesearch}"></h4>
+            <div class="search-wrapper">
+                <input id="ordersearchcustomer" name="custName" type="text" th:value="${param.custName}" hx-get="/pos/customer" hx-target="#orderSearchByNameResults" hx-swap="innerHTML" hx-trigger="keyup changed delay:500ms" th:placeholder="#{pos.search.name.placeholder}">
+                <div id="orderSearchByNameResults" class="dropdown-results"></div>
+            </div>
+        </div>
+
+        <!-- 4. The Cart (Right Side) -->
+        <div class="zone" id="cart-zone"></div>
+
     </div>
 
-    <!-- 2. Order Search Results -->
-    <div class="zone" id="orderSearchArea"></div>
+    <!-- Customer Modal Container -->
+    <div id="modal-container-cust" hx-on:close-modal="this.innerHTML=''"></div>
 
-    <!-- 3. Product Search Input -->
-    <div class="zone" id="searchbar">
-        <h2>Create an order</h2>
-        <label for="search-bar">Search for items to add</label>
-        <input id="search-bar" th:value="${param.keyword}" name="keyword" type="text" hx-get="/products/search-pos" hx-target="#search-results-area" hx-swap="innerHTML" hx-trigger="keyup changed delay:500ms" placeholder="Type product name.....">
-    </div>
-
-    <!-- 4. Product Search Results -->
-    <div class="zone" id="search-results-area"></div>
-
-    <!-- 5. The Cart (Right Side) -->
-    <div class="zone" id="cart-zone"></div>
-
-</div>
-
-<!-- Customer Modal Container -->
-<div id="modal-container-cust" hx-on:close-modal="this.innerHTML=''"></div>
-
-<!-- Print Listener -->
-<script>
-    if (!window.printListenerAdded) {
-        document.body.addEventListener("orderCompleted", function(evt) {
-            const orderId = evt.detail.orderId;
-            window.open('/pos/print/' + orderId, '_blank', 'width=800,height=600');
+    <!-- POS Specific Scripts (Note the th:inline="javascript") -->
+    <script th:inline="javascript">
+        // Automatically clear and close dropdowns when an item is clicked
+        document.body.addEventListener('click', function(event) {
+            const clickableRow = event.target.closest('.clickable-row');
+            if (clickableRow) {
+                const resultsArea = clickableRow.closest('#search-results-area');
+                if (resultsArea) {
+                    resultsArea.innerHTML = '';
+                    const searchInput = document.getElementById('search-bar');
+                    if (searchInput) {
+                        searchInput.value = '';
+                        setTimeout(() => {
+                            searchInput.focus();
+                        }, 50);
+                    }
+                }
+            }
         });
-        window.printListenerAdded = true;
-    }
-</script>
+
+        // Close ANY open dropdown when clicking outside of its search wrapper
+        document.addEventListener('click', function(event) {
+            const searchWrappers = document.querySelectorAll('.search-wrapper');
+
+            searchWrappers.forEach(function(wrapper) {
+                const dropdown = wrapper.querySelector('.dropdown-results');
+                if (dropdown && !wrapper.contains(event.target)) {
+                    dropdown.innerHTML = '';
+                }
+            });
+        });
+
+        if (!window.printListenerAdded) {
+            document.body.addEventListener("orderCompleted", function(evt) {
+                const orderId = evt.detail.orderId;
+                window.open('/pos/print/' + orderId, '_blank', 'width=800,height=600');
+            });
+            window.printListenerAdded = true;
+        }
+
+        window.addEventListener("beforeunload", function (e) {
+            const hasCartItems = document.querySelector('input[name*="quantity"]') != null;
+            if (hasCartItems) {
+                e.preventDefault();
+                e.returnValue = "";
+            }
+        });
+
+        if (!window.confirmListenerAttached) {
+            document.body.addEventListener('htmx:confirm', function(evt) {
+                if (evt.detail.target.id === 'main-window') {
+                    const hasCartItems = document.querySelector('input[name*="quantity"]') != null;
+                    if (hasCartItems) {
+                        // Using Thymeleaf variable for JS Alert
+                        if (!confirm([[#{pos.alert.leave}]])) {
+                            evt.preventDefault();
+                        }
+                    }
+                }
+            });
+            window.confirmListenerAttached = true;
+        }
+    </script>
+</div>

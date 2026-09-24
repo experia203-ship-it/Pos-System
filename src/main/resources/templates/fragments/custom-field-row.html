@@ -1,0 +1,18 @@
+<div class="custom-field-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+
+    <input type="text"
+           th:placeholder="#{products.customfield.name.placeholder}"
+           class="field-key"
+           onchange="this.nextElementSibling.name='customFields['+ this.value+']'"
+           required />
+
+    <input type="text"
+           th:placeholder="#{products.customfield.value.placeholder}"
+           required />
+
+    <button type="button"
+            onclick="this.parentElement.remove()"
+            th:text="#{products.customfield.btn.remove}">
+    </button>
+
+</div>

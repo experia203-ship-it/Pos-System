@@ -5,11 +5,16 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -36,6 +41,9 @@ public class Products {
     @Size(max=50)
     @Column(name="part_number",length = 50,nullable = false,unique = true)
     private String partNumber;
+    @Size(max = 50)
+    @Column(name="barcode",length=50,unique=true)
+    private String barcode;
     @NotNull
     @Size(max=255)
     @Column(name="description",nullable = false,length=255)
@@ -50,7 +58,8 @@ public class Products {
 @Builder.Default
 @Column(name="stock",columnDefinition = "bigint default 0")
     private Long stock =0L;
-
+@Column(name="reorder_point",columnDefinition = "bigint default 0")
+private Long reorderPoint = 0L;
 @Column(name="created_at",columnDefinition = "timestamp default current_timestamp",
 insertable = false,updatable = false)
 @Generated
@@ -67,6 +76,10 @@ insertable = false,updatable = false)
 @NotNull
 @Column(name="is_active",nullable = false)
 private boolean active = true;
+@JdbcTypeCode(SqlTypes.JSON)
+@Column(name="custom_fields",columnDefinition = "jsonb")
+@Builder.Default
+private Map<String,Object> customFields= new HashMap<>();
 
 @Override
 public boolean equals(Object o){

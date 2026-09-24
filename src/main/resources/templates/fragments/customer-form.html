@@ -1,39 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
 <body>
 <dialog open th:fragment="customer-pop-up">
-<article>
-    <h2>create new customer</h2>
-    <form id="new-cust-form" th:object="${customerCreate}" hx-post="/customers"
-    hx-target="#customer-fragment" hx-swap="outerHTML"
-          hx-on::after-request="if(event.detail.successful) document.getElementById('modal-container-cust').innerHTML=''"
-    >
-        <label>name:</label>
-        <input placeholder="micheal" id="name"
-        type="text" th:field="*{name}" required
-        />
-        <label for="location">location:</label>
-        <input id="location"
-        type="text" placeholder="cairo , ....."
-        th:field="*{location}"
-        />
-        <label for="shipping">shippingCompany:</label>
-        <input id="shipping" type="text"
-        th:field="*{shippingCompany}"
-        />
+    <article>
+        <h2 th:text="#{customer.modal.title}"></h2>
+        <form id="new-cust-form" th:object="${customerCreate}" hx-post="/customers"
+              hx-target="#customer-fragment" hx-swap="outerHTML"
+              hx-on::after-request="if(event.detail.successful) document.getElementById('modal-container-cust').innerHTML=''">
 
-        <button type="submit"> save customer</button>
-    </form>
-<form method="dialog">
-    <button class="secondary">close</button>
-</form>
-</article>
+            <label th:text="#{customer.modal.name}"></label>
+            <input th:placeholder="#{customer.modal.placeholder.name}" id="name"
+                   type="text" th:field="*{name}" required />
+
+            <label for="location" th:text="#{customer.modal.location}"></label>
+            <input id="location" type="text" th:placeholder="#{customer.modal.placeholder.location}"
+                   th:field="*{location}" />
+
+            <label for="shipping" th:text="#{customer.modal.shipping}"></label>
+            <input id="shipping" type="text" th:field="*{shippingCompany}" />
+
+            <button type="submit" th:text="#{customer.modal.btn.save}"></button>
+        </form>
+        <form method="dialog">
+            <button class="secondary" th:text="#{btn.close}"></button>
+        </form>
+    </article>
 </dialog>
-
-
 </body>
 </html>

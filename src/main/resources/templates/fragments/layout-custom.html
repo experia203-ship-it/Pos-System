@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}"
+      th:dir="${#locale.language == 'ar' ? 'rtl' : 'ltr'}"
+      xmlns:th="http://www.thymeleaf.org"
+      th:data-theme="${#strings.toLowerCase(globalSettings.theme)}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${globalSettings.companyName}"></title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/response-targets.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <style>
+        /* --- BALANCED VERTICAL POS GRID LAYOUT --- */
+        .pos-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto 1fr;
+            grid-template-areas:
+                "shift-widget    shift-widget"
+                "order-search    product-search"
+                "cart            cart";
+            gap: 12px;
+            height: calc(100vh - 85px);
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        #shift-widget    { grid-area: shift-widget; }
+        #orderSearch     { grid-area: order-search; }
+        #searchbar       { grid-area: product-search; }
+        #cart-zone       { grid-area: cart; overflow-y: auto; }
+
+        .zone {
+            border: 1px solid var(--pico-muted-border-color);
+            padding: 10px 14px;
+            border-radius: 6px;
+            background-color: var(--pico-background-color);
+            position: relative;
+        }
+
+        .zone input, .zone select, .zone button {
+            margin-bottom: 0 !important;
+            padding: 8px 12px !important;
+            font-size: 0.95rem !important;
+        }
+
+        /* --- ROBUST DROPDOWN & Z-INDEX FIXES --- */
+        .dropdown-anchor {
+            position: relative;
+            width: 100%;
+        }
+
+        #searchbar, #orderSearch {
+            position: relative;
+            z-index: 10;
+        }
+
+        #searchbar:focus-within,
+        #orderSearch:focus-within {
+            z-index: 9999 !important;
+        }
+
+        #orderSearchArea,
+        #orderNameSearchArea,
+        #search-results-area {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            width: 100%;
+            max-height: 280px;
+            overflow-y: auto;
+            background-color: var(--pico-background-color) !important;
+            border: 1px solid var(--pico-primary);
+            border-radius: 6px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            z-index: 10000;
+        }
+
+        #orderSearchArea:empty,
+        #orderNameSearchArea:empty,
+        #search-results-area:empty {
+            display: none !important;
+            border: none;
+            box-shadow: none;
+        }
+
+        .dropdown-results table {
+            width: 100%;
+            margin-bottom: 0;
+            background-color: var(--pico-background-color) !important;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        .dropdown-results th {
+            position: sticky;
+            top: 0;
+            background-color: var(--pico-background-color) !important;
+            z-index: 2;
+        }
+
+        .dropdown-results th,
+        .dropdown-results td {
+            padding: 8px 6px;
+            text-align: left;
+            vertical-align: middle;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+        }
+        .clickable-row:hover td {
+            background-color: var(--pico-primary-background) !important;
+            color: var(--pico-primary-inverse);
+        }
+
+        /* --- SIDEBAR & TOGGLE SWITCH STYLES --- */
+        #sidebar {
+            transition: width 0.3s ease;
+            overflow-x: hidden;
+        }
+        #sidebar.collapsed {
+            width: 30px !important;
+            padding: 20px 2px !important;
+        }
+        #sidebar.collapsed .hide-on-collapse { display: none; }
+
+        #toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--pico-primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+        #sidebar.collapsed #toggle-btn { justify-content: center; }
+
+        .hidden-checkbox { display: none; }
+        .toggle-label {
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+            background-color: green;
+            border-radius: 26px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .toggle-label::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .hidden-checkbox:checked + .toggle-label { background-color: blue; }
+        .hidden-checkbox:checked + .toggle-label::after { transform: translateX(24px); }
+    </style>
+</head>
+<body style="display: flex; height: 100vh; margin: 0; overflow: hidden;">
+
+<!-- Sidebar -->
+<aside id="sidebar" style="width: 250px; background-color: var(--pico-background-color); color: var(--pico-color); border: 1px solid var(--pico-primary); padding: 20px; flex-shrink: 0; overflow-y: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 class="hide-on-collapse" style="margin: 0; font-size: 1.2rem;" th:text="#{sidebar.name}"></h2>
+        <button id="toggle-btn" th:title="#{sidebar.btn.toggle}">
+            <span id="arrow-icon">◀</span>
+        </button>
+    </div>
+    <div class="hide-on-collapse">
+        <nav>
+            <ul style="list-style: none; padding: 0;">
+                <li><button hx-get="/pos/sales" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.pos}"></button></li>
+                <li><button hx-get="/products" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.inventory}"></button></li>
+                <li><button hx-get="/products/reorder-point" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.products}"></button></li>
+                <li><button hx-get="/pos/summary" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.summary}"></button></li>
+                <li><button hx-get="/statics" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.statics}"></button></li>
+                <li><button hx-get="/customers" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.customers}"></button></li>
+                <li><button hx-get="/suppliers" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.vendors}"></button></li>
+                <li><button hx-get="/settings" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.settings}"></button></li>
+                <li><button hx-post="/auth/logout" hx-target="#main-window" hx-swap="innerHTML" th:text="#{sidebar.botton.logout}"></button></li>
+            </ul>
+        </nav>
+    </div>
+</aside>
+
+<!-- Main Window Shell -->
+<main id="main-window" style="flex-grow: 1; padding: 20px; overflow-y: auto;">
+    <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; user-select: none;">
+        <th:block th:if="${globalSettings.logo != null}">
+            <img th:src="@{/settings/logo}" th:alt="#{layout.logo.alt}" style="max-width: 600px; max-height: 500px; margin-bottom: 1rem; object-fit: contain;" />
+        </th:block>
+        <th:block th:unless="${globalSettings.logo != null}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.1; margin-bottom: 1rem; color: var(--pico-color);">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+            </svg>
+        </th:block>
+        <h1 th:text="${globalSettings.companyName} ?: #{layout.title.fallback}" style="margin-bottom: 0.5rem; color: var(--pico-muted-color);"></h1>
+        <p style="color: var(--pico-muted-color);" th:text="#{layout.message}"></p>
+    </div>
+</main>
+
+<!-- Scripts -->
+<script>
+    document.body.addEventListener('htmx:beforeSwap', function(evt) {
+        if (evt.detail.target.id === 'main-window') {
+            document.querySelectorAll('.flatpickr-calendar').forEach(function(calendar) { calendar.remove(); });
+        }
+    });
+
+    document.body.addEventListener('newItemAdded', function(evt) {
+        const lastRowInput = document.querySelector('#cart-table tbody tr:last-child input[type=number][name*="quantity"]');
+        if (lastRowInput) {
+            lastRowInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setTimeout(() => { lastRowInput.select(); }, 50);
+        }
+    });
+
+    document.getElementById('toggle-btn').addEventListener('click', function() {
+        const sidebar = document.getElementById('sidebar');
+        const arrowIcon = document.getElementById('arrow-icon');
+        sidebar.classList.toggle('collapsed');
+        arrowIcon.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+    });
+
+    // Outside click handlers to clear search boxes/dropdowns
+    document.addEventListener('click', function(event) {
+        const productDropdown = document.getElementById('search-results-area');
+        const productInput = document.getElementById('search-bar');
+
+        const orderDropdown = document.getElementById('orderSearchArea');
+        const orderInput = document.getElementById('orderSearchIn');
+
+        const orderNameDropdown = document.getElementById('orderNameSearchArea');
+        const orderNameInput = document.getElementById('orderNameSearchIn');
+
+        if (productDropdown && productInput && !productDropdown.contains(event.target) && event.target !== productInput) {
+            productDropdown.innerHTML = '';
+            productInput.value = '';
+        }
+        if (orderDropdown && orderInput && !orderDropdown.contains(event.target) && event.target !== orderInput) {
+            orderDropdown.innerHTML = '';
+            orderInput.value = '';
+        }
+        if (orderNameDropdown && orderNameInput && !orderNameDropdown.contains(event.target) && event.target !== orderNameInput) {
+            orderNameDropdown.innerHTML = '';
+            orderNameInput.value = '';
+        }
+    });
+</script>
+</body>
+</html>

@@ -95,6 +95,7 @@ when(prodRepo.findAllByIds(anyList())).thenReturn(new ArrayList<Products>());
                 null,
                 1,
                 BigDecimal.ZERO,
+                   null,
                 "Custom Part",
                 new BigDecimal("160.00"),
                 new BigDecimal("100.00")
@@ -134,7 +135,7 @@ verify(orderRepo).save(any(Order.class));
                 .id(1L).stock(20L).build();
 
 
-        OrderItemCreateDto item = new OrderItemCreateDto(1L,30,new BigDecimal("2.00"),null,null,null);
+        OrderItemCreateDto item = new OrderItemCreateDto(1L,30,new BigDecimal("2.00"),null,null,null,null);
         List<OrderItemCreateDto> items = new ArrayList<>();
         items.add(item);
         OrderCreateDto order = new OrderCreateDto(new BigDecimal("2.00"),1L,items,new BigDecimal("2.00"),new BigDecimal("2.00"),123L);

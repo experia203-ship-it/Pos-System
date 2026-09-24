@@ -1,13 +1,13 @@
 <div hx-ext="response-targets">
-    <h2>All Products Exist</h2>
+    <h2 th:text="#{products.title}"></h2>
 
     <form action="/products/import" method="post" enctype="multipart/form-data">
-        <label for="file">Upload Inventory CSV:</label>
+        <label for="file" th:text="#{products.import.label}"></label>
         <input type="file" id="file" name="file" accept=".csv" required>
-        <button type="submit">import bulk products</button>
+        <button type="submit" th:text="#{products.import.btn}"></button>
     </form>
 
-    <h4>search for a product</h4>
+    <h4 th:text="#{products.search.title}"></h4>
 
     <div id="search-div">
         <label>
@@ -17,29 +17,34 @@
                    hx-trigger="keyup changed delay:500ms"
                    hx-swap="outerHTML"
                    hx-replace-url="true"
-                   placeholder="search for any parts ......">
+                   th:placeholder="#{products.search.placeholder}">
         </label>
     </div>
 
     <div>
-        <button hx-get="/products/create" hx-target="#modal-container" hx-swap="innerHTML">create product</button>
+        <button hx-get="/products/create" hx-target="#modal-container" hx-swap="innerHTML" th:text="#{products.btn.create}"></button>
     </div>
 
     <div id="table-container" th:fragment="table-wrapper">
         <table>
             <thead>
             <tr>
-                <th>id</th>
-                <th>partNumber</th>
-                <th>name</th>
-                <th>description</th>
-                <th>sellingPrice</th>
-                <th>purchasePrice</th>
-                <th>stock</th>
-                <th>category_name</th>
-                <th>created_At</th>
-                <th>updated_At</th>
-                <th>Actions</th>
+                <th th:text="#{products.table.id}"></th>
+                <th th:text="#{products.table.partnumber}"></th>
+                <th th:text="#{products.table.name}"></th>
+                <th th:text="#{products.table.description}"></th>
+                <th th:text="#{products.table.sellingprice}"></th>
+                <th th:text="#{products.table.purchaseprice}"></th>
+                <th th:text="#{products.table.stock}"></th>
+                <th th:text="#{products.table.category}"></th>
+                <th th:text="#{products.table.created}"></th>
+                <th th:text="#{products.table.updated}"></th>
+                <th th:text="#{products.table.barcode}"></th>
+                <th th:text="#{products.table.reorderpoint}"></th>
+                <th th:text="#{products.table.attributes}"></th>
+                <th> </th>
+                <th th:text="#{products.table.actions}"></th>
+                <th> </th>
             </tr>
             </thead>
 
@@ -52,53 +57,90 @@
                 <td th:text="${product.sellingPrice}"></td>
                 <td th:text="${product.purchasePrice}"></td>
                 <td th:text="${product.stock}"></td>
-                <td th:text="${catMap!=null and product.categoryId !=null ?  ( catMap[product.categoryId] ?: 'No Category Assigned') : 'No Category Assigned'}"></td>
+                <td th:text="${catMap != null and product.categoryId != null ? (catMap[product.categoryId] ?: #messages.msg('products.category.none')) : #messages.msg('products.category.none')}"></td>
                 <td th:text="${product.createdAt}"></td>
                 <td th:text="${product.updatedAt}"></td>
+                <td th:text="${product.barcode != null and !product.barcode.empty ? product.barcode : #messages.msg('products.barcode.none')}"></td>
+                <td th:text="${product.reorderPoint}" > </td>
+                <td>
+                    <div th:if="${product.customFields != null and !product.customFields.isEmpty()}"
+                         style="display: flex; flex-wrap: wrap; gap: 5px;">
+
+                        <span th:each="entry : ${product.customFields}"
+                              style="background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; white-space: nowrap; border: 1px solid #cbd5e1;">
+                            <strong th:text="${entry.key} + ':'"></strong>
+                            <span th:text="${entry.value}"></span>
+                        </span>
+
+                    </div>
+
+                    <span th:if="${product.customFields == null or product.customFields.isEmpty()}"
+                          style="color: #94a3b8; font-size: 0.85em;">
+                      _
+                    </span>
+                </td>
                 <td>
                     <button th:hx-delete="@{/products/{id}(id=${product.id})}"
                             hx-target="closest tr"
                             hx-swap="outerHTML swap:1s"
-                            th:hx-confirm="'are you sure to delete ' + ${product.name} + ' for ever ?!!'">
-                        delete🗑️
+                            th:hx-confirm="${#messages.msg('products.alert.delete', product.name)}"
+                            th:text="#{products.btn.delete}">
                     </button>
                 </td>
                 <td>
                     <button th:hx-get="@{/products/{id}(id=${product.id})}"
                             hx-target="#modal-container"
-                            hx-swap="innerHTML">
-                        update
+                            hx-swap="innerHTML"
+                            th:text="#{products.btn.update}">
                     </button>
+                </td>
+                <td>
+                    <button th:onclick="|window.open('/products/print-label/${product.id}' , 'printwindow','width=400,height=400')|" th:text="#{products.btn.print.barcode}"></button>
                 </td>
             </tr>
             </tbody>
         </table>
 
-        <nav style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
-            <button th:if="${allProducts.hasPrevious()}"
-                    th:hx-get="@{/products(page=${allProducts.number-1})}"
-                    hx-target="#table-container"
-                    hx-swap="outerHTML"
-                    hx-push-url="true"
-                    class="secondary small">
-                previous
-            </button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 10px 0;">
 
-            <span>page [[${allProducts.number+1}]] of [[${allProducts.totalPages}]]</span>
+            <!-- View Numbers -->
+            <div style="font-size: 0.9em; color: #64748b;">
+                <span th:text="#{pagination.showing}"></span>
+                <span th:text="${allProducts.totalElements > 0 ? (allProducts.number * allProducts.size + 1) : 0}"></span>
+                <span th:text="#{pagination.to}"></span>
+                <span th:text="${allProducts.number * allProducts.size + allProducts.numberOfElements}"></span>
+                <span th:text="#{pagination.of}"></span>
+                <strong th:text="${allProducts.totalElements}"></strong> <span th:text="#{pagination.entries}"></span>
+            </div>
 
-            <button th:if="${allProducts.hasNext()}"
-                    th:hx-get="@{/products(page=${allProducts.number+1})}"
-                    hx-target="#table-container"
-                    hx-swap="outerHTML"
-                    hx-push-url="true"
-                    class="secondary small">
-                next
-            </button>
-        </nav>
+            <!-- Page Controllers -->
+            <nav style="display: flex; align-items: center; gap: 10px;">
+                <button th:if="${allProducts.hasPrevious()}"
+                        th:hx-get="@{/products/search(page=${allProducts.number-1}, keyword=${param.keyword})}"
+                        hx-target="#table-container"
+                        hx-swap="outerHTML"
+                        hx-push-url="true"
+                        class="secondary small"
+                        th:text="#{pagination.previous}">
+                </button>
+
+                <span style="font-size: 0.9em; font-weight: 500;">
+                    <span th:text="#{pagination.page}"></span> [[${allProducts.number+1}]] <span th:text="#{pagination.of}"></span> [[${allProducts.totalPages == 0 ? 1 : allProducts.totalPages}]]
+                </span>
+
+                <button th:if="${allProducts.hasNext()}"
+                        th:hx-get="@{/products/search(page=${allProducts.number+1}, keyword=${param.keyword})}"
+                        hx-target="#table-container"
+                        hx-swap="outerHTML"
+                        hx-push-url="true"
+                        class="secondary small"
+                        th:text="#{pagination.next}">
+                </button>
+            </nav>
+        </div>
     </div>
 
     <div id="modal-container" hx-on:close-modal="this.innerHTML=''"></div>
     <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px;"></div>
 
 </div>
-

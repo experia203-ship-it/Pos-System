@@ -1,10 +1,30 @@
-HELP.md
+# --- Build Outputs ---
 target/
-.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# --- Database Files (Crucial for SQLite) ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Binaries & Installers ---
+*.jar
+*.war
+*.ear
+*.exe
+*.zip
+
+# --- Logs & OS Files ---
+*.log
+.DS_Store
+Thumbs.db
+
+# --- Help Files ---
+HELP.md
+
+# --- Eclipse / Spring Tool Suite (STS) ---
 .apt_generated
 .classpath
 .factorypath
@@ -13,13 +33,13 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
+# --- IntelliJ IDEA ---
 .idea
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# --- NetBeans ---
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,5 +49,5 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+# --- VS Code ---
 .vscode/

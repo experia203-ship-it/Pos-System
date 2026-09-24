@@ -42,7 +42,7 @@ public SecurityFilterChain filterChain(HttpSecurity http){
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(cust->cust.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .formLogin(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth->auth.requestMatchers("/auth/**" ,"/pos/print/**").permitAll()
+            .authorizeHttpRequests(auth->auth.requestMatchers("/auth/**" ,"/pos/print/**","/error").permitAll()
                     .anyRequest().authenticated())
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .build();

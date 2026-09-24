@@ -1,56 +1,38 @@
 <!DOCTYPE html>
-
-<html xmlns:th="http://www.thymeleaf.org"  lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="utf-8">
-<title>pos system -registration</title>
-<script src="https://unpkg.com/htmx.org@1.9.10"> </script>
+    <title th:text="#{register.title}">pos system -registration</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
-
-
-
 </head>
 <body>
 
-<h2>Register a new Cashier</h2>
+<h2 th:text="#{register.heading}">Register a new Cashier</h2>
 
 <form hx-post="/auth/register" hx-target="#form-message" hx-swap="innerHTML"
-th:object="${userForm}">
-<div>
-<label>Name:
-        <input type="text" th:field="*{name}" required>
-    </label>
-</div>
+      th:object="${userForm}">
     <div>
-        <label>Email:
+        <label>
+            <span th:text="#{register.label.name}">Name:</span>
+            <input type="text" th:field="*{name}" required>
+        </label>
+    </div>
+    <div>
+        <label>
+            <span th:text="#{register.label.email}">Email:</span>
             <input type="email" th:field="*{email}" required>
         </label>
     </div>
     <div>
-        <label>Password:
+        <label>
+            <span th:text="#{register.label.password}">Password:</span>
             <input type="password" th:field="*{password}" required>
         </label>
     </div>
-    <button type="submit" >Create Account</button>
+    <button type="submit" th:text="#{register.btn.submit}">Create Account</button>
 </form>
 <div id="form-message" style="color:red;"></div>
 
-
-
-
-
-
 </body>
-
-
-
-
-
-
-
-
-
-
-
 </html>
-

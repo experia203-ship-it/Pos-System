@@ -3,153 +3,167 @@
 
 <body>
 
-<div th:fragment="auth-error" class="error-banner" style="color: red; font-weight: bold;">
-
-    ❌ Registration Failed: <span th:text="${errorMessage}">Default Error Text</span>
-
+<div th:fragment="auth-error" class="error-banner" style="color: red; font-weight: bold;" th:text="|#{auth.error.prefix} ${errorMessage}|">
 </div>
 
 <div th:fragment="empty"></div>
 
 
-<dialog open  th:fragment="pop-up">
-<article>
-    <h2>add a new product</h2>
-    <form id="form1" th:object="${createDto}"  hx-post="/products" hx-target="#tbody" hx-swap="outerHTML"  hx-target-400="#form-error-catcher"
-     hx-swap-400="innerHTML"  hx-target-406="#form-error-catcher" hx-swap-406="innerHTML" >
-        <label for="name"> name: </label>
-            <input placeholder="Ngk 21" id="name" type="text" th:field="*{name}" required
-            th:attr="aria-invalid=${#fields.hasErrors('name') ? 'true' :'false'}"/>
-        <p th:if="${#fields.hasErrors('name')}"
-        th:errors="*{name}"></p>
-       <label for="partNumber">partNumber:</label>
-        <input placeholder="2756" id="partNumber" type="text" th:field="*{partNumber}"  required
-               th:attr="aria-invalid=${#fields.hasErrors('partNumber') ? 'true' :'false'}"/>
-        <p th:if="${#fields.hasErrors('partNumber')}"
-           th:errors="*{partNumber}"></p>
-        <label for="description">description:</label>
-        <input placeholder="spark plugs" id="description" type="text" th:field="*{description}" required
-               th:attr="aria-invalid=${#fields.hasErrors('description') ? 'true' :'false'}"/>
-        <p th:if="${#fields.hasErrors('description')}"
-           th:errors="*{description}"></p>
-        <label for="sellingPrice">Selling price:</label>
-        <input placeholder="276.00" id="sellingPrice" type="text" th:field="*{sellingPrice}" required
-        th:attr="aria-invalid=${#fields.hasErrors('sellingPrice') ? 'true' :'false'}" />
-        <p th:if="${#fields.hasErrors('sellingPrice')}"
-        th:errors="*{sellingPrice}" >
+<dialog open th:fragment="pop-up">
+    <article>
+        <h2 th:text="#{products.modal.title.add}"></h2>
+        <form id="form1" th:object="${createDto}" hx-post="/products" hx-target="#tbody" hx-swap="outerHTML" hx-target-400="#form-error-catcher"
+              hx-swap-400="innerHTML" hx-target-406="#form-error-catcher" hx-swap-406="innerHTML">
 
-        </p>
-        <label for="purchasePrice">purchase Price:</label>
-        <input placeholder="265.00" id="purchasePrice" type="text" th:field="*{purchasePrice}" required
-               th:attr="aria-invalid=${#fields.hasErrors('purchasePrice') ? 'true' :'false'}"/>
-        <p th:if="${#fields.hasErrors('purchasePrice')}"
-           th:errors="*{purchasePrice}"></p>
-      <label for="stock">stock:</label>
-        <input placeholder="2000" id="stock" type="text" th:field="*{stock}" required
-               th:attr="aria-invalid=${#fields.hasErrors('stock') ? 'true' :'false'}"/>
-        <p th:if="${#fields.hasErrors('stock')}"
-           th:errors="*{stock}"></p>
-        <div id="category-wrapper">
-    <label   for="category-list">category:</label>
-        <select id="category-list"  name="categoryId"  >
-      <option value="" disabled selected>select a category .....</option>
+            <label for="name" th:text="#{products.modal.label.name}"></label>
+            <input th:placeholder="#{products.modal.placeholder.name}" id="name" type="text" th:field="*{name}" required
+                   th:attr="aria-invalid=${#fields.hasErrors('name') ? 'true' :'false'}"/>
+            <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
 
-      <option th:each="cat :${categories}"
-              th:value="${cat.id}"
-              th:text="${cat.name}"
-      > category name</option>
+            <label for="partNumber" th:text="#{products.modal.label.partnumber}"></label>
+            <input th:placeholder="#{products.modal.placeholder.partnumber}" id="partNumber" type="text" th:field="*{partNumber}" required
+                   th:attr="aria-invalid=${#fields.hasErrors('partNumber') ? 'true' :'false'}"/>
+            <p th:if="${#fields.hasErrors('partNumber')}" th:errors="*{partNumber}"></p>
 
-        </select>
+            <label for="description" th:text="#{products.modal.label.description}"></label>
+            <input th:placeholder="#{products.modal.placeholder.description}" id="description" type="text" th:field="*{description}" required
+                   th:attr="aria-invalid=${#fields.hasErrors('description') ? 'true' :'false'}"/>
+            <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></p>
+
+            <label for="sellingPrice" th:text="#{products.modal.label.sellingprice}"></label>
+            <input th:placeholder="#{products.modal.placeholder.sellingprice}" id="sellingPrice" type="text" th:field="*{sellingPrice}" required
+                   th:attr="aria-invalid=${#fields.hasErrors('sellingPrice') ? 'true' :'false'}" />
+            <p th:if="${#fields.hasErrors('sellingPrice')}" th:errors="*{sellingPrice}"></p>
+
+            <label for="purchasePrice" th:text="#{products.modal.label.purchaseprice}"></label>
+            <input th:placeholder="#{products.modal.placeholder.purchaseprice}" id="purchasePrice" type="text" th:field="*{purchasePrice}" required
+                   th:attr="aria-invalid=${#fields.hasErrors('purchasePrice') ? 'true' :'false'}"/>
+            <p th:if="${#fields.hasErrors('purchasePrice')}" th:errors="*{purchasePrice}"></p>
+
+            <label for="stock" th:text="#{products.modal.label.stock}"></label>
+            <input th:placeholder="#{products.modal.placeholder.stock}" id="stock" type="text" th:field="*{stock}" required
+                   th:attr="aria-invalid=${#fields.hasErrors('stock') ? 'true' :'false'}"/>
+            <p th:if="${#fields.hasErrors('stock')}" th:errors="*{stock}"></p>
+
+            <label for="reorderPoint" th:text="#{products.modal.label.reorderpoint}"></label>
+            <input th:placeholder="#{products.modal.placeholder.reorderpoint}" id="reorderPoint" type="text" th:field="*{reorderPoint}" required
+                   th:attr="aria-invalid=${#fields.hasErrors('reorderPoint') ? 'true' :'false'}"/>
+            <p th:if="${#fields.hasErrors('reorderPoint')}" th:errors="*{reorderPoint}"></p>
+
+            <div id="category-wrapper">
+                <label for="category-list" th:text="#{products.modal.label.category}"></label>
+                <select id="category-list" name="categoryId">
+                    <option value="" disabled selected th:text="#{products.modal.option.selectcategory}"></option>
+                    <option th:each="cat :${categories}"
+                            th:value="${cat.id}"
+                            th:text="${cat.name}">
+                    </option>
+                </select>
+                <div>
+                    <label for="barcode" th:text="#{products.modal.label.barcode}"></label>
+                    <input id="barcode" type="text" name="barcode" th:field="*{barcode}" th:placeholder="#{products.modal.placeholder.barcode}" class="form-control barcode-input"
+                           th:attr="aria-invalid=${#fields.hasErrors('barcode') ? 'true' :'false'}"/>
+                    <button type="button"
+                            hx-get="/products/generate-barcode"
+                            hx-target="#barcode"
+                            hx-swap="outerHTML"
+                            th:text="#{products.modal.btn.genbarcode}">
+                    </button>
+                </div>
+            </div>
+
+            <div id="custom-fields-container">
+                <h3 th:text="#{products.modal.title.customfields}"></h3>
+                <div id="custom-fields-list"></div>
+                <button type="button"
+                        hx-get="/products/custom-field-row"
+                        hx-target="#custom-fields-list"
+                        hx-swap="beforeend"
+                        th:text="#{products.modal.btn.addcustomfield}">
+                </button>
+            </div>
+
+            <div id="form-error-catcher"></div>
+            <button type="submit" th:text="#{products.modal.btn.save}"></button>
+
+        </form>
+        <div>
+            <button hx-get="/categories/new" hx-target="#modal-container2" hx-swap="innerHTML" th:text="#{products.modal.btn.createcategory}"></button>
         </div>
+        <div>
+            <form method="dialog">
+                <button class="secondary" th:text="#{btn.close}"></button>
+            </form>
+        </div>
+    </article>
+    <div id="modal-container2" hx-on:close-modal="this.innerHTML=''"></div>
 
-        <div id="form-error-catcher"></div>
-<button type="submit">save product</button>
-
-    </form>
-     <div>
-        <button hx-get="/categories/new" hx-target="#modal-container2" hx-swap="innerHTML">create a new category</button>
-     </div>
-    <div>
-    <form method="dialog">
-<button class="secondary">close</button>
-    </form>
-    </div>
-</article>
-<div id="modal-container2" hx-on:close-modal="this.innerHTML=''"></div>
+    <script>
+        setTimeout(() => {
+            const barcodeInput = document.getElementById('barcode');
+            if (barcodeInput) {
+                barcodeInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('name').focus();
+                    }
+                });
+            }
+        }, 100);
+    </script>
 </dialog>
 
 
-<dialog open th:fragment="pop-up2" >
+<dialog open th:fragment="pop-up2">
     <article>
-        <h2>create new category</h2>
-        <form id="form2" th:object="${categoryDto}" hx-post="/categories" hx-target="#modal-container2"  hx-swap="innerHTML">
-   <label for="categoryName"></label>
-            <input id="categoryName" placeholder="spark plugs" type="text" th:field="*{name}" required/>
+        <h2 th:text="#{category.modal.title.add}"></h2>
+        <form id="form2" th:object="${categoryDto}" hx-post="/categories" hx-target="#modal-container2" hx-swap="innerHTML">
+            <label for="categoryName"></label>
+            <input id="categoryName" th:placeholder="#{category.modal.placeholder.name}" type="text" th:field="*{name}" required/>
 
-<label for="categoryDiscription"></label>
-            <input id="categoryDiscription" placeholder="parts for spark plugs like ngk...."
-            type="text" th:field="*{description}"
-            />
-         <button type="submit" >save category</button>
+            <label for="categoryDiscription"></label>
+            <input id="categoryDiscription" th:placeholder="#{category.modal.placeholder.description}"
+                   type="text" th:field="*{description}"/>
+            <button type="submit" th:text="#{category.modal.btn.save}"></button>
         </form>
 
-<form method="dialog">
-
-    <button class="secondary">close</button>
-</form>
-
+        <form method="dialog">
+            <button class="secondary" th:text="#{btn.close}"></button>
+        </form>
     </article>
-
-
-
 </dialog>
-
-
-
-
-
 
 
 <div th:fragment="category-success">
-    <div id="category-wrapper" hx-swap-oob="true">
-        <label for="category-list">category:</label>
-        <select id="category-list" name="categoryId" required>
-            <option value="" disabled selected>select a category .....</option>
+    <div id="category-wrapper2" hx-swap-oob="true">
+        <label for="category-list" th:text="#{products.modal.label.category}"></label>
+        <select id="category-list2" name="categoryId" required>
+            <option value="" disabled selected th:text="#{products.modal.option.selectcategory}"></option>
             <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
         </select>
     </div>
 
     <div hx-swap-oob="beforeend:#toast-container">
         <article style="border-left: 4px solid green;">
-            <p>Category created successfully!</p>
-            <button class="small secondary" onclick="this.closest('article').remove()">Dismiss</button>
+            <p th:text="#{category.toast.success}"></p>
+            <button class="small secondary" onclick="this.closest('article').remove()" th:text="#{btn.dismiss}"></button>
         </article>
     </div>
 </div>
 
 
-
-    <div hx-swap-oob="beforeend:#toast-container" th:fragment="deletion-success">
-        <article style="border-left: 4px solid red;">
-            <p>product deleted successfully!</p>
-            <button class="small secondary" onclick="this.closest('article').remove()">Dismiss</button>
-        </article>
-
-    </div>
-
-
-
-
+<div hx-swap-oob="beforeend:#toast-container" th:fragment="deletion-success">
+    <article style="border-left: 4px solid red;">
+        <p th:text="#{products.toast.delete.success}"></p>
+        <button class="small secondary" onclick="this.closest('article').remove()" th:text="#{btn.dismiss}"></button>
+    </article>
+</div>
 
 
 <article th:fragment="exceptions-response" style="border-left: 4px solid var(--pico-form-element-invalid-border-color);">
-<p th:text="${errorMessage}"></p>
-    <button onclick="this.closest('article').remove()">dismiss</button>
-
+    <p th:text="${errorMessage}"></p>
+    <button onclick="this.closest('article').remove()" th:text="#{btn.dismiss}"></button>
 </article>
 
-
-
 </body>
-
 </html>

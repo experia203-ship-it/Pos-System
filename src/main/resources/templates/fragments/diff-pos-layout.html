@@ -1,0 +1,45 @@
+<style>
+    /* --- POS LAYOUT CSS MOVED HERE --- */
+    .pos-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        /* Create 4 rows on the left, and let the last one stretch */
+        grid-template-rows: 2fr auto auto;
+        grid-template-areas:
+                "order-search     order-results"
+                "product-search    product-results"
+                "cart   cart";
+        gap: 15px;
+        height: 100%;
+    }
+
+    /* Assign each HTML ID to its new unique spot on the map */
+    #orderSearch         { grid-area: order-search; }
+    #orderSearchArea     { grid-area: order-results; }
+    #searchbar           { grid-area: product-search; }
+    #search-results-area { grid-area: product-results; }
+    #cart-zone           { grid-area: cart; }
+
+    .zone {
+        border: 1px solid #000000;
+        padding: 15px;
+        border-radius: 8px;
+        overflow-y: auto;
+    }
+
+
+
+
+    .pos-layout {
+        display: grid;
+        grid-template-columns: .5fr 1fr;
+        /* Create 4 rows on the left, and let the last one stretch */
+        grid-template-rows: auto auto auto 1fr;
+        grid-template-areas:
+                "order-search     cart"
+                "order-results    cart"
+                "product-search   cart"
+                "product-results  cart";
+        gap: 15px;
+        height: 100%;
+    }

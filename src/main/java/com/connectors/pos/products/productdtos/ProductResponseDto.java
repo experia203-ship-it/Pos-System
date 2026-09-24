@@ -2,6 +2,7 @@ package com.connectors.pos.products.productdtos;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public record ProductResponseDto(
         Long id,
@@ -13,7 +14,11 @@ public record ProductResponseDto(
         Long stock,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        Long categoryId
+        Long categoryId,
+        String barcode,
+        Long reorderPoint,
+        Map<String,String> customFields
+
 
 ) {
 }

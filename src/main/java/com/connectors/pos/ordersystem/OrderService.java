@@ -10,8 +10,12 @@ import com.connectors.pos.security.UserPrincipal;
 import com.connectors.pos.users.UserRepository;
 import com.connectors.pos.users.Users;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.swing.text.html.parser.Parser;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -61,13 +66,12 @@ public class OrderService {
         order.setUserName(principal.getUsername());
 
         Long customerId = create.customerId();
-        if(customerId ==null){
-            throw new CustomerMustBeProvidedException("please select a valid customer");
+        if(customerId !=null) {
+
+            Customer customer = customerRepo.getReferenceById(customerId);
+
+            order.setCustomer(customer);
         }
-        Customer customer = customerRepo.getReferenceById(customerId);
-
-        order.setCustomer(customer);
-
         List<OrderItemCreateDto> itemsDto = create.itemsList();
 if(create.itemsList() == null || create.itemsList().isEmpty()){
     throw new YouMustProvideAtLeastOneItem("please provide at least on item");
@@ -164,7 +168,7 @@ String orderNumber = generateOrderNumber();
 
 
 
-    private String generateOrderNumber() {
+    public String generateOrderNumber() {
 Long nextOrderNumber = orderRepo.getNextOrderSequence();
 
         return nextOrderNumber+1000 + "";
@@ -296,9 +300,40 @@ return orderMapper.toResponse(savedOrder);
     public List<OrderResponseDto> findByOrderNumber(String OrderNumber){
 
         List<Order> results = orderRepo.findByOrderNumber(OrderNumber);
-
+System.out.println(results);
         return orderMapper.toListResponse(results);
 
+   }
+
+
+   @Transactional(readOnly = true)
+
+    public Page<OrderResponseDto> findByCustomerName(String name, Pageable pageable){
+
+     Page<Order> result  =  orderRepo.findOrdersByCustomerNameContainingKeyword(name,pageable);
+
+
+       return result.map(orderMapper::toResponse);
+   }
+
+
+   @Transactional(readOnly = true)
+    public CustomerSummary getCustomerSummaryInPeriodById(Long id , LocalDateTime start,LocalDateTime end,Pageable pageable){
+
+        Page<Order> res = orderRepo.findOrdersByCustomerIdBetweenDates(id,start,end,pageable);
+          System.out.println(res.getTotalElements()+ "contents"+ res.getContent().indexOf(1));
+        Object[] result = orderRepo.sumAllOrdersSummaryBetweenDatesById(id,start,end);
+       Object[] row = (Object[]) result[0];
+
+ BigDecimal totalSelling = (BigDecimal) row[0];
+ BigDecimal totalPaid = (BigDecimal) row[1];
+ BigDecimal totaLRemaining = (BigDecimal) row[2];
+
+ Page<OrderResponseDto> response = res.map(orderMapper::toResponse);
+  Customer found = customerRepo.findById(id).orElseThrow(()-> new EntityNotFoundException("customer wasn't found"));
+  String name = found.getName();
+ CustomerSummary summary  = new CustomerSummary(name,start,end,totalSelling,totalPaid,totaLRemaining,response);
+       return summary;
    }
 
 }

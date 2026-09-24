@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{customer.popup.pagetitle}">Create Customer</title>
+</head>
+<body>
+<dialog open th:fragment="customer-pop-up">
+    <article>
+        <h2 th:text="#{customer.popup.heading}">create new customer</h2>
+        <form id="new-cust-form" th:object="${customerCreate}" hx-post="/customers/new"
+              hx-target="#table-customers" hx-swap="outerHTML"
+              hx-on::after-request="if(event.detail.successful) document.getElementById('modal-container-cust2').innerHTML=''"
+        >
+            <label th:text="#{customer.label.name}">name:</label>
+            <input th:placeholder="#{customer.placeholder.name}" id="name"
+                   type="text" th:field="*{name}" required
+            />
+            <label for="location" th:text="#{customer.label.location}">location:</label>
+            <input id="location"
+                   type="text" th:placeholder="#{customer.placeholder.location}"
+                   th:field="*{location}"
+            />
+            <label for="shipping" th:text="#{customer.label.shippingCompany}">shippingCompany:</label>
+            <input id="shipping" type="text"
+                   th:field="*{shippingCompany}"
+            />
+
+            <button type="submit" th:text="#{customer.btn.save}">save customer</button>
+        </form>
+        <form method="dialog">
+            <button class="secondary" th:text="#{customer.btn.close}">close</button>
+        </form>
+    </article>
+</dialog>
+</body>
+</html>

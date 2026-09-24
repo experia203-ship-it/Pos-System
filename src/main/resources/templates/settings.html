@@ -1,0 +1,86 @@
+<div id="settings-div" th:fragment="settings-fragment">
+
+    <article style="margin-bottom: 2rem; padding: 1rem;">
+        <h3 style="margin-bottom: 1rem;" th:text="#{settings.language.title}">System Language / لغة النظام</h3>
+
+        <div style="display: flex; gap: 10px;">
+            <a th:href="@{/layout(lang='en')}" role="button" class="outline" th:text="#{settings.lang.en}">English</a>
+            <a th:href="@{/layout(lang='ar')}" role="button" class="outline" th:text="#{settings.lang.ar}">عربي</a>
+        </div>
+    </article>
+
+    <article style="margin-bottom: 2rem; padding: 1rem;">
+        <h3 style="margin-bottom: 1rem;" th:text="#{settings.logo.title}">Company Logo</h3>
+        <div id="logo-container" style="margin-bottom: 1rem;">
+            <!-- Added a timestamp to the URL so the browser immediately updates the image after a new upload instead of loading the old one from cache -->
+            <img th:src="@{/settings/logo(t=${#dates.createNow().time})}" th:alt="#{settings.logo.alt}"
+                 style="max-width: 200px; max-height: 100px; border: 1px dashed var(--pico-muted-border-color); padding: 5px;">
+        </div>
+    </article>
+
+    <!-- Main Settings Form (Handles text + file) -->
+    <form th:object="${settings}"
+          hx-post="/settings"
+          hx-encoding="multipart/form-data"
+          hx-target="#main-window"
+          hx-swap="innerHTML">
+
+        <label>
+            <span th:text="#{settings.logo.upload}">Upload New Logo:</span>
+            <input type="file" name="logoFile" accept="image/png, image/jpeg" style="margin-bottom: 1rem;"/>
+        </label>
+
+        <label for="companyName" th:text="#{settings.field.companyName}">companyName:</label>
+        <input type="text" id="companyName" th:field="*{companyName}"/>
+        <span style="color: red" th:if="${#fields.hasErrors('companyName')}" th:errors="*{companyName}"></span>
+
+        <label for="phoneNumber" th:text="#{settings.field.phoneNumber}">phoneNumber:</label>
+        <input type="text" id="phoneNumber" th:field="*{phoneNumber}"/>
+        <span style="color: red" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
+
+        <label for="address" th:text="#{settings.field.address}">address:</label>
+        <input type="text" id="address" th:field="*{address}" />
+        <span style="color:red" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
+
+        <label for="taxRegistrationNumber" th:text="#{settings.field.taxRegistrationNumber}">taxRegistrationNumber:</label>
+        <input type="text" id="taxRegistrationNumber" th:field="*{taxRegistrationNumber}" />
+        <span style="color:red" th:if="${#fields.hasErrors('taxRegistrationNumber')}" th:errors="*{taxRegistrationNumber}"></span>
+
+        <label for="theme" th:text="#{settings.field.theme}">theme:</label>
+        <select id="theme" th:field="*{theme}">
+            <option th:each="t :*{theme.values()}"
+                    th:value="${t.name}"
+                    th:text="${t.name}"></option>
+        </select>
+        <span style="color:red" th:if="${#fields.hasErrors('theme')}" th:errors="*{theme}"></span>
+
+        <label for="printSize" th:text="#{settings.field.printSize}">printSize:</label>
+        <select id="printSize" th:field="*{printSize}">
+            <option th:each="s : *{printSize.values()}"
+                    th:value="${s.name}"
+                    th:text="${s.name}"></option>
+        </select>
+        <span style="color:red" th:if="${#fields.hasErrors('printSize')}" th:errors="*{printSize}"></span>
+
+        <label for="currencySymbol" th:text="#{settings.field.currencySymbol}">currencySymbol:</label>
+        <input id="currencySymbol" type="text" th:field="*{currencySymbol}" />
+        <span style="color:red" th:if="${#fields.hasErrors('currencySymbol')}" th:errors="*{currencySymbol}"></span>
+
+        <label for="pos-style" th:text="#{settings.field.posStyle}">PosStyle:</label>
+        <select id="pos-style" th:field="*{posStyle}">
+            <option th:each="s : *{posStyle.values()}"
+                    th:text="${s.name}"
+                    th:value="${s.name}"></option>
+        </select>
+        <span style="color:red" th:if="${#fields.hasErrors('posStyle')}" th:errors="*{posStyle}"></span>
+
+        <label for="shift" style="display: flex; gap: 10px; align-items: center; cursor: pointer; margin-bottom: 1.5rem;" th:text="#{settings.field.shiftManagement}">show-shiftManagement:</label>
+        <input id="shift" type="checkbox" th:field="*{shiftManagement}" style="margin-bottom: 0;"/>
+        <span style="color:red" th:if="${#fields.hasErrors('shiftManagement')}" th:errors="*{shiftManagement}"></span>
+
+        <button type="submit" style="margin-top: 1rem;" th:text="#{settings.btn.save}">save</button>
+    </form>
+
+    <div id="list-error2" style="color: red; font-weight: bold; margin-top: 5px;"></div>
+
+</div>

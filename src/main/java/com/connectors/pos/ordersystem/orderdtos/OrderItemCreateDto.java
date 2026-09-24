@@ -14,7 +14,7 @@ public record OrderItemCreateDto(
      @NotNull(message="sub discount is required , use 0% for no discount")
      @PositiveOrZero(message="discount can't be below 0")
      BigDecimal subDiscount ,
-
+       String barcode,
        String customName,
        BigDecimal customSellingPrice,
        BigDecimal customPurchasePrice

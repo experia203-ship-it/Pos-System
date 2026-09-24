@@ -29,7 +29,7 @@
 
     <div id="customer-fragment" th:fragment="customer-fragment">
         <form id="customerInfo" >
-            <lablel for="customer-List">Customer: </lablel>
+            <lablel for="customer-List" th:text="#{cart.customer}"> </lablel>
             <select id="customer-list" name="customerId" form="active-cart-form"
 
                     hx-post="/pos/cart/update"
@@ -39,12 +39,12 @@
                     hx-swap="outerHTML">
 
 
-                <option value="" disabled th:selected="${currentCustomerId == null}" > select a customer</option>
+                <option value=""  th:selected="${currentCustomerId == null}" th:text="#{cart.customer.options}"></option>
                 <option th:each=" cust :${customers}"
                         th:value="${cust.id}"
                         th:text="${cust.name}"
                         th:selected="${cust.id==currentCustomerId}"
-                > customer name</option>
+                ></option>
 
             </select>
             <div id="customer-error"  style="color: red; font-weight: bold; margin-top: 5px;"></div>
@@ -52,7 +52,8 @@
         <button hx-get="/customers/create"
                 hx-target="#modal-container-cust"
                 hx-swap="innerHTML"
-        > create customer</button>
+                th:text="#{cart.button.creatcust}"
+        > </button>
     </div>
 
 
@@ -68,15 +69,15 @@
 <form id="active-cart-form">
 
 <input  type="hidden"  th:name="ordId" th:value="${ordId}">
-    <table role="grid">
+    <table role="grid" id="cart-table">
         <thead>
         <tr>
-            <th>ItemName</th>
-            <th>Quantity</th>
-            <th>subDisc</th>
-            <th>Price</th>
-            <th>SubTotal</th>
-            <th></th>
+            <th th:text="#{cart.table.name}" ></th>
+            <th th:text="#{cart.table.qt}"></th>
+            <th th:text="#{cart.table.subdisc}"></th>
+            <th th:text="#{cart.table.price}"></th>
+            <th th:text="#{cart.table.subtotal}"></th>
+            <th ></th>
         </tr>
         </thead>
 
@@ -86,10 +87,10 @@
         <td>
             <input type="hidden" th:name="|itemsList[${stat.index}].productId|" th:value="${item.productId}"/>
             <input type="hidden" th:name="|itemsList[${stat.index}].customPurchasePrice|" th:value="${item.customPurchasePrice}" />
-
+            <input type="hidden" th:name="|itemsList[${stat.index}].barcode|" th:value="${item.barcode}"/>
 
             <input type="text" th:name="|itemsList[${stat.index}].customName|"
-            th:value="${item.customName!=null ? item.customName : item.productName}"
+            th:value="${item.productName}"
                    hx-post="/pos/cart/update"
                    hx-trigger="change delay:500ms"
                    hx-include="#active-cart-form , #disc , #paid ,#customerInfo"
@@ -101,7 +102,7 @@
         <td><input type="number" th:name="|itemsList[${stat.index}].quantity|" th:value="${item.quantity}"
 
                    hx-post="/pos/cart/update"
-                   hx-trigger="change"
+                   hx-trigger="change ,keyup[key=='Enter']"
                    hx-include="#active-cart-form , #disc , #paid ,#customerInfo"
                    hx-target="#cart-zone"
                    hx-swap="outerHTML"
@@ -149,39 +150,52 @@
     </table>
 </form>
 <article>
-<header><strong>Order Summary</strong></header>
-<label for="disc">Global Order Discount:</label>
+<header><strong th:text="#{cart.order.summary}"></strong></header>
+<label for="disc" th:text="#{cart.order.discount}"></label>
     <input id="disc" type="number" step="0.01" name="discount" th:value="${globalDiscount!=null ? globalDiscount : 0.00}"
 
            hx-post="/pos/cart/update"
            hx-include="#active-cart-form ,#disc ,#paid ,#customerInfo"
-           hx-trigger="change delay:300ms"
+           hx-trigger="keyup[key=='Enter']"
+           hx-on:keyup="if(event.key=='Enter') this.blur()"
            hx-target="#cart-zone"
            hx-swap="outerHTML"
     >
 
-    <label for="paid">paid:</label>
+    <label for="paid" th:text="#{cart.order.paid}"></label>
     <input id="paid" type="number" step="0.01" name="paid" th:value="${paid!=null ? paid :0.00}"
           hx-post="/pos/cart/update"
            hx-include="#active-cart-form , #disc , #paid ,#customerInfo"
-           hx-trigger="change delay:300ms"
+           hx-trigger="keyup[key=='Enter']"
+           hx-on:keyup="if(event.key=='Enter') this.blur()"
            hx-target="#cart-zone"
            hx-swap="outerHTML"
     >
-    <h3>Grand Total: <span th:text="${grandTotal!=null ? grandTotal :0.00}"></span></h3>
-    <h4>remaining:<span id="remaining-display" th:text="${remaining!=null ? remaining : 0.00}"></span></h4>
-    <h5>orderId:<span id="orderNumber-display" th:text="${orderNumber}"></span></h5>
+    <h3>
+        <span th:text="#{cart.order.grandtotal}"></span>:
+        <span th:text="|${grandTotal ?: '0.00'} ${globalSettings.currencySymbol}|"></span>
+    </h3>
+
+    <h4>
+        <span th:text="#{cart.order.remaining}"></span>:
+        <span id="remaining-display" th:text="|${remaining!=null ? remaining : 0.00} ${globalSettings.currencySymbol}|"></span>
+    </h4>
+
+    <h5>
+        <span th:text="#{cart.order.ids}"></span>:
+        <span id="orderNumber-display" th:text="${orderNumber}"></span>
+    </h5>
+
     <input id="remaining" type="hidden" name="remaining" th:value="${remaining != null ? remaining : 0.00}" form="active-cart-form" />
     <input id="orderNumber" type="hidden" th:value="${orderNumber}" form="active-cart-form" />
-
     <div id="list-error"   style="color: red; font-weight: bold; margin-top: 5px;"></div>
 
 
-    <button type="button"    th:if="${ordId !=null}"    th:hx-patch="|/pos/update/${ordId}|"     hx-include="#active-cart-form, #disc, #paid, #customerInfo ,#remaining" hx-target="#cart-zone">update</button>
+    <button  type="button"    th:if="${ordId !=null}"    th:hx-patch="|/pos/update/${ordId}|"     hx-include="#active-cart-form, #disc, #paid, #customerInfo ,#remaining" hx-target="#cart-zone" th:text="#{cart.bttn.update}"></button>
 
-    <button type="button"    th:if="${ordId ==null}"    hx-post="/pos/check-out"     hx-include="#active-cart-form, #disc, #paid, #customerInfo ,#remaining" hx-target="#cart-zone">checkOut</button>
+    <button type="button"    th:if="${ordId ==null}"    hx-post="/pos/check-out"     hx-include="#active-cart-form, #disc, #paid, #customerInfo ,#remaining" hx-target="#cart-zone" th:text="#{cart.bttn.checkOut}"></button>
 
-<button type="button" hx-delete="/pos/clear" hx-target="#cart-zone" th:hx-confirm="|are you sure to clear order with total : ${grandTotal}|" >clear</button>
+<button type="button" hx-delete="/pos/clear" hx-target="#cart-zone" th:hx-confirm="| #{cart.clear.msg} ${grandTotal}|" th:text="#{cart.bttn.clear}" ></button>
 
 </article>
 </div>

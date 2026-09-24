@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{invoice.title}">A4 Invoice</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .invoice-box {
+            max-width: 210mm; /* A4 width */
+            margin: auto;
+            padding: 20mm;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .invoice-box {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                max-width: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        th, td { border-bottom: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f8f8f8; font-weight: bold; }
+        .text-right { text-align: right; }
+        .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+<div class="invoice-box">
+    <!-- Header Section -->
+    <div class="header-container">
+        <div>
+            <h1 style="margin: 0 0 10px 0; font-size: 28px;" th:text="${globalSettings.companyName}"></h1>
+            <p style="margin: 3px 0;" th:if="${not #strings.isEmpty(globalSettings.address)}" th:text="${globalSettings.address}"></p>
+            <p style="margin: 3px 0;" th:if="${not #strings.isEmpty(globalSettings.phoneNumber)}" th:text="${globalSettings.phoneNumber}"></p>
+            <p style="margin: 3px 0;" th:if="${not #strings.isEmpty(globalSettings.taxRegistrationNumber)}" th:text="#{invoice.taxId(${globalSettings.taxRegistrationNumber})}">Tax ID: </p>
+        </div>
+        <div class="text-right">
+            <h2 style="margin: 0; color: #555; text-transform: uppercase;" th:text="#{invoice.heading}">Invoice</h2>
+        </div>
+    </div>
+
+    <!-- Order Metadata -->
+    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; padding-top: 15px; border-top: 2px solid #333;">
+        <div>
+            <strong th:text="#{invoice.orderId}">Order ID:</strong> <span th:text="${order.orderNumber}"></span><br>
+            <strong th:text="#{invoice.date}">Date:</strong> <span th:text="${#temporals.format(order.createdAt, 'dd-MM-yyyy HH:mm')}"></span>
+        </div>
+        <div class="text-right">
+            <strong th:text="#{invoice.billedTo}">Billed To:</strong><br>
+            <span th:text="${customerName}"></span>
+        </div>
+    </div>
+
+    <!-- Line Items -->
+    <table>
+        <thead>
+        <tr>
+            <th th:text="#{invoice.table.itemDescription}">Item Description</th>
+            <th th:text="#{invoice.table.qty}">Qty</th>
+            <th class="text-right" th:text="#{invoice.table.unitPrice}">Unit Price</th>
+            <th class="text-right" th:text="#{invoice.table.total}">Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${order.items}">
+            <td th:text="${item.productName}">Brake Pad Set</td>
+            <td th:text="${item.quantity}">2</td>
+            <td class="text-right" th:text="|${globalSettings.currencySymbol} ${item.productSellingPrice}|">45.00</td>
+            <td class="text-right" th:text="|${globalSettings.currencySymbol} ${item.subTotal}|">90.00</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Totals Section -->
+    <div style="margin-top: 30px; display: flex; justify-content: flex-end;">
+        <table style="width: 300px; margin-top: 0;">
+            <tr>
+                <td style="border: none;"><strong th:text="#{invoice.totals.subtotal}">Subtotal:</strong></td>
+                <td style="border: none;" class="text-right" th:text="|${globalSettings.currencySymbol} ${order.total + order.discount}|"></td>
+            </tr>
+            <tr>
+                <td style="border: none;"><strong th:text="#{invoice.totals.discount}">Discount:</strong></td>
+                <td style="border: none; color: red;" class="text-right" th:text="|-${globalSettings.currencySymbol} ${order.discount}|"></td>
+            </tr>
+            <tr>
+                <td style="border-top: 2px solid #333; font-size: 18px;"><strong th:text="#{invoice.totals.grandTotal}">Grand Total:</strong></td>
+                <td style="border-top: 2px solid #333; font-size: 18px;" class="text-right" th:text="|${globalSettings.currencySymbol} ${order.total}|"></td>
+            </tr>
+            <tr>
+                <td style="border: none; padding-top: 15px;" th:text="#{invoice.totals.paid}">Paid:</td>
+                <td style="border: none; padding-top: 15px;" class="text-right" th:text="|${globalSettings.currencySymbol} ${order.paid}|"></td>
+            </tr>
+            <tr>
+                <td style="border: none;" th:text="#{invoice.totals.remaining}">Remaining:</td>
+                <td style="border: none;" class="text-right" th:text="|${globalSettings.currencySymbol} ${order.remaining}|"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 50px; font-size: 14px; color: #777;">
+        <p th:text="#{invoice.footer.thankYou}">Thank you for your business!</p>
+    </div>
+
+    <div class="no-print" style="text-align: center; margin-top: 30px;">
+        <button onclick="window.print()" style="padding: 12px 24px; font-size: 16px; cursor: pointer;" th:text="#{invoice.btn.print}">Print Invoice</button>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        window.print();
+    };
+</script>
+</body>
+</html>
