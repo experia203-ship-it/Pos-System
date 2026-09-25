@@ -147,7 +147,7 @@ INSERT INTO customer (id, name, location, shipping_company, is_active) VALUES
     (20, 'جنى فؤاد', 'كفر الشيخ، كفر الشيخ', 'شركة الساحل للشحن', 1);
 
 INSERT INTO customer_phone (customer_id, type, is_primary, phone_number)
-SELECT id, 'محمول', 1, printf('010%08d', id)
+SELECT id, 'MOBILE_PHONE', 1, printf('010%08d', id)
 FROM customer;
 
 INSERT INTO vendor (id, name, location, landline, mobile, is_active) VALUES
