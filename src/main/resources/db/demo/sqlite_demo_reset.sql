@@ -183,7 +183,7 @@ SELECT
     ROUND((p.selling_price * 2) - n, 2),
     ROUND(((p.selling_price - p.purchase_price) * 2) - n, 2),
     n,
-    printf('بيع-%04d', n),
+    printf('%d', 1000 + n),
     datetime('now', printf('-%d days', n))
 FROM (SELECT 1 AS n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
       UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8
@@ -211,7 +211,7 @@ SELECT
     u.name,
     ROUND((p.purchase_price * 10) - n, 2),
     n,
-    printf('شراء-%04d', n),
+    printf('%d', 2000 + n),
     datetime('now', printf('-%d days', n + 2))
 FROM (SELECT 1 AS n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
       UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8
