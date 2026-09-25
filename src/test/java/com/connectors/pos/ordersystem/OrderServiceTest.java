@@ -47,6 +47,8 @@ class OrderServiceTest {
     private ProductRepository prodRepo;
     @Mock
     private OrderRepository orderRepo;
+    @Mock
+    private OrderNumberGenerator orderNumberGenerator;
     @InjectMocks
     private OrderService orderServo;
     @Spy
@@ -89,6 +91,7 @@ class OrderServiceTest {
    when(customerRepo.getReferenceById(any(Long.class))).thenReturn(new Customer());
    when(userRepo.getReferenceById(any(Long.class))).thenReturn(new Users());
 when(prodRepo.findAllByIds(anyList())).thenReturn(new ArrayList<Products>());
+   when(orderNumberGenerator.nextValue()).thenReturn(1L);
 
 
         OrderItemCreateDto dummyItem = new OrderItemCreateDto(

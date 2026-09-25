@@ -20,10 +20,7 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
 
     List<Order> findByOrderNumber(String orderNumber);
 
-   @Query(value="select nextval('order_number_seq')",nativeQuery = true)
-    Long getNextOrderSequence();
-
-   @Query("select max(o.orderNumber) from Order o")
+   @Query("select max(cast(o.orderNumber as long)) from Order o")
 Long findMaxOrderNumber();
 
 @Query("select sum(o.revenue) from Order o where o.createdAt >= :start and o.createdAt <= :end")

@@ -226,7 +226,7 @@ SELECT po.id, p.id, p.name, p.purchase_price, 10, po.discount
 FROM purchase_order po
 JOIN products p ON p.id = po.id;
 
-INSERT INTO order_number_sequence (id) VALUES (110);
+INSERT INTO order_number_sequence (id) VALUES (10);
 
 INSERT INTO shift_session (
     id, user_id, status, start_time, end_time, starting_float, expected_cash, counted_cash

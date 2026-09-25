@@ -42,6 +42,7 @@ public class OrderService {
     private final ProductRepository productRepo;
     private final OrderItemRepository orderItemRepo;
     private final OrderRepository orderRepo;
+    private final OrderNumberGenerator orderNumberGenerator;
 
 
     @Transactional
@@ -169,9 +170,7 @@ String orderNumber = generateOrderNumber();
 
 
     public String generateOrderNumber() {
-Long nextOrderNumber = orderRepo.getNextOrderSequence();
-
-        return nextOrderNumber+1000 + "";
+        return (orderNumberGenerator.nextValue() + 1000) + "";
     }
 
 
