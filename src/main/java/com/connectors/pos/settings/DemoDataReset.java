@@ -21,8 +21,8 @@ public class DemoDataReset {
     private boolean isAutoResetEnabled;
 
     // Cron expression: Seconds Minutes Hours Day-of-month Month Day-of-week
-    // "0 0 3 * * ?" = Every day at 03:00:00 AM
-    @Scheduled(cron = "0 0 3 * * ?",zone = "Africa/Cairo")
+    // "0 0 4 * * ?" = Every day at 04:00:00 AM
+    @Scheduled(cron = "0 0 4 * * ?",zone = "Africa/Cairo")
     public void executeDatabaseReset() {
         if (!isAutoResetEnabled) {
             log.info("Demo DB Auto-Reset skipped: Feature disabled on this environment.");
@@ -33,7 +33,7 @@ public class DemoDataReset {
 
         try {
             ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-            populator.addScript(new ClassPathResource("sqlite_demo_reset.sql"));
+            populator.addScript(new ClassPathResource("db/demo/sqlite_demo_reset.sql"));
             populator.setContinueOnError(false);
 
             populator.execute(dataSource);
