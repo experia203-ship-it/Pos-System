@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
+import com.connectors.pos.backup.BackupService;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -23,7 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SettingsControllerMvcTest {
     private final SettingsService service = mock(SettingsService.class);
     private final SettingsRepository repository = mock(SettingsRepository.class);
-    private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new SettingsController(service, repository))
+    private final BackupService backupService = mock(BackupService.class);
+    private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new SettingsController(service, repository, backupService))
             .setViewResolvers((viewName, locale) -> (model, request, response) -> { })
             .build();
 
