@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Preferences</title>
+</head>
+<body>
+
+<div id="preferences-div" th:fragment="preferences-fragment">
+
+    <h2 class="page-heading">
+        <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span th:text="#{sidebar.botton.preferences}">Preferences</span>
+    </h2>
+
+    <article style="margin-bottom: 1.5rem;">
+        <h3 style="margin-bottom: 1rem;" th:text="#{settings.language.title}">System Language / لغة النظام</h3>
+
+        <div style="display: flex; gap: 10px;">
+            <a th:href="@{/layout(lang='en')}" role="button" class="outline" th:text="#{settings.lang.en}">English</a>
+            <a th:href="@{/layout(lang='ar')}" role="button" class="outline" th:text="#{settings.lang.ar}">عربي</a>
+        </div>
+    </article>
+
+    <article>
+        <form hx-post="/settings/preferences" hx-target="#main-window" hx-swap="innerHTML">
+
+            <label for="pref-theme" th:text="#{settings.field.theme}">theme:</label>
+            <select id="pref-theme" name="theme">
+                <option th:each="t : ${T(com.connectors.pos.settings.Theme).values()}"
+                        th:value="${t.name}"
+                        th:selected="${t == settings.theme}"
+                        th:text="${t.name}"></option>
+            </select>
+
+            <button type="submit" style="margin-top: 1rem;" th:text="#{settings.btn.save}">save</button>
+        </form>
+    </article>
+
+    <article style="margin-top: 1.5rem;">
+        <h3 th:text="#{preferences.password.title}">Change your password</h3>
+        <div id="password-error" class="form-error"></div>
+        <div id="password-success"></div>
+        <form th:object="${changePasswordForm}" hx-post="/auth/change-password"
+              hx-target="#password-success" hx-swap="innerHTML">
+
+            <label for="currentPassword" th:text="#{preferences.password.current}">Current password</label>
+            <input id="currentPassword" type="password" th:field="*{currentPassword}" required autocomplete="current-password"/>
+
+            <label for="newPassword" th:text="#{preferences.password.new}">New password</label>
+            <input id="newPassword" type="password" th:field="*{newPassword}" required autocomplete="new-password"/>
+
+            <label for="confirmPassword" th:text="#{preferences.password.confirm}">Confirm new password</label>
+            <input id="confirmPassword" type="password" th:field="*{confirmPassword}" required autocomplete="new-password"/>
+
+            <button type="submit" style="margin-top: 1rem;" th:text="#{preferences.password.submit}">Change password</button>
+        </form>
+    </article>
+
+</div>
+
+</body>
+</html>

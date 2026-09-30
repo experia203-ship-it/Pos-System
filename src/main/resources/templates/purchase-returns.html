@@ -1,0 +1,38 @@
+<div id="purchase-returns" th:fragment="purchase-returns">
+    <h2 class="page-heading" th:text="#{purchase.return.title}">Vendor Returns</h2>
+    <p th:text="#{purchase.return.description}">
+        Choose a vendor purchase receipt to record a return and supplier credit.
+    </p>
+
+    <figure>
+        <table role="grid">
+            <thead>
+            <tr>
+                <th th:text="#{purchase.return.order}">Purchase</th>
+                <th th:text="#{purchase.cart.supplier}">Vendor</th>
+                <th th:text="#{purchase.summary.grandTotal}">Total</th>
+                <th th:text="#{purchase.return.credit}">Supplier credit</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="purchase : ${purchaseOrders.content}">
+                <td th:text="${purchase.orderNumber != null ? purchase.orderNumber : purchase.id}"></td>
+                <td th:text="${purchase.vendorName != null ? purchase.vendorName : '-'}"></td>
+                <td th:text="${purchase.total}"></td>
+                <td th:text="${purchase.vendorCredit}"></td>
+                <td>
+                    <button type="button" class="secondary"
+                            th:if="${purchase.vendorId != null}"
+                            th:hx-get="@{/purchase/returns/{id}(id=${purchase.id})}"
+                            hx-target="#main-window" hx-swap="innerHTML"
+                            th:text="#{purchase.return.action}">Record return</button>
+                </td>
+            </tr>
+            <tr th:if="${purchaseOrders.empty}">
+                <td colspan="5" th:text="#{purchase.return.empty}">No purchase receipts found.</td>
+            </tr>
+            </tbody>
+        </table>
+    </figure>
+</div>

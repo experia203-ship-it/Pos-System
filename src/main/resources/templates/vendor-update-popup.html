@@ -8,6 +8,7 @@
 <dialog open th:fragment="supplier-pop-up3">
     <article>
         <h2 th:text="#{supplier.update.heading}">Update Existing Supplier</h2>
+        <div id="supplier-form-error" class="form-error"></div>
         <form id="new-sup-form" th:object="${supplierUpdate}" hx-post="/suppliers/update"
               hx-target="#vtable" hx-swap="outerHTML"
 

@@ -8,6 +8,7 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 
@@ -65,6 +66,7 @@ insertable = false,updatable = false)
 @Generated
     private LocalDateTime createdAt ;
 
+@UpdateTimestamp
 @Column(name="updated_at")
     private LocalDateTime updatedAt;
 

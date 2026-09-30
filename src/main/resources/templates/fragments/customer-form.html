@@ -8,9 +8,10 @@
 <dialog open th:fragment="customer-pop-up">
     <article>
         <h2 th:text="#{customer.modal.title}"></h2>
+        <div id="customer-form-error" class="form-error"></div>
         <form id="new-cust-form" th:object="${customerCreate}" hx-post="/customers"
               hx-target="#customer-fragment" hx-swap="outerHTML"
-              hx-on::after-request="if(event.detail.successful) document.getElementById('modal-container-cust').innerHTML=''">
+              hx-on::after-request="if(event.detail.xhr.getResponseHeader('HX-Trigger') === 'close-modal') document.getElementById('modal-container-cust').innerHTML=''">
 
             <label th:text="#{customer.modal.name}"></label>
             <input th:placeholder="#{customer.modal.placeholder.name}" id="name"

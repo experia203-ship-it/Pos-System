@@ -11,6 +11,7 @@ public interface PurchaseMapper {
    @Mapping(target = "vendorId", source = "vendor.id")
    @Mapping(target = "userName", source = "user.name")
    @Mapping(target = "userId", source = "user.id")
+   @Mapping(target = "vendorCredit", source = "vendorCredit")
    PurchaseOrderResponseDto  toResponse (PurchaseOrder order);
 
 }

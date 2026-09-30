@@ -7,12 +7,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.module.ModuleDescriptor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +21,7 @@ public class StatisticsService {
     private final OrderItemRepository orderItemRepo;
 
 
+    @Transactional(readOnly = true)
     public Statistics calculateStats(LocalDate start, LocalDate end) {
 
         BigDecimal totalSales = countTotalSales(start, end);
@@ -30,25 +31,23 @@ public class StatisticsService {
 
     }
 
-    @Transactional(readOnly = true)
     private BigDecimal countTotalSales(LocalDate start, LocalDate end) {
 
         LocalDateTime startTime = start.atStartOfDay();
 
         LocalDateTime endTime = end.atTime(LocalTime.MAX);
 
-        return orderRepo.calculateTotalSales(startTime, endTime);
+        return Objects.requireNonNullElse(orderRepo.calculateTotalSales(startTime, endTime), BigDecimal.ZERO);
 
 
     }
 
-    @Transactional(readOnly = true)
     private BigDecimal countTotalRevenue(LocalDate start, LocalDate end) {
         LocalDateTime startTime = start.atStartOfDay();
 
         LocalDateTime endTime = end.atTime(LocalTime.MAX);
 
-        return orderRepo.calculateRevenueBetweenDates(startTime, endTime);
+        return Objects.requireNonNullElse(orderRepo.calculateRevenueBetweenDates(startTime, endTime), BigDecimal.ZERO);
 
     }
 

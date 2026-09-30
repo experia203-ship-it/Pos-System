@@ -1,0 +1,103 @@
+<div id="sale-return-form" th:fragment="sale-return-form">
+    <h2 th:text="#{sale.return.form.title}">Process sale return</h2>
+    <p>
+        <span th:text="#{sale.return.sale}">Sale</span>:
+        <strong th:text="${sale.orderNumber != null ? sale.orderNumber : sale.id}"></strong>
+        <span> | </span>
+        <span th:text="#{sale.return.total}">Total</span>:
+        <strong th:text="${sale.total}"></strong>
+        <span> | </span>
+        <span th:text="#{sale.return.balance}">Balance</span>:
+        <strong th:text="${sale.remaining}"></strong>
+    </p>
+    <div id="sale-return-error" class="form-error"></div>
+    <p th:if="${returnsDisabled}" class="form-error" th:text="#{sale.return.shift.required}">
+        Open your shift before processing returns or voids.
+    </p>
+
+    <div th:if="${!sale.voided}">
+    <form th:object="${returnRequest}"
+          th:hx-post="@{/pos/returns/{id}(id=${sale.id})}"
+          hx-target="#main-window" hx-swap="innerHTML">
+        <label for="orderItemId" th:text="#{sale.return.item}">Sale item</label>
+        <select id="orderItemId" th:field="*{orderItemId}" required
+                onchange="const restock = document.getElementById('restock'); const option = this.selectedOptions[0]; restock.disabled = option.dataset.restockable !== 'true'; if (restock.disabled) restock.checked = false;">
+            <option value="" th:text="#{sale.return.chooseItem}">Choose an item</option>
+            <option th:each="item : ${returnItems}"
+                    th:value="${item.orderItemId}"
+                    th:attr="data-restockable=${item.restockable}"
+                    th:text="${item.productName + ' - ' + item.quantityReturnable + ' ' + #messages.msg('sale.return.available') + ' - ' + #messages.msg('sale.return.unitCredit') + ' ' + item.unitCredit}">
+            </option>
+        </select>
+
+        <label for="quantity" th:text="#{sale.return.quantity}">Quantity to return</label>
+        <input id="quantity" type="number" th:field="*{quantity}" min="1" step="1" required>
+
+        <label>
+            <input id="restock" type="checkbox" th:field="*{restock}" disabled>
+            <span th:text="#{sale.return.restock}">Restock returned item</span>
+        </label>
+
+        <label for="reason" th:text="#{sale.return.reason}">Reason</label>
+        <input id="reason" type="text" th:field="*{reason}" maxlength="255" required>
+
+        <button type="submit" th:disabled="${returnItems.empty or returnsDisabled}"
+                th:text="#{sale.return.submit}">Record return</button>
+        <button type="button" class="secondary" hx-get="/pos/returns"
+                hx-target="#main-window" hx-swap="innerHTML"
+                th:text="#{btn.close}">Cancel</button>
+    </form>
+
+    <hr>
+    <h3 th:text="#{sale.return.void.title}">Void sale</h3>
+    <p th:text="#{sale.return.void.note}">
+        Voiding returns all unreturned items to stock and applies the value to the outstanding balance before refunding.
+    </p>
+    <form th:hx-post="@{/pos/returns/{id}/void(id=${sale.id})}"
+          hx-target="#main-window" hx-swap="innerHTML">
+        <label for="voidReason" th:text="#{sale.return.reason}">Reason</label>
+        <input id="voidReason" name="reason" type="text" maxlength="255" required>
+        <button type="submit" class="secondary" th:disabled="${returnsDisabled}" th:text="#{sale.return.void.submit}">Void sale</button>
+    </form>
+    </div>
+
+    <hr>
+    <h3 th:text="#{sale.return.history}">Return / void history</h3>
+    <figure>
+        <table role="grid">
+            <thead>
+            <tr>
+                <th th:text="#{sale.return.history.date}">Date</th>
+                <th th:text="#{sale.return.history.type}">Type</th>
+                <th th:text="#{sale.return.history.item}">Item</th>
+                <th th:text="#{sale.return.quantity}">Quantity</th>
+                <th th:text="#{sale.return.history.credit}">Credit</th>
+                <th th:text="#{sale.return.refunded}">Refunded</th>
+                <th th:text="#{sale.return.restock}">Restocked</th>
+                <th th:text="#{sale.return.history.payment}">Payment method</th>
+                <th th:text="#{sale.return.history.reference}">Payment reference</th>
+                <th th:text="#{sale.return.reason}">Reason</th>
+                <th th:text="#{sale.return.history.user}">Processed by</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="entry : ${returnHistory}">
+                <td th:text="${entry.createdAt != null ? entry.createdAt : '-'}"></td>
+                <td th:text="${entry.type}"></td>
+                <td th:text="${entry.itemName}"></td>
+                <td th:text="${entry.quantity}"></td>
+                <td th:text="${entry.credit}"></td>
+                <td th:text="${entry.refund}"></td>
+                <td th:text="${entry.restocked ? #messages.msg('sale.return.yes') : #messages.msg('sale.return.no')}"></td>
+                <td th:text="${entry.paymentMethod}"></td>
+                <td th:text="${entry.paymentReference != null ? entry.paymentReference : '-'}"></td>
+                <td th:text="${entry.reason}"></td>
+                <td th:text="${entry.userName}"></td>
+            </tr>
+            <tr th:if="${returnHistory.empty}">
+                <td colspan="11" th:text="#{sale.return.history.empty}">No return or void activity yet.</td>
+            </tr>
+            </tbody>
+        </table>
+    </figure>
+</div>

@@ -40,12 +40,10 @@ WHERE name IN (
 
 INSERT INTO settings (
     id, company_name, phone_number, address, tax_registration_number,
-    default_theme, print_size, currency_symbol,
-    is_licensed, trial_ends_at, last_accessed_at, pos_style, shift_management
+    default_theme, print_size, currency_symbol, pos_style, shift_management
 ) VALUES (
     1, 'متجر البقالة النموذجي', '01000000000', 'شارع التحرير، القاهرة',
-    '123456789', 'SYSTEM_DEFAULT', 'A4', 'جنيه',
-    1, datetime('now', '+365 days'), datetime('now'), 'HORIZONTAL', 1
+    '123456789', 'SYSTEM_DEFAULT', 'A4', 'جنيه', 'HORIZONTAL', 1
 );
 
 INSERT INTO category (id, name, description, is_active) VALUES
@@ -180,8 +178,8 @@ SELECT
     n,
     u.id,
     u.name,
-    ROUND((p.selling_price * 2) - n, 2),
-    ROUND(((p.selling_price - p.purchase_price) * 2) - n, 2),
+    ROUND((p.selling_price * 2) - (2 * n), 2),
+    ROUND(((p.selling_price - p.purchase_price) * 2) - (2 * n), 2),
     n,
     printf('%d', 1000 + n),
     datetime('now', printf('-%d days', n))
@@ -209,7 +207,7 @@ SELECT
     u.id,
     n,
     u.name,
-    ROUND((p.purchase_price * 10) - n, 2),
+    ROUND(p.purchase_price * 10, 2),
     n,
     printf('%d', 2000 + n),
     datetime('now', printf('-%d days', n + 2))
@@ -222,7 +220,7 @@ JOIN (SELECT id, name FROM users ORDER BY id LIMIT 1) u;
 INSERT INTO purchase_order_item (
     order_id, product_id, product_name, product_purchase_price, quantity, sub_discount
 )
-SELECT po.id, p.id, p.name, p.purchase_price, 10, po.discount
+SELECT po.id, p.id, p.name, p.purchase_price, 10, 0
 FROM purchase_order po
 JOIN products p ON p.id = po.id;
 
@@ -232,13 +230,13 @@ INSERT INTO shift_session (
     id, user_id, status, start_time, end_time, starting_float, expected_cash, counted_cash
 )
 SELECT
-    1, id, 'مغلقة', datetime('now', '-1 day'), datetime('now', '-1 day', '+8 hours'),
-    1000.00, 2500.00, 2480.00
+    1, id, 'CLOSED', datetime('now', '-1 day'), datetime('now', '-1 day', '+8 hours'),
+    1000.00, 1980.00, 1980.00
 FROM (SELECT id FROM users ORDER BY id LIMIT 1);
 
 INSERT INTO cash_drawer_event (shift_id, event_type, amount, reason, created_at) VALUES
-    (1, 'إيداع', 1000.00, 'رأس مال بداية الوردية', datetime('now', '-1 day')),
-    (1, 'سحب', 20.00, 'مصروفات تشغيلية', datetime('now', '-1 day', '+4 hours'));
+    (1, 'PAY_IN', 1000.00, 'رأس مال بداية الوردية', datetime('now', '-1 day')),
+    (1, 'PAY_OUT', 20.00, 'مصروفات تشغيلية', datetime('now', '-1 day', '+4 hours'));
 
 COMMIT;
 

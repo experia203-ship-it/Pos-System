@@ -2,6 +2,7 @@ package com.connectors.pos.settings;
 
 import com.connectors.pos.settings.settingsdtos.SettingsResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 

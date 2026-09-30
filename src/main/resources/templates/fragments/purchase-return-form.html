@@ -1,0 +1,30 @@
+<div id="purchase-return-form" th:fragment="return-form">
+    <h2 th:text="#{purchase.return.form.title}">Record vendor return</h2>
+    <p th:text="#{purchase.return.form.note}">
+        Returned quantity is removed from available stock. The supplier credit is recorded against this receipt.
+    </p>
+    <div id="purchase-return-error" class="form-error"></div>
+    <form th:object="${returnRequest}"
+          th:hx-post="@{/purchase/returns/{id}(id=${purchaseOrderId})}"
+          hx-target="#main-window" hx-swap="innerHTML">
+        <label for="purchaseItemId" th:text="#{purchase.return.item}">Received product</label>
+        <select id="purchaseItemId" th:field="*{purchaseItemId}" required>
+            <option value="" th:text="#{purchase.return.chooseItem}">Choose an item</option>
+            <option th:each="item : ${returnItems}"
+                    th:value="${item.purchaseItemId}"
+                    th:text="${item.productName + ' - ' + item.quantityReturnable + ' ' + #messages.msg('purchase.return.available') + ' - ' + #messages.msg('purchase.return.unitCredit') + ' ' + item.unitCredit}">
+            </option>
+        </select>
+
+        <label for="quantity" th:text="#{purchase.return.quantity}">Quantity to return</label>
+        <input id="quantity" type="number" th:field="*{quantity}" min="1" step="1" required>
+
+        <label for="reason" th:text="#{purchase.return.reason}">Reason</label>
+        <input id="reason" type="text" th:field="*{reason}" maxlength="255" required>
+
+        <button type="submit" th:text="#{purchase.return.submit}">Record supplier credit</button>
+        <button type="button" class="secondary"
+                hx-get="/purchase/returns" hx-target="#main-window" hx-swap="innerHTML"
+                th:text="#{btn.close}">Cancel</button>
+    </form>
+</div>

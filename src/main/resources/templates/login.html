@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title th:text="#{login.title}">pos system -login</title>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
 </head>
@@ -16,7 +18,7 @@
         <label>
             <span th:text="#{login.label.email}">email:</span>
             <input id="email" name="email" type="email"
-                   th:value="${#strings.isEmpty(loginForm.email) ? 'user123@Gmail.com' : loginForm.email}"
+                   th:value="${demoCredentialsEnabled ? 'user123@Gmail.com' : loginForm.email}"
                    autocomplete="username" required>
         </label>
     </div>
@@ -24,7 +26,7 @@
         <label>
             <span th:text="#{login.label.password}">password:</span>
             <input id="password" name="password" type="password"
-                   th:value="${#strings.isEmpty(loginForm.password) ? 'A@123456' : loginForm.password}"
+                   th:value="${demoCredentialsEnabled ? 'A@123456' : loginForm.password}"
                    autocomplete="current-password" required>
         </label>
     </div>
@@ -33,6 +35,16 @@
 
 </form>
 <div id="form-message"></div>
+
+<script>
+    document.body.addEventListener('htmx:configRequest', function(evt) {
+        const token = document.querySelector('meta[name="_csrf"]');
+        const header = document.querySelector('meta[name="_csrf_header"]');
+        if (token && header) {
+            evt.detail.headers[header.content] = token.content;
+        }
+    });
+</script>
 
 </body>
 </html>

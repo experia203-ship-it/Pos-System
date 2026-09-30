@@ -5,14 +5,13 @@ import com.connectors.pos.customersystem.CustomerRepository;
 import com.connectors.pos.customersystem.CustomerService;
 import com.connectors.pos.customersystem.customerdtos.CustomerViewDto;
 import com.connectors.pos.exceptions.ProductNotFoundException;
+import com.connectors.pos.exceptions.BusinessRuleException;
 import com.connectors.pos.exceptions.YouMustProvideAtLeastOneItem;
 import com.connectors.pos.ordersystem.orderdtos.*;
 import com.connectors.pos.products.ProductRepository;
 import com.connectors.pos.products.Products;
 import com.connectors.pos.security.UserPrincipal;
-import com.connectors.pos.settings.PosStyle;
-import com.connectors.pos.settings.SettingsGlobalInjector;
-import com.connectors.pos.settings.SettingsService;
+import com.connectors.pos.settings.*;
 import com.connectors.pos.settings.settingsdtos.SettingsResponseDto;
 import com.connectors.pos.shift.ShiftService;
 import com.connectors.pos.shift.ShiftSession;
@@ -20,10 +19,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -33,26 +34,52 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/pos")
-public class OrderController {
-   private final CustomerRepository customerRepo;
-    private final OrderService orderServo;
+public class OrderController { private final CustomerRepository customerRepo;
+ private final OrderService orderServo;
 private final ProductRepository productRepo;
 private final SettingsService settingsServo;
 private final CustomerService customerServo;
 private final SettingsGlobalInjector settings;
 private final ShiftService shiftService;
 private final OrderRepository orderRepo;
-private String posFile;
 
     private long nextOrderNumber() {
         Long maximum = orderRepo.findMaxOrderNumber();
         return (maximum == null ? 0L : maximum) + 1L;
+    }
+
+    private BigDecimal addCartTaxTotals(Model model, BigDecimal taxableSubtotal) {
+        BigDecimal taxRate = settings.getSettings().taxRate();
+        if (taxRate == null) {
+            taxRate = BigDecimal.ZERO;
+        }
+        BigDecimal taxAmount = SalesTaxCalculator.calculateTax(taxableSubtotal, taxRate);
+        model.addAttribute("taxableSubtotal", taxableSubtotal);
+        model.addAttribute("taxRate", taxRate);
+        model.addAttribute("taxAmount", taxAmount);
+        return taxableSubtotal.add(taxAmount);
+    }
+
+    private BigDecimal addPaymentPreview(Model model, PaymentMethod requestedMethod,
+                                         String reference, BigDecimal tendered, BigDecimal total) {
+        PaymentMethod method = requestedMethod == null ? PaymentMethod.CASH : requestedMethod;
+        BigDecimal amountTendered = tendered == null ? BigDecimal.ZERO : tendered.max(BigDecimal.ZERO);
+        BigDecimal payable = total.max(BigDecimal.ZERO);
+        BigDecimal amountApplied = method == PaymentMethod.CASH ? amountTendered.min(payable) : amountTendered;
+        BigDecimal cashChange = method == PaymentMethod.CASH
+                ? amountTendered.subtract(amountApplied) : BigDecimal.ZERO;
+        model.addAttribute("paymentMethod", method);
+        model.addAttribute("paymentReference", reference);
+        model.addAttribute("amountApplied", amountApplied);
+        model.addAttribute("cashChange", cashChange);
+        return amountApplied;
     }
 
 @ModelAttribute("customers")
@@ -61,59 +88,55 @@ public List<Customer> populateCustomers(){
     return customerRepo.findAll();
 }
 
-@ModelAttribute
-private void setPosStyle(){
-    SettingsResponseDto res = settings.getSettings();
-    PosStyle style=res.posStyle();
-    if(style.equals(PosStyle.HORIZONTAL)){
-        posFile="pos";
+@ModelAttribute("checkoutDisabled")
+public boolean isCheckoutDisabled(@AuthenticationPrincipal UserPrincipal principal) {
+    if (!settings.getSettings().shiftManagement()) {
+        return false;
     }
-    else{
-        posFile="fragments/pos-custom";
-    }
+    return principal == null || shiftService.findActiveShift(principal.getId()).isEmpty();
 }
+
+@ModelAttribute("returnsDisabled")
+public boolean isReturnsDisabled(@AuthenticationPrincipal UserPrincipal principal) {
+    if (!settings.getSettings().shiftManagement()) {
+        return false;
+    }
+    return principal == null || shiftService.findActiveShift(principal.getId()).isEmpty();
+}
+
+
+
+    private String resolvePosView() {
+        SettingsResponseDto res = settings.getSettings();
+        PosStyle style = (res != null && res.posStyle() != null) ? res.posStyle() : PosStyle.HORIZONTAL;
+        return style == PosStyle.HORIZONTAL ? "pos" : "fragments/pos-custom";
+    }
 
     @GetMapping("/sales")
     public String viewPosPage(@AuthenticationPrincipal UserPrincipal principal, Model model){
         SettingsResponseDto res = settings.getSettings();
-boolean shift = res.shiftManagement();
+        model.addAttribute("allow_shift", res.shiftManagement());
 
-  model.addAttribute("allow_shift",shift);
-
-
-
-
-        Long userId = principal.getId();
-    try {
-        ShiftSession activeShift = shiftService.getActiveShift(userId);
+        ShiftSession activeShift = principal == null ? null
+                : shiftService.findActiveShift(principal.getId()).orElse(null);
         model.addAttribute("activeShift", activeShift);
+        model.addAttribute("mode", "sales");
 
-    }
-    catch(RuntimeException ex){
-
-        model.addAttribute("activeShift", null);
-
-
+        return resolvePosView();
     }
 
-
-    model.addAttribute("mode","sales");
-
-        return posFile;
-
+    @GetMapping("/purchase")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String viewPurchasePage(Model model){
+        model.addAttribute("mode", "purchase");
+        return resolvePosView();
     }
-@GetMapping("/purchase")
-
-public String viewPurchasePage(Model model){
-    model.addAttribute("mode","purchase");
-
-    return posFile;
-}
 
 @PostMapping("/cart/add/{prodId}")
 
 
     public String addNewItemToCart(@PathVariable Long prodId  , @RequestParam(required = false) Long ordId,@ModelAttribute OrderCreateDto currentCart,Model model,HttpServletResponse response){
+System.out.println("adding new item to cart with prodId: " + prodId);
 
     if(ordId!=null){
         model.addAttribute("ordId",ordId);
@@ -191,8 +214,11 @@ BigDecimal discount = currentCart.discount()!=null ? currentCart.discount() :Big
 grandTotal =grandTotal.subtract(discount);
 
 BigDecimal paid = currentCart.paid()!=null ? currentCart.paid() : BigDecimal.ZERO;
+grandTotal = addCartTaxTotals(model, grandTotal);
 
-BigDecimal remaining = currentCart.paid()!=null  ? (grandTotal.subtract(paid)) : BigDecimal.ZERO;
+BigDecimal applied = addPaymentPreview(model, currentCart.paymentMethod(),
+        currentCart.paymentReference(), paid, grandTotal);
+BigDecimal remaining = grandTotal.subtract(applied);
 
 
 Long currentLastOrderNum = nextOrderNumber();
@@ -284,15 +310,18 @@ public String addNewItemUsingBarcodeSystem(@RequestParam(required = false) Long 
         grandTotal=grandTotal.add(subTotal);
 
         cartItems.add(new CartItemView(item.productId(),name,item.quantity()
-                ,subDiscount,price,subTotal,item.customName(),item.barcode(),item.customSellingPrice(),item.customPurchasePrice()));
+                ,subDiscount,price,subTotal,item.barcode(),item.customName(),item.customSellingPrice(),item.customPurchasePrice()));
 
     }
     BigDecimal discount = currentCart.discount()!=null ? currentCart.discount() :BigDecimal.ZERO;
     grandTotal =grandTotal.subtract(discount);
 
     BigDecimal paid = currentCart.paid()!=null ? currentCart.paid() : BigDecimal.ZERO;
+    grandTotal = addCartTaxTotals(model, grandTotal);
 
-    BigDecimal remaining = currentCart.paid()!=null  ? (grandTotal.subtract(paid)) : BigDecimal.ZERO;
+    BigDecimal applied = addPaymentPreview(model, currentCart.paymentMethod(),
+            currentCart.paymentReference(), paid, grandTotal);
+    BigDecimal remaining = grandTotal.subtract(applied);
 
 
     Long currentLastOrderNum = nextOrderNumber();
@@ -374,7 +403,7 @@ listItems.removeIf(it->it.quantity()<=0);
 
             grandTotal=grandTotal.add(subTotal);
 
-        CartItemView cartItem = new CartItemView(item.productId(),name,item.quantity(),subDisc,sellingPrice, subTotal,item.customName(),item.barcode()
+        CartItemView cartItem = new CartItemView(item.productId(),name,item.quantity(),subDisc,sellingPrice, subTotal,item.barcode(),item.customName()
         ,item.customSellingPrice(),item.customPurchasePrice());
 
              cartItems.add(cartItem);
@@ -383,8 +412,11 @@ BigDecimal globalDiscount = createDto.discount()!=null ? createDto.discount() : 
 grandTotal=grandTotal.subtract(globalDiscount);
 
     BigDecimal paid = createDto.paid()!=null ? createDto.paid() : BigDecimal.ZERO;
+    grandTotal = addCartTaxTotals(model, grandTotal);
 
-    BigDecimal remaining = createDto.paid()!=null  ? (grandTotal.subtract(paid)) : BigDecimal.ZERO;
+    BigDecimal applied = addPaymentPreview(model, createDto.paymentMethod(),
+            createDto.paymentReference(), paid, grandTotal);
+    BigDecimal remaining = grandTotal.subtract(applied);
 
     Long currentLastOrderNum = nextOrderNumber();
     String stordNum = currentLastOrderNum+"";
@@ -455,7 +487,7 @@ return "fragments/cart ::cart";
 
         grandTotal=grandTotal.add(subTotal);
 
-        CartItemView cartItem = new CartItemView(item.productId(),name,item.quantity(),subDisc,sellingPrice, subTotal,item.customName(),item.barcode()
+        CartItemView cartItem = new CartItemView(item.productId(),name,item.quantity(),subDisc,sellingPrice, subTotal,item.barcode(),item.customName()
                 ,item.customSellingPrice(),item.customPurchasePrice());
         cartItems.add(cartItem);
 
@@ -463,8 +495,11 @@ return "fragments/cart ::cart";
     BigDecimal globalDiscount = createDto.discount()!=null ? createDto.discount() : BigDecimal.ZERO;
     grandTotal=grandTotal.subtract(globalDiscount);
     BigDecimal paid = createDto.paid()!=null ? createDto.paid() : BigDecimal.ZERO;
+    grandTotal = addCartTaxTotals(model, grandTotal);
 
-    BigDecimal remaining = createDto.paid()!=null  ? (grandTotal.subtract(paid)) : BigDecimal.ZERO;
+    BigDecimal applied = addPaymentPreview(model, createDto.paymentMethod(),
+            createDto.paymentReference(), paid, grandTotal);
+    BigDecimal remaining = grandTotal.subtract(applied);
 
 
     Long currentLastOrderNum = nextOrderNumber();
@@ -511,7 +546,15 @@ return "fragments/cart ::cart";
     OrderResponseDto result = orderServo.createOrder(currentCart);
 
     response.setHeader("HX-Trigger", "{\"orderCompleted\": {\"orderId\": " + result.id() + "}}");
-
+    model.addAttribute("globalDiscount", BigDecimal.ZERO);
+    model.addAttribute("grandTotal", BigDecimal.ZERO);
+    model.addAttribute("cartItems", List.of());
+    model.addAttribute("paid", BigDecimal.ZERO);
+    model.addAttribute("remaining", BigDecimal.ZERO);
+    model.addAttribute("currentCustomerId", null);
+    model.addAttribute("orderNumber", null);
+    addCartTaxTotals(model, BigDecimal.ZERO);
+    addPaymentPreview(model, PaymentMethod.CASH, null, BigDecimal.ZERO, BigDecimal.ZERO);
 
     return "fragments/cart ::cart";
 
@@ -543,6 +586,76 @@ String printPage = switch(settings.printSize()){
 return printPage;
 }
 
+@GetMapping("/returns")
+@PreAuthorize("hasRole('ADMIN')")
+public String viewSaleReturns(@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+                              Pageable pageable, Model model) {
+    model.addAttribute("sales", orderServo.findOrdersForReturns(pageable));
+    return "sale-returns :: sale-returns";
+}
+
+@GetMapping("/returns/{orderId}")
+@PreAuthorize("hasRole('ADMIN')")
+public String openSaleReturn(@PathVariable Long orderId, Model model) {
+    OrderResponseDto sale = orderServo.findOrderById(orderId);
+    model.addAttribute("sale", sale);
+    model.addAttribute("returnItems", orderServo.getReturnableItems(orderId));
+    model.addAttribute("returnHistory", orderServo.getSaleReturnHistory(orderId));
+    model.addAttribute("returnRequest", new SaleReturnRequest(null, null, false, ""));
+    return "fragments/sale-return-form :: sale-return-form";
+}
+
+@PostMapping("/returns/{orderId}")
+@PreAuthorize("hasRole('ADMIN')")
+public String processSaleReturn(@PathVariable Long orderId,
+                                @Valid @ModelAttribute("returnRequest") SaleReturnRequest request,
+                                BindingResult bindingResult,
+                                HttpServletResponse response,
+                                Model model) {
+    if (bindingResult.hasErrors()) {
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("HX-Retarget", "#sale-return-error");
+        response.setHeader("HX-Reswap", "innerHTML");
+        model.addAttribute("errorMessage", bindingResult.getFieldError().getDefaultMessage());
+        return "fragments/auth-messages :: exceptions-response";
+    }
+
+    try {
+        orderServo.recordSaleReturn(orderId, request);
+        model.addAttribute("sales", orderServo.findOrdersForReturns(PageRequest.of(
+                0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))));
+        response.setHeader("HX-Trigger", "close-modal");
+        return "sale-returns :: sale-returns";
+    } catch (BusinessRuleException ex) {
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("HX-Retarget", "#sale-return-error");
+        response.setHeader("HX-Reswap", "innerHTML");
+        model.addAttribute("errorMessage", ex.getMessage());
+        return "fragments/auth-messages :: exceptions-response";
+    }
+}
+
+@PostMapping("/returns/{orderId}/void")
+@PreAuthorize("hasRole('ADMIN')")
+public String voidSale(@PathVariable Long orderId,
+                       @RequestParam String reason,
+                       HttpServletResponse response,
+                       Model model) {
+    try {
+        orderServo.voidSale(orderId, reason);
+        model.addAttribute("sales", orderServo.findOrdersForReturns(PageRequest.of(
+                0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))));
+        response.setHeader("HX-Trigger", "close-modal");
+        return "sale-returns :: sale-returns";
+    } catch (BusinessRuleException ex) {
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("HX-Retarget", "#sale-return-error");
+        response.setHeader("HX-Reswap", "innerHTML");
+        model.addAttribute("errorMessage", ex.getMessage());
+        return "fragments/auth-messages :: exceptions-response";
+    }
+}
+
 @GetMapping("order/{orderId}")
     public String viewExistingOrderPage(@PathVariable Long orderId, Model model){
 
@@ -553,8 +666,10 @@ return printPage;
 
    }).toList();
 
-   OrderUpdateDto update = new OrderUpdateDto(response.discount(),response.customerId(),items,response.paid()
-   ,response.remaining(),response.orderNumber());
+   BigDecimal tenderedAmount = response.paymentMethod() == PaymentMethod.CASH
+           ? response.cashReceived() : response.paid();
+   OrderUpdateDto update = new OrderUpdateDto(response.discount(), response.customerId(), items, tenderedAmount,
+           response.remaining(), response.orderNumber(), response.paymentMethod(), response.paymentReference());
 
    Long ordId = response.id();
 
@@ -606,7 +721,7 @@ return printPage;
         BigDecimal subTotal = (sellingPrice.multiply(Bigquantity)) .subtract(subDisc);
 
 
-        CartItemView cartItem = new CartItemView(item.productId(),name,item.quantity(),subDisc,sellingPrice, subTotal,item.customName(),item.barcode()
+        CartItemView cartItem = new CartItemView(item.productId(),name,item.quantity(),subDisc,sellingPrice, subTotal,item.barcode(),item.customName()
                 ,item.customSellingPrice(),item.customPurchasePrice());
         cartItems.add(cartItem);
 
@@ -616,8 +731,15 @@ return printPage;
 
     model.addAttribute("globalDiscount",response.discount());
     model.addAttribute("grandTotal",response.total());
+    model.addAttribute("taxableSubtotal",response.total().subtract(response.taxAmount()));
+    model.addAttribute("taxRate",response.taxRate());
+    model.addAttribute("taxAmount",response.taxAmount());
     model.addAttribute("cartItems",cartItems);
-    model.addAttribute("paid",response.paid());
+    model.addAttribute("paid", tenderedAmount);
+    model.addAttribute("paymentMethod", response.paymentMethod());
+    model.addAttribute("paymentReference", response.paymentReference());
+    model.addAttribute("amountApplied", response.paid());
+    model.addAttribute("cashChange", response.cashChange());
     model.addAttribute("remaining",response.remaining());
     model.addAttribute("currentCustomerId", response.customerId());
     model.addAttribute("ordId",ordId);
@@ -655,7 +777,8 @@ return printPage;
 
 @PatchMapping("/update/{ordId}")
 
-        public String updateOrderById( @PathVariable Long ordId ,@ModelAttribute OrderUpdateDto update , BindingResult bindResult,HttpServletResponse response , Model model){
+        public String updateOrderById(@PathVariable Long ordId, @Valid @ModelAttribute OrderUpdateDto update,
+                                      BindingResult bindResult, HttpServletResponse response, Model model){
 
 
 
@@ -680,6 +803,8 @@ model.addAttribute("grandTotal",BigDecimal.ZERO);
     model.addAttribute("remaining",BigDecimal.ZERO);
 
     model.addAttribute("globalDiscount",BigDecimal.ZERO);
+    addCartTaxTotals(model, BigDecimal.ZERO);
+    addPaymentPreview(model, PaymentMethod.CASH, null, BigDecimal.ZERO, BigDecimal.ZERO);
     List<CartItemView> items = new ArrayList<>();
 model.addAttribute("cartItems",items);
 
@@ -717,6 +842,8 @@ List<CartItemView> emptyList = new ArrayList<>();
     model.addAttribute("cartItems",emptyList);
     model.addAttribute("paid",BigDecimal.ZERO);
     model.addAttribute("remaining",BigDecimal.ZERO);
+    addCartTaxTotals(model, BigDecimal.ZERO);
+    addPaymentPreview(model, PaymentMethod.CASH, null, BigDecimal.ZERO, BigDecimal.ZERO);
     model.addAttribute("currentCustomerId", null);
     model.addAttribute("ordId", null);
     model.addAttribute("orderNumber", null);
@@ -728,6 +855,9 @@ List<CartItemView> emptyList = new ArrayList<>();
     @PostMapping("/custom")
 
     public String addCustomRowToCart(@ModelAttribute OrderCreateDto createDto, Model model,@RequestParam(required = false) Long ordId){
+
+    System.out.println("adding custom row to cart");
+
         if(ordId!=null){
             model.addAttribute("ordId",ordId);
         }
@@ -789,8 +919,11 @@ List<CartItemView> emptyList = new ArrayList<>();
         grandTotal=grandTotal.subtract(globalDiscount);
 
         BigDecimal paid = createDto.paid()!=null ? createDto.paid() : BigDecimal.ZERO;
+        grandTotal = addCartTaxTotals(model, grandTotal);
 
-        BigDecimal remaining = createDto.paid()!=null  ? (grandTotal.subtract(paid)) : BigDecimal.ZERO;
+        BigDecimal applied = addPaymentPreview(model, createDto.paymentMethod(),
+                createDto.paymentReference(), paid, grandTotal);
+        BigDecimal remaining = grandTotal.subtract(applied);
 
         Long currentLastOrderNum = nextOrderNumber();
         String stordNum = currentLastOrderNum+"";
@@ -825,37 +958,23 @@ public String findOrdersByCustomerName(@RequestParam(name ="custName") String na
     return "summary";
     }
 
-    @GetMapping("/CustomerOrderSummary/{id}")
-    public String getCustomerOrderSummary(@PageableDefault Pageable pageable,@PathVariable("id") Long id,@RequestParam(name="dateRange", required =false ) String dateRange,Model model){
-LocalDate modst;
-LocalDate modend;
+    @GetMapping({"/CustomerOrderSummary", "/CustomerOrderSummary/{id}"})
+    public String getCustomerOrderSummary(@PageableDefault Pageable pageable,
+                                          @PathVariable(name = "id", required = false) Long pathId,
+                                          @RequestParam(name = "customerId", required = false) Long customerId,
+                                          @RequestParam(name="dateRange", required =false ) String dateRange,
+                                          Model model){
+        Long id = pathId != null ? pathId : customerId;
+        if (id == null) {
+            return "fragments/order-sum-res-fragment :: select-customer";
+        }
+        LocalDate[] dates = parseCustomerSummaryDateRange(dateRange);
+        if (dates == null) {
+            return "fragments/order-sum-res-fragment :: summary-error";
+        }
 
-
-    if(dateRange == null || dateRange.isBlank()){
-   modst= LocalDate.now().minusMonths(1);
-   modend= LocalDate.now();
-    }
-    else{
-        String[] range =dateRange.split("to");
-        String st = (range.length>0 && !range[0].isBlank()) ? range[0].trim() : null;
-        String ed = (range.length>1 && !range[1].isBlank()) ? range[1].trim() :null;
-
-        modst = st!=null? LocalDate.parse(st) : LocalDate.now().minusMonths(1);
-
-        modend = ed!=null? LocalDate.parse(ed) : LocalDate.now();
-
-    }
-
-
-
-
-
-
-
-
-        LocalDateTime  start = modst.atStartOfDay();
-        LocalDateTime end = modend.atTime(LocalTime.MAX);
-
+        LocalDateTime start = dates[0].atStartOfDay();
+        LocalDateTime end = dates[1].atTime(LocalTime.MAX);
 
       CustomerSummary summary = orderServo.getCustomerSummaryInPeriodById(id,start,end,pageable);
     model.addAttribute("summary",summary);
@@ -864,6 +983,27 @@ LocalDate modend;
     return "fragments/order-sum-res-fragment :: summary-result";
 }
 
+    private static LocalDate[] parseCustomerSummaryDateRange(String dateRange) {
+        if (dateRange == null || dateRange.isBlank()) {
+            LocalDate today = LocalDate.now();
+            return new LocalDate[]{today.minusMonths(1), today};
+        }
+
+        String[] parts = dateRange.trim().split("\\s+to\\s+", -1);
+        if (parts.length == 1) {
+            parts = new String[]{parts[0], parts[0]};
+        }
+        if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+            return null;
+        }
+        try {
+            LocalDate start = LocalDate.parse(parts[0].trim());
+            LocalDate end = LocalDate.parse(parts[1].trim());
+            return start.isAfter(end) ? null : new LocalDate[]{start, end};
+        } catch (DateTimeParseException exception) {
+            return null;
+        }
+    }
 
 
 

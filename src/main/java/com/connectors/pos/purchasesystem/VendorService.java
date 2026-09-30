@@ -66,7 +66,7 @@ public class VendorService {
 
         if(update.name()!=null&&!update.name().equals(vendor.getName())){vendor.setName(update.name());}
         if(update.location()!=null&& !update.location().equals(vendor.getLocation())){vendor.setLocation(update.location());}
-        if(update.phoneNumber()!=null&&update.phoneNumber().equals(vendor.getMobile())){vendor.setMobile(update.phoneNumber());}
+        if(update.phoneNumber()!=null&&!update.phoneNumber().equals(vendor.getMobile())){vendor.setMobile(update.phoneNumber());}
        if(update.landline()!=null&&!update.landline().equals(vendor.getLandline())){vendor.setLandline(update.landline());}
 
        return vendor;

@@ -1,0 +1,87 @@
+<div>
+
+    <h2 class="page-heading">
+        <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span th:text="#{users.title}">Users</span>
+    </h2>
+
+    <div id="list-error" class="form-error"></div>
+
+    <div id="users-table" th:fragment="users-table">
+        <figure>
+        <table role="grid">
+            <thead>
+            <tr>
+                <th th:text="#{users.table.name}">name</th>
+                <th th:text="#{users.table.email}">email</th>
+                <th th:text="#{users.table.role}">role</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="u : ${usersList}">
+                <td th:text="${u.name}"></td>
+                <td th:text="${u.email}"></td>
+                <td>
+                    <span th:if="${u.admin}" th:text="#{users.role.admin}">Admin</span>
+                    <span th:unless="${u.admin}" th:text="#{users.role.cashier}">Cashier</span>
+                </td>
+                <td>
+                    <button th:if="${!u.admin}" type="button" class="secondary outline" style="padding: 4px 10px;"
+                            th:hx-post="@{/users/{id}/promote(id=${u.id})}"
+                            hx-target="#users-table"
+                            hx-swap="outerHTML"
+                            th:hx-confirm="#{users.confirm.promote(${u.name})}"
+                            th:text="#{users.btn.promote}">
+                        promote
+                    </button>
+                    <button th:if="${u.admin}" type="button" class="contrast outline" style="padding: 4px 10px;"
+                            th:hx-post="@{/users/{id}/demote(id=${u.id})}"
+                            hx-target="#users-table"
+                            hx-swap="outerHTML"
+                            th:hx-confirm="#{users.confirm.demote(${u.name})}"
+                            th:text="#{users.btn.demote}">
+                        demote
+                    </button>
+                    <button type="button" class="outline" style="padding: 4px 10px;"
+                            th:hx-get="@{/users/{id}/reset-password(id=${u.id})}"
+                            hx-target="#modal-container-users"
+                            hx-swap="innerHTML"
+                            th:text="#{users.btn.resetPassword}">
+                        reset password
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        </figure>
+    </div>
+
+    <div id="modal-container-users" hx-on:close-modal="this.innerHTML=''"></div>
+
+    <dialog open th:fragment="reset-password-dialog" th:if="${targetUser != null}">        <article>
+            <h2 th:text="#{users.resetPassword.title}">Reset password</h2>
+            <p>
+                <span th:text="#{users.resetPassword.for}">Set a new password for</span>
+                <strong th:text="|${targetUser.name}  (${targetUser.email})|"></strong>
+            </p>
+            <div id="reset-password-error" class="form-error"></div>
+            <form th:object="${resetPasswordForm}"
+                  th:hx-post="@{/users/{id}/reset-password(id=${targetUser.id})}"
+                  hx-target="#users-table" hx-swap="outerHTML">
+
+                <label for="newPassword" th:text="#{users.resetPassword.new}">New password</label>
+                <input id="newPassword" type="password" th:field="*{newPassword}" required autocomplete="new-password"/>
+
+                <label for="confirmPassword" th:text="#{users.resetPassword.confirm}">Confirm new password</label>
+                <input id="confirmPassword" type="password" th:field="*{confirmPassword}" required autocomplete="new-password"/>
+
+                <button type="submit" th:text="#{users.resetPassword.submit}">Reset password</button>
+            </form>
+            <form method="dialog">
+                <button class="secondary" th:text="#{btn.close}">Close</button>
+            </form>
+        </article>
+    </dialog>
+</div>
+

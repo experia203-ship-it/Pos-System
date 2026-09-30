@@ -5,7 +5,6 @@
     <title th:text="#{invoice.a5.title}">A5 Invoice</title>
 
     <style>
-        /* Base styling for the screen preview */
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #333;
@@ -24,39 +23,39 @@
 
         @media print {
             body {
-                background-color: white; /* remove gray background when printing */
+                background-color: white;
                 padding: 0;
             }
             .invoice-box {
-                box-shadow: none; /* remove shadows for print */
+                box-shadow: none;
                 margin: 0;
                 padding: 0;
             }
             .no-print {
-                display: none !important; /* Hides buttons on the actual paper */
+                display: none !important;
             }
         }
 
         @page {
-            size: A5 portrait; /* Forces the browser to default to A5 */
+            size: A5 portrait;
             margin: 10mm;
         }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f8f8f8; }
+        th { background-color: #f0fdfa; color: #0b3455; }
         .text-right { text-align: right; }
     </style>
 </head>
 <body>
 <div class="invoice-box">
     <div>
-        <h2 th:text="${globalSettings.companyName}"></h2>
+        <h2 style="color: #0b3455;" th:text="${globalSettings.companyName}"></h2>
         <p style="margin: 3px 0;" th:if="${not #strings.isEmpty(globalSettings.address)}" th:text="${globalSettings.address}"></p>
         <p style="margin: 3px 0;" th:if="${not #strings.isEmpty(globalSettings.phoneNumber)}" th:text="${globalSettings.phoneNumber}"></p>
         <p style="margin: 3px 0;" th:if="${not #strings.isEmpty(globalSettings.taxRegistrationNumber)}" th:text="#{invoice.taxId(${globalSettings.taxRegistrationNumber})}"></p>
     </div>
 
-    <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 2px solid #333;">
+    <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 2px solid #0e9488;">
         <div>
             <strong th:text="#{invoice.orderId}">Order ID:</strong> <span th:text="${order.orderNumber}"></span><br>
             <strong th:text="#{invoice.date}">Date:</strong> <span th:text="${#temporals.format(order.createdAt, 'dd-MM-yyyy HH:mm')}"></span>
@@ -86,9 +85,22 @@
     </table>
 
     <div style="margin-top: 20px; text-align: right;">
-        <p><strong th:text="#{invoice.totals.discount}">Discount:</strong> <span th:text="|-${globalSettings.currencySymbol} ${order.discount}|">0.00</span></p>
-        <p><strong th:text="#{invoice.totals.grandTotal}">Grand Total:</strong> <span th:text="|${globalSettings.currencySymbol} ${order.total}|"></span></p>
+        <p><strong th:text="#{invoice.totals.subtotal}">Subtotal:</strong> <span th:text="|${globalSettings.currencySymbol} ${order.total + order.discount - order.taxAmount}|"></span></p>
+        <p><strong th:text="#{invoice.totals.discount}">Discount:</strong> <span style="color: #dc2626;" th:text="|-${globalSettings.currencySymbol} ${order.discount}|">0.00</span></p>
+        <p><strong th:text="|#{invoice.totals.tax} (${order.taxRate}%)|">Tax:</strong> <span th:text="|${globalSettings.currencySymbol} ${order.taxAmount}|"></span></p>
+        <p><strong th:text="#{invoice.totals.grandTotal}">Grand Total:</strong> <span style="color: #0e9488; font-weight: bold;" th:text="|${globalSettings.currencySymbol} ${order.total}|"></span></p>
         <p><strong th:text="#{invoice.totals.paid}">Paid:</strong> <span th:text="|${globalSettings.currencySymbol} ${order.paid}|"></span></p>
+        <p><strong th:text="#{invoice.payment.method}">Payment method:</strong>
+            <span th:text="${#messages.msg('payment.method.' + #strings.toLowerCase(order.paymentMethod.name()))}"></span></p>
+        <p th:if="${order.paymentReference != null and !#strings.isEmpty(order.paymentReference)}">
+            <strong th:text="#{invoice.payment.reference}">Payment reference:</strong>
+            <span th:text="${order.paymentReference}"></span></p>
+        <p th:if="${order.paymentMethod.name() == 'CASH'}">
+            <strong th:text="#{invoice.payment.cashReceived}">Cash received:</strong>
+            <span th:text="|${globalSettings.currencySymbol} ${order.cashReceived}|"></span></p>
+        <p th:if="${order.paymentMethod.name() == 'CASH'}">
+            <strong th:text="#{invoice.payment.change}">Change:</strong>
+            <span th:text="|${globalSettings.currencySymbol} ${order.cashChange}|"></span></p>
         <p><strong th:text="#{invoice.totals.remaining}">Remaining:</strong> <span th:text="|${globalSettings.currencySymbol} ${order.remaining}|"></span></p>
     </div>
 
@@ -97,7 +109,7 @@
     </div>
 
     <div class="no-print" style="text-align: center; margin-top: 20px;">
-        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;" th:text="#{invoice.btn.print}">Print Invoice</button>
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #0e9488; color: white; border: none; border-radius: 8px;" th:text="#{invoice.btn.print}">Print Invoice</button>
     </div>
 </div>
 

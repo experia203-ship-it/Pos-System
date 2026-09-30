@@ -6,17 +6,17 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import io.jsonwebtoken.JwtException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.logging.Logger;
-
 @RequiredArgsConstructor
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -50,7 +50,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
                         email = jwtService.getUsernameFromToken(token);
                     }
-                    catch(Exception e){
+                    catch(JwtException | IllegalArgumentException e){
 
                         logger.error("Could not extract username from JWt Cookie ",e);
                     }
@@ -66,18 +66,22 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if(email!=null && SecurityContextHolder.getContext().getAuthentication()==null){
 
-   UserDetails userDetails = detailsService.loadUserByUsername(email);
+            try {
+                UserDetails userDetails = detailsService.loadUserByUsername(email);
 
-if(jwtService.validateToken(token,userDetails)){
+                if(jwtService.validateToken(token,userDetails)){
 
-    UsernamePasswordAuthenticationToken newToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken newToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
 
-newToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    newToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-SecurityContextHolder.getContext().setAuthentication(newToken);
+                    SecurityContextHolder.getContext().setAuthentication(newToken);
+                }
+            } catch (UsernameNotFoundException ex) {
+                logger.debug("JWT subject no longer maps to an account", ex);
+            }
 
-
-}
 
         }
         filterChain.doFilter(request,response);
@@ -88,7 +92,7 @@ SecurityContextHolder.getContext().setAuthentication(newToken);
   protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
 
         String path=request.getRequestURI();
-        return path.startsWith("/auth/");
+        return path.equals("/auth/login");
     }
 
 }

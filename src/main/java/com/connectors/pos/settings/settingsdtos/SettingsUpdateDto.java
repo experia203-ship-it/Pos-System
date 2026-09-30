@@ -7,7 +7,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.math.BigDecimal;
 
 public record SettingsUpdateDto(
         @NotBlank(message="please provide your company name")
@@ -26,7 +30,17 @@ public record SettingsUpdateDto(
         String currencySymbol,
         PosStyle posStyle,
         MultipartFile logoFile,
-        boolean shiftManagement
+        boolean shiftManagement,
+        @DecimalMin(value = "0.00", message = "Tax rate cannot be negative.")
+        @DecimalMax(value = "100.00", message = "Tax rate cannot exceed 100%.")
+        BigDecimal taxRate
 
 ) {
+    public SettingsUpdateDto(String companyName, String phoneNumber, String address,
+                             String taxRegistrationNumber, Theme theme, PrintSize printSize,
+                             String currencySymbol, PosStyle posStyle, MultipartFile logoFile,
+                             boolean shiftManagement) {
+        this(companyName, phoneNumber, address, taxRegistrationNumber, theme, printSize,
+                currencySymbol, posStyle, logoFile, shiftManagement, BigDecimal.ZERO);
+    }
 }

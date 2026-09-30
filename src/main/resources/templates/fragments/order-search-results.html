@@ -10,23 +10,25 @@
     <table th:if="${not orderResults.empty}">
         <thead>
         <tr>
-            <th th:text="#{order.results.number}">Number</th>
-            <th th:text="#{order.results.customer}">Customer</th>
-            <th th:text="#{order.results.total}">Total</th>
-            <th th:text="#{order.results.date}">Date</th>
+            <th style="width: 22%;" th:text="#{order.results.number}">Number</th>
+            <th style="width: 28%;" th:text="#{order.results.customer}">Customer</th>
+            <th style="width: 15%;" th:text="#{order.results.total}">Total</th>
+            <th style="width: 20%;" th:text="#{order.results.paymentMethod}">Payment method</th>
+            <th style="width: 15%;" th:text="#{order.results.date}">Date</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="order : ${orderResults}"
             th:hx-get="|/pos/order/${order.id}|"
             hx-target="#cart-zone"
-            hx-swap="innerHTML"
+            hx-swap="outerHTML"
             class="clickable-row"
             tabindex="0">
 
-            <td class="truncate-text" th:text="${order.orderNumber}" th:title="${order.orderNumber}"></td>
-            <td th:text="${order.customerName}"></td>
+            <td class="wrap-text" th:text="${order.orderNumber}" th:title="${order.orderNumber}"></td>
+            <td class="wrap-text" th:text="${order.customerName}" th:title="${order.customerName}"></td>
             <td th:text="${order.total}"></td>
+            <td th:text="${#messages.msg('payment.method.' + #strings.toLowerCase(order.paymentMethod.name()))}"></td>
             <td class="truncate-text" th:text="${order.createdAt}" th:title="${order.createdAt}"></td>
 
         </tr>

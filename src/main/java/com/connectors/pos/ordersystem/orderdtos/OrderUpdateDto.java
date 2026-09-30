@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
+import com.connectors.pos.ordersystem.PaymentMethod;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,7 +28,17 @@ public record OrderUpdateDto(
 
         BigDecimal remaining ,
 
-        String orderNumber
+        String orderNumber,
+
+        PaymentMethod paymentMethod,
+
+        @Size(max = 100, message = "Payment reference must be 100 characters or fewer.")
+        String paymentReference
+
 
 ) {
+    public OrderUpdateDto(BigDecimal discount, Long customerId, List<OrderItemCreateDto> itemsList,
+                          BigDecimal paid, BigDecimal remaining, String orderNumber) {
+        this(discount, customerId, itemsList, paid, remaining, orderNumber, PaymentMethod.CASH, null);
+    }
 }

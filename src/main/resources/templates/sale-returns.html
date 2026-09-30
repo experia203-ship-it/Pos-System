@@ -1,0 +1,56 @@
+<div id="sale-returns" th:fragment="sale-returns">
+    <h2 class="page-heading" th:text="#{sale.return.title}">Customer Returns</h2>
+    <p th:text="#{sale.return.description}">
+        Choose a sale to record returned items or void the remaining sale.
+    </p>
+    <p th:if="${returnsDisabled}" class="form-error" th:text="#{sale.return.shift.required}">
+        Open your shift before processing returns or voids.
+    </p>
+    <figure>
+        <table role="grid">
+            <thead>
+            <tr>
+                <th th:text="#{sale.return.sale}">Sale</th>
+                <th th:text="#{sale.return.customer}">Customer</th>
+                <th th:text="#{sale.return.total}">Total</th>
+                <th th:text="#{sale.return.balance}">Balance</th>
+                <th th:text="#{sale.return.credit}">Returned credit</th>
+                <th th:text="#{sale.return.refunded}">Refunded</th>
+                <th th:text="#{sale.return.status}">Status</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="sale : ${sales.content}">
+                <td th:text="${sale.orderNumber != null ? sale.orderNumber : sale.id}"></td>
+                <td th:text="${sale.customerName != null ? sale.customerName : '-'}"></td>
+                <td th:text="${sale.total}"></td>
+                <td th:text="${sale.remaining}"></td>
+                <td th:text="${sale.returnCredit}"></td>
+                <td th:text="${sale.refundedTotal}"></td>
+                <td th:text="${sale.voided ? #messages.msg('sale.return.voided') : #messages.msg('sale.return.active')}"></td>
+                <td>
+                    <button type="button" class="secondary"
+                            th:hx-get="@{/pos/returns/{id}(id=${sale.id})}"
+                            hx-target="#main-window" hx-swap="innerHTML"
+                            th:text="#{sale.return.action}">Process return</button>
+                </td>
+            </tr>
+            <tr th:if="${sales.empty}">
+                <td colspan="8" th:text="#{sale.return.empty}">No sales found.</td>
+            </tr>
+            </tbody>
+        </table>
+    </figure>
+    <nav th:if="${sales.totalPages > 1}" aria-label="Sale return pages">
+        <button type="button" class="secondary" th:if="${sales.hasPrevious()}"
+                th:hx-get="@{/pos/returns(page=${sales.number - 1})}"
+                hx-target="#main-window" hx-swap="innerHTML"
+                th:text="#{sale.return.previous}">Previous</button>
+        <span th:text="#{sale.return.page(${sales.number + 1}, ${sales.totalPages})}">Page 1 of 2</span>
+        <button type="button" class="secondary" th:if="${sales.hasNext()}"
+                th:hx-get="@{/pos/returns(page=${sales.number + 1})}"
+                hx-target="#main-window" hx-swap="innerHTML"
+                th:text="#{sale.return.next}">Next</button>
+    </nav>
+</div>

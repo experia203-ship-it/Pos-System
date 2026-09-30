@@ -1,6 +1,11 @@
 <div id="settings-div" th:fragment="settings-fragment">
 
-    <article style="margin-bottom: 2rem; padding: 1rem;">
+    <h2 class="page-heading">
+        <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span th:text="#{sidebar.botton.settings}">Settings</span>
+    </h2>
+
+    <article style="margin-bottom: 1.5rem;">
         <h3 style="margin-bottom: 1rem;" th:text="#{settings.language.title}">System Language / لغة النظام</h3>
 
         <div style="display: flex; gap: 10px;">
@@ -9,16 +14,17 @@
         </div>
     </article>
 
-    <article style="margin-bottom: 2rem; padding: 1rem;">
+    <article style="margin-bottom: 1.5rem;">
         <h3 style="margin-bottom: 1rem;" th:text="#{settings.logo.title}">Company Logo</h3>
         <div id="logo-container" style="margin-bottom: 1rem;">
             <!-- Added a timestamp to the URL so the browser immediately updates the image after a new upload instead of loading the old one from cache -->
             <img th:src="@{/settings/logo(t=${#dates.createNow().time})}" th:alt="#{settings.logo.alt}"
-                 style="max-width: 200px; max-height: 100px; border: 1px dashed var(--pico-muted-border-color); padding: 5px;">
+                 style="max-width: 200px; max-height: 100px; border: 1px dashed var(--brand-gray-border); border-radius: 8px; padding: 5px;">
         </div>
     </article>
 
     <!-- Main Settings Form (Handles text + file) -->
+    <article>
     <form th:object="${settings}"
           hx-post="/settings"
           hx-encoding="multipart/form-data"
@@ -32,19 +38,26 @@
 
         <label for="companyName" th:text="#{settings.field.companyName}">companyName:</label>
         <input type="text" id="companyName" th:field="*{companyName}"/>
-        <span style="color: red" th:if="${#fields.hasErrors('companyName')}" th:errors="*{companyName}"></span>
+        <span class="form-error" th:if="${#fields.hasErrors('companyName')}" th:errors="*{companyName}"></span>
 
         <label for="phoneNumber" th:text="#{settings.field.phoneNumber}">phoneNumber:</label>
         <input type="text" id="phoneNumber" th:field="*{phoneNumber}"/>
-        <span style="color: red" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
+        <span class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
 
         <label for="address" th:text="#{settings.field.address}">address:</label>
         <input type="text" id="address" th:field="*{address}" />
-        <span style="color:red" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
+        <span class="form-error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
 
         <label for="taxRegistrationNumber" th:text="#{settings.field.taxRegistrationNumber}">taxRegistrationNumber:</label>
         <input type="text" id="taxRegistrationNumber" th:field="*{taxRegistrationNumber}" />
-        <span style="color:red" th:if="${#fields.hasErrors('taxRegistrationNumber')}" th:errors="*{taxRegistrationNumber}"></span>
+        <span class="form-error" th:if="${#fields.hasErrors('taxRegistrationNumber')}" th:errors="*{taxRegistrationNumber}"></span>
+
+        <label for="taxRate" th:text="#{settings.field.taxRate}">Sales tax rate (%):</label>
+        <input type="number" id="taxRate" th:field="*{taxRate}" min="0" max="100" step="0.01" />
+        <span class="form-error" th:if="${#fields.hasErrors('taxRate')}" th:errors="*{taxRate}"></span>
+        <small th:text="#{settings.field.taxRate.help}">
+            Tax is added to before-tax prices and calculated after discounts.
+        </small>
 
         <label for="theme" th:text="#{settings.field.theme}">theme:</label>
         <select id="theme" th:field="*{theme}">
@@ -52,7 +65,7 @@
                     th:value="${t.name}"
                     th:text="${t.name}"></option>
         </select>
-        <span style="color:red" th:if="${#fields.hasErrors('theme')}" th:errors="*{theme}"></span>
+        <span class="form-error" th:if="${#fields.hasErrors('theme')}" th:errors="*{theme}"></span>
 
         <label for="printSize" th:text="#{settings.field.printSize}">printSize:</label>
         <select id="printSize" th:field="*{printSize}">
@@ -60,11 +73,11 @@
                     th:value="${s.name}"
                     th:text="${s.name}"></option>
         </select>
-        <span style="color:red" th:if="${#fields.hasErrors('printSize')}" th:errors="*{printSize}"></span>
+        <span class="form-error" th:if="${#fields.hasErrors('printSize')}" th:errors="*{printSize}"></span>
 
         <label for="currencySymbol" th:text="#{settings.field.currencySymbol}">currencySymbol:</label>
         <input id="currencySymbol" type="text" th:field="*{currencySymbol}" />
-        <span style="color:red" th:if="${#fields.hasErrors('currencySymbol')}" th:errors="*{currencySymbol}"></span>
+        <span class="form-error" th:if="${#fields.hasErrors('currencySymbol')}" th:errors="*{currencySymbol}"></span>
 
         <label for="pos-style" th:text="#{settings.field.posStyle}">PosStyle:</label>
         <select id="pos-style" th:field="*{posStyle}">
@@ -72,15 +85,22 @@
                     th:text="${s.name}"
                     th:value="${s.name}"></option>
         </select>
-        <span style="color:red" th:if="${#fields.hasErrors('posStyle')}" th:errors="*{posStyle}"></span>
+        <span class="form-error" th:if="${#fields.hasErrors('posStyle')}" th:errors="*{posStyle}"></span>
 
         <label for="shift" style="display: flex; gap: 10px; align-items: center; cursor: pointer; margin-bottom: 1.5rem;" th:text="#{settings.field.shiftManagement}">show-shiftManagement:</label>
         <input id="shift" type="checkbox" th:field="*{shiftManagement}" style="margin-bottom: 0;"/>
-        <span style="color:red" th:if="${#fields.hasErrors('shiftManagement')}" th:errors="*{shiftManagement}"></span>
+        <span class="form-error" th:if="${#fields.hasErrors('shiftManagement')}" th:errors="*{shiftManagement}"></span>
 
         <button type="submit" style="margin-top: 1rem;" th:text="#{settings.btn.save}">save</button>
     </form>
+    </article>
 
-    <div id="list-error2" style="color: red; font-weight: bold; margin-top: 5px;"></div>
+    <article th:if="${backupSupported}" style="margin-bottom: 1.5rem;">
+        <h3 style="margin-bottom: 1rem;" th:text="#{settings.backup.title}">Database Backup</h3>
+        <p th:text="#{settings.backup.description}">Download a backup of the database now. Automatic backups are also taken daily.</p>
+        <a th:href="@{/settings/backup/download}" role="button" class="outline" th:text="#{settings.backup.download}">Download backup</a>
+    </article>
+
+    <div id="list-error2" class="form-error"></div>
 
 </div>

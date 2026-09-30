@@ -2,6 +2,7 @@ package com.connectors.pos.ordersystem.orderdtos;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import com.connectors.pos.ordersystem.PaymentMethod;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,7 +26,16 @@ public record OrderCreateDto(
 
         BigDecimal remaining ,
 
-        Long number
+        Long number,
+
+        PaymentMethod paymentMethod,
+
+        @Size(max = 100, message = "Payment reference must be 100 characters or fewer.")
+        String paymentReference
 
 ) {
+    public OrderCreateDto(BigDecimal discount, Long customerId, List<OrderItemCreateDto> itemsList,
+                          BigDecimal paid, BigDecimal remaining, Long number) {
+        this(discount, customerId, itemsList, paid, remaining, number, PaymentMethod.CASH, null);
+    }
 }

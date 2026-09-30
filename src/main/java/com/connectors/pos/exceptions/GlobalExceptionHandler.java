@@ -1,6 +1,8 @@
 package com.connectors.pos.exceptions;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
@@ -11,6 +13,20 @@ import org.springframework.web.servlet.ModelAndView;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({
+            CustomerNotFoundException.class,
+            OrderNotFoundException.class,
+            CategoryNotFoundException.class,
+            EntityNotFoundException.class
+    })
+    public ModelAndView handleEntityNotFound(RuntimeException ex, HttpServletRequest request) {
+        ModelAndView mav = new ModelAndView("fragments/auth-messages :: exceptions-response");
+        mav.addObject("errorMessage", ex.getMessage());
+        mav.setStatus("true".equalsIgnoreCase(request.getHeader("HX-Request"))
+                ? HttpStatus.OK : HttpStatus.NOT_FOUND);
+        return mav;
+    }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
 
@@ -77,6 +93,46 @@ public ModelAndView  handleBusinessRuleExceptions(BusinessRuleException ex){
         return mav;
     }
 
+    @ExceptionHandler(ShiftRequiredException.class)
+    public ModelAndView handleShiftRequired(ShiftRequiredException ex, HttpServletResponse response) {
+        ModelAndView mav = new ModelAndView("fragments/auth-messages :: exceptions-response");
+        mav.addObject("errorMessage", ex.getMessage());
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("HX-Retarget", "#list-error");
+        response.setHeader("HX-Reswap", "innerHTML");
+        return mav;
+    }
+
+    @ExceptionHandler(ShiftOperationException.class)
+    public ModelAndView handleShiftOperation(ShiftOperationException ex, HttpServletResponse response) {
+        ModelAndView mav = new ModelAndView("fragments/auth-messages :: exceptions-response");
+        mav.addObject("errorMessage", ex.getMessage());
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("HX-Retarget", "#shift-error");
+        response.setHeader("HX-Reswap", "innerHTML");
+        return mav;
+    }
+
+    @ExceptionHandler(PurchaseOrderException.class)
+    public ModelAndView handlePurchaseOrder(PurchaseOrderException ex, HttpServletResponse response) {
+        ModelAndView mav = new ModelAndView("fragments/auth-messages :: exceptions-response");
+        mav.addObject("errorMessage", ex.getMessage());
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("HX-Retarget", "#list-error");
+        response.setHeader("HX-Reswap", "innerHTML");
+        return mav;
+    }
+
+    @ExceptionHandler(SaleValidationException.class)
+    public ModelAndView handleSaleValidation(SaleValidationException ex, HttpServletResponse response) {
+        ModelAndView mav = new ModelAndView("fragments/auth-messages :: exceptions-response");
+        mav.addObject("errorMessage", ex.getMessage());
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("HX-Retarget", "#list-error");
+        response.setHeader("HX-Reswap", "innerHTML");
+        return mav;
+    }
+
 
     @ExceptionHandler(InsuffecientStockException.class)
 
@@ -99,21 +155,33 @@ public ModelAndView  handleBusinessRuleExceptions(BusinessRuleException ex){
     @ExceptionHandler(ProductNotFoundException.class)
 
     public ModelAndView handleProductNotFoundException(ProductNotFoundException ex,HttpServletResponse response){
-        ModelAndView mav = new ModelAndView("@PostMapping\n" +
-                "    public String updateSettings(@Valid @ModelAttribute(\"settings\") SettingsUpdateDto update, BindingResult bindResult , HttpServletResponse response){\n" +
-                "\n" +
-                "        if(bindResult.hasErrors()){\n" +
-                "\n" +
-                "            response.setHeader(\"HX-Retarget\",\"#settings-div\");\n" +
-                "            response.setHeader(\"HX-Reswap\",\"innerHTML\");\n" +
-                "        return \"settings :: settings-fragment\";\n" +
-                "        }\n" +
-                "\n" +
-                "        settingsServo.updateGlobalSettings(update);\n" +
-                "\n" +
-                "        return \"fragments/layout :: main-window\";\n" +
-                "}\n" +
-                "}");
+        ModelAndView mav = new ModelAndView("fragments/auth-messages :: exceptions-response");
+        mav.addObject("errorMessage",ex.getMessage());
+
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("HX-Retarget","#list-error");
+        response.setHeader("HX-Reswap","innerHTML");
+
+        return mav;
+    }
+
+    @ExceptionHandler(UserManagementException.class)
+
+    public ModelAndView handleUserManagementException(UserManagementException ex, HttpServletResponse response){
+        ModelAndView mav = new ModelAndView("fragments/auth-messages :: exceptions-response");
+        mav.addObject("errorMessage",ex.getMessage());
+
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("HX-Retarget","#list-error");
+        response.setHeader("HX-Reswap","innerHTML");
+
+        return mav;
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+
+    public ModelAndView handleUserNotFoundException(UserNotFoundException ex, HttpServletResponse response){
+        ModelAndView mav = new ModelAndView("fragments/auth-messages :: exceptions-response");
         mav.addObject("errorMessage",ex.getMessage());
 
         response.setStatus(HttpServletResponse.SC_OK);

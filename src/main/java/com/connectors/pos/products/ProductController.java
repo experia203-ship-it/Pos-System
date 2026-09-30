@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -38,6 +39,7 @@ public class ProductController {
 
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public String viewProductsPage(Model model,
     @PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.DESC) Pageable pageable ,
                                    @RequestHeader(value = "Hx-Request",required = false) String hxRequest){
@@ -67,6 +69,7 @@ model.addAttribute("catMap",catsWithIds);
     }
 
     @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN')")
     public String searchByKeyword(@RequestParam String keyword ,
     @PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.DESC) Pageable pageable , Model model,
                         @RequestHeader(value ="Hx-Request",required = false)  String hxRequest       ){
@@ -80,6 +83,7 @@ return "products :: table-wrapper";
 
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String deleteProduct(@PathVariable Long id){
 
         productServo.deleteProductById(id);
@@ -91,7 +95,7 @@ return "products :: table-wrapper";
 
 
     @GetMapping("/create")
-
+    @PreAuthorize("hasRole('ADMIN')")
     public String openCreateProductDialog(Model model){
 
         CreateProductDto create = new CreateProductDto(null,
@@ -111,7 +115,7 @@ model.addAttribute("categories",listOfCategories);
 
 
 @PostMapping
-
+    @PreAuthorize("hasRole('ADMIN')")
     public String createNewProduct(@Valid @ModelAttribute("createDto") CreateProductDto incomingDto, BindingResult bindResult, Model model,
                                    @PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.DESC) Pageable pageable,
                                    HttpServletResponse response){
@@ -140,6 +144,7 @@ return "products :: product-table-body";
 
 }
 @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String viewUpdateProductDialog(@PathVariable Long id ,Model model){
 
 
@@ -166,7 +171,7 @@ if(product.categoryId()!=null) {
 
     }
     @PatchMapping("/{id}")
-
+    @PreAuthorize("hasRole('ADMIN')")
     public String updateProduct(@PathVariable Long id,
                                 @Valid@ModelAttribute("updateProduct") ProductUpdateDto dto,
                                 BindingResult bindResult,
@@ -204,6 +209,7 @@ if(product.categoryId()!=null) {
 
 
     @GetMapping("/search-pos")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public String searchForPos(@PageableDefault(page = 0,size = 10,sort = "name",direction = Sort.Direction.ASC) Pageable pageable,
                                Model model , @RequestParam(name = "keyword" ,defaultValue = "") String keyword ,@RequestParam(name="mode",defaultValue = "sales") String mode){
 
@@ -228,7 +234,7 @@ else {
 
 
   @PostMapping("/import")
-
+  @PreAuthorize("hasRole('ADMIN')")
   public String importCsvFiles(@RequestParam(name="file") MultipartFile file, RedirectAttributes redirect){
 
 
@@ -256,6 +262,7 @@ redirect.addFlashAttribute("success",result.imported() + " products imported suc
   }
 
 @GetMapping("/generate-barcode")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseBody
 
     public String generateBarcode(){
@@ -275,6 +282,7 @@ return String.format(html,generatedBarcode);
 
 }
     @GetMapping("/print-label/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String printBarcodeLabel(@PathVariable Long id, Model model) {
         ProductResponseDto prod = productServo.findById(id);
         model.addAttribute("product", prod);
@@ -282,6 +290,7 @@ return String.format(html,generatedBarcode);
     }
 
     @GetMapping("/reorder-point")
+    @PreAuthorize("hasRole('ADMIN')")
     public String viewReorderPointsProducts(@PageableDefault(page = 0,size = 10) Pageable pageable ,Model model){
 
         ProductsReorderPoint point = productServo.viewAndCountReorderPoints(pageable);
@@ -299,6 +308,7 @@ Map<Long,String> catMap=getAllCatsWithIds.stream().collect(Collectors.toMap(Cate
         return "products-Reorder-Point";
     }
     @GetMapping("/custom-field-row")
+    @PreAuthorize("hasRole('ADMIN')")
     public String getCustomRow(){
 
 

@@ -49,8 +49,8 @@ Page<Products> findByCategoryId(Long id,Pageable pageable);
 
     Page<Products> searchByKeywordPartialMatch(@Param("name") String name , Pageable pageable);
 
-@Query(value="select exists(select 1 from products where id =:id and  is_active = :status)" ,nativeQuery = true)
-   boolean checkActiveStatus(@Param("id") Long id , @Param("status") boolean status);
+@Query(value = "select case when exists(select 1 from products where id = :id and is_active = :status) then 1 else 0 end", nativeQuery = true)
+   int checkActiveStatus(@Param("id") Long id, @Param("status") boolean status);
 
 
 @Query(value="select * from products where id=:id and is_active = false",nativeQuery = true)

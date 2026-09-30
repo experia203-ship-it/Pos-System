@@ -10,24 +10,24 @@
     <table th:if="${results.hasContent()}">
         <thead>
         <tr>
-            <th style="width: 15%;" th:text="#{product.search.partNumber}">partNumber</th>
-            <th style="width: 30%;" th:text="#{product.search.name}">name</th>
-            <th style="width: 15%;" th:text="#{product.search.sellingPrice}">sellingPrice</th>
-            <th style="width: 10%;" th:text="#{product.search.stock}">stock</th>
-            <th style="width: 15%;" th:text="#{product.search.purchasePrice}">purchasePrice</th>
+            <th style="width: 12%;" th:text="#{product.search.partNumber}">partNumber</th>
+            <th style="width: 40%;" th:text="#{product.search.name}">name</th>
+            <th style="width: 16%;" th:text="#{product.search.sellingPrice}">sellingPrice</th>
+            <th style="width: 12%;" th:text="#{product.search.stock}">stock</th>
+            <th style="width: 20%;" th:text="#{product.search.purchasePrice}">purchasePrice</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="product : ${results.content}"
             th:hx-post="${mode == 'sales' ? '/pos/cart/add/' + product.id : '/purchase/add/' + product.id}"
-            hx-include="#active-cart-form, #paid, #disc, #customerInfo, #supplierInfo, #remaining"
+            hx-include="#active-cart-form, #paid, #disc, #customerInfo, #paymentMethod, #paymentReference, #supplierInfo, #remaining"
             hx-target="#cart-zone"
-            hx-swap="innerHTML"
+            hx-swap="outerHTML"
             class="clickable-row"
             tabindex="0">
 
             <td class="truncate-text" th:text="${product.partNumber}" th:title="${product.partNumber}"></td>
-            <td class="truncate-text" th:text="${product.name}" th:title="${product.name}"></td>
+            <td class="wrap-text" th:text="${product.name}" th:title="${product.name}"></td>
             <td th:text="${product.sellingPrice}"></td>
             <td th:text="${product.stock}"></td>
             <td th:text="${product.purchasePrice}"></td>

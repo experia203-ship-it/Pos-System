@@ -38,6 +38,18 @@ public class SettingsService {
         settingsRepo.save(settings);
     }
 
+    @Transactional
+    @CacheEvict(value = "settings",allEntries = true)
+    public void updateTheme(Theme theme) {
+
+        Settings settings = settingsRepo.findById(1)
+                .orElseGet(() -> Settings.builder().id(1).build());
+
+        settings.setTheme(theme);
+        settingsRepo.save(settings);
+    }
+
+
     @Cacheable("settings")
     public SettingsResponseDto getSettings() {
 

@@ -32,7 +32,7 @@ public class PurchaseOrderItem {
     @Column(name="sub_discount",precision = 10,scale=2)
     private BigDecimal subDiscount;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="product_id",nullable = false)
+    @JoinColumn(name="product_id")
     private Products product;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="order_id",nullable = false)

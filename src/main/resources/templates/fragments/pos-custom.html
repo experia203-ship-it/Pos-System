@@ -1,8 +1,9 @@
-<div class="pos-layout" th:fragment="content">
+<div class="pos-layout" th:fragment="content" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
     <!-- 1. Shift Management Widget -->
     <th:block   th:if="${allow_shift}">
     <div class="zone" id="shift-widget" th:fragment="shift-widget">
+        <div id="shift-error" class="form-error"></div>
 
         <!-- STATE A: No Active Shift -->
         <th:block th:if="${activeShift == null}">
@@ -20,12 +21,22 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; gap: 15px; align-items: center;">
                     <span style="font-weight: bold; font-size: 0.95rem;" th:text="#{pos.shift.active}"></span>
-                    <span style="color: green; font-weight: bold; font-size: 0.95rem;"><span th:text="#{pos.shift.id}"></span> <span th:text="${activeShift.id}"></span></span>
+                    <span class="badge badge--success"><span th:text="#{pos.shift.id}"></span> <span th:text="${activeShift.id}"></span></span>
                 </div>
+
+                <form hx-post="/shift/event" hx-target="#shift-widget" hx-swap="outerHTML" style="margin: 0; display: flex; gap: 6px; align-items: center;">
+                    <select name="eventType" required style="margin: 0; width: auto;">
+                        <option value="PAY_OUT" th:text="#{pos.shift.payout}"></option>
+                        <option value="PAY_IN" th:text="#{pos.shift.payin}"></option>
+                    </select>
+                    <input type="number" name="amount" min="0.01" step="0.01" required th:placeholder="#{pos.shift.amount.placeholder}" style="width: 120px;">
+                    <input type="text" name="reason" required th:placeholder="#{pos.shift.reason.placeholder}" style="width: 150px;">
+                    <button type="submit" class="secondary" style="white-space: nowrap;" th:text="#{pos.shift.btn.save}"></button>
+                </form>
 
                 <form hx-post="/shift/close" hx-target="#shift-widget" hx-swap="outerHTML" style="margin: 0; display: flex; gap: 8px; align-items: center;">
                     <input type="number" name="actualCount" min="0" step="0.01" required th:placeholder="#{pos.shift.blindCount.placeholder}" style="width: 170px;">
-                    <button type="submit" style="background-color: #d9534f; border-color: #d43f3a; white-space: nowrap;" th:text="#{pos.shift.btn.close}"></button>
+                    <button type="submit" class="contrast" style="white-space: nowrap;" th:text="#{pos.shift.btn.close}"></button>
                 </form>
             </div>
         </th:block>
@@ -59,7 +70,7 @@
             <div style="font-weight: 600; font-size: 0.8rem;" th:text="#{pos.order.create}"></div>
 
             <!-- Mode Toggle Switch -->
-            <div class="toggle-container" style="display: flex; align-items: center; gap: 6px;">
+            <div sec:authorize="hasRole('ADMIN')" class="toggle-container" style="display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 0.75rem; font-weight: bold;" th:text="#{pos.mode.sales}"></span>
                 <input id="mode" th:checked="${mode == 'purchase'}" hx-trigger="change" type="checkbox" class="hidden-checkbox"
                        th:hx-get="${mode == 'sales' ? '/pos/purchase' : '/pos/sales'}" hx-target="#main-window" hx-swap="innerHTML">
@@ -69,9 +80,9 @@
         </div>
 
         <div style="display: flex; gap: 8px;">
-            <button type="button" id="custom-item" style="width: auto; white-space: nowrap;"
+            <button type="button" id="custom-item" class="secondary" style="width: auto; white-space: nowrap;"
                     th:hx-post="${mode == 'sales' ? '/pos/custom' : '/purchase/custom'}"
-                    hx-include="#active-cart-form, #disc, #paid, #customerInfo ,#remaining ,#supplierInfo"
+                    hx-include="#active-cart-form, #disc, #paid, #customerInfo, #paymentMethod, #paymentReference, #remaining ,#supplierInfo"
                     hx-target="#cart-zone" th:text="#{pos.bttn.custom}"></button>
 
             <div class="dropdown-anchor" style="flex: 1;">
@@ -91,6 +102,16 @@
 <div id="modal-container-cust" hx-on:close-modal="this.innerHTML=''"></div>
 
 <script>
+    if (!window.shiftStatusListenerAdded) {
+        document.body.addEventListener("shiftStatusChanged", function(evt) {
+            const checkout = document.getElementById("checkout-button");
+            if (checkout && checkout.dataset.shiftRequired === "true") {
+                checkout.disabled = !evt.detail.open;
+            }
+        });
+        window.shiftStatusListenerAdded = true;
+    }
+
     if (!window.printListenerAdded) {
         document.body.addEventListener("orderCompleted", function(evt) {
             const orderId = evt.detail.orderId;

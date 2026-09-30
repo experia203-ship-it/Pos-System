@@ -16,6 +16,7 @@ public record PurchaseOrderResponseDto(
         BigDecimal discount,
         BigDecimal paid,
         BigDecimal remaining,
+        BigDecimal vendorCredit,
         LocalDateTime createdAt,
         Long userId,
         Long vendorId,

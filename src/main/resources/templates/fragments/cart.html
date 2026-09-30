@@ -9,32 +9,16 @@
 </head>
 <body>
 
-
-
-
-
-
-
-
-
-
-
-
 <div id="cart-zone" th:fragment="cart">
 
-
-
-
-
-
-    <div id="customer-fragment" th:fragment="customer-fragment">
-        <form id="customerInfo" >
-            <lablel for="customer-List" th:text="#{cart.customer}"> </lablel>
-            <select id="customer-list" name="customerId" form="active-cart-form"
+    <div id="customer-fragment" th:fragment="customer-fragment" style="display: flex; align-items: flex-end; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+        <form id="customerInfo" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+            <label for="customer-list" th:text="#{cart.customer}" style="font-weight: 600; font-size: 0.85rem;"> </label>
+            <select id="customer-list" name="customerId" form="active-cart-form" style="margin-bottom: 0;"
 
                     hx-post="/pos/cart/update"
                     hx-trigger="change"
-                    hx-include="#active-cart-form, #disc, #paid, #customerInfo"
+                    hx-include="#active-cart-form, #disc, #paid, #customerInfo, #paymentMethod, #paymentReference"
                     hx-target="#cart-zone"
                     hx-swap="outerHTML">
 
@@ -47,24 +31,14 @@
                 ></option>
 
             </select>
-            <div id="customer-error"  style="color: red; font-weight: bold; margin-top: 5px;"></div>
+            <div id="customer-error" class="form-error"></div>
         </form>
-        <button hx-get="/customers/create"
+        <button type="button" class="secondary" hx-get="/customers/create"
                 hx-target="#modal-container-cust"
                 hx-swap="innerHTML"
                 th:text="#{cart.button.creatcust}"
         > </button>
     </div>
-
-
-
-
-
-
-
-
-
-
 
 <form id="active-cart-form">
 
@@ -91,54 +65,56 @@
 
             <input type="text" th:name="|itemsList[${stat.index}].customName|"
             th:value="${item.productName}"
+                   style="margin-bottom: 0;"
                    hx-post="/pos/cart/update"
                    hx-trigger="change delay:500ms"
-                   hx-include="#active-cart-form , #disc , #paid ,#customerInfo"
+                   hx-include="#active-cart-form , #disc , #paid ,#customerInfo, #paymentMethod, #paymentReference"
                    hx-target="#cart-zone"
                    hx-swap="outerHTML"
             />
         </td>
 
-        <td><input type="number" th:name="|itemsList[${stat.index}].quantity|" th:value="${item.quantity}"
-
+        <td><input type="number" min="1" step="1" th:name="|itemsList[${stat.index}].quantity|" th:value="${item.quantity}"
+                   style="margin-bottom: 0;"
                    hx-post="/pos/cart/update"
                    hx-trigger="change ,keyup[key=='Enter']"
-                   hx-include="#active-cart-form , #disc , #paid ,#customerInfo"
+                   hx-include="#active-cart-form , #disc , #paid ,#customerInfo, #paymentMethod, #paymentReference"
                    hx-target="#cart-zone"
                    hx-swap="outerHTML"
         />
         </td>
             <td>
-         <input type="number" step="0.01" th:name="|itemsList[${stat.index}].subDiscount|"  th:value="${item.subDiscount}"
-
+         <input type="number" min="0" step="0.01" th:name="|itemsList[${stat.index}].subDiscount|"  th:value="${item.subDiscount}"
+                style="margin-bottom: 0;"
          hx-post="/pos/cart/update"
          hx-trigger="change"
-         hx-include="#active-cart-form ,#disc ,#paid ,#customerInfo"
+         hx-include="#active-cart-form ,#disc ,#paid ,#customerInfo, #paymentMethod, #paymentReference"
          hx-target="#cart-zone"
                 hx-swap="outerHTML"
          />
 
             </td>
             <td>
-                <input type="number" th:name="|itemsList[${stat.index}].customSellingPrice|"
+                <input type="number" min="0" step="0.01" th:name="|itemsList[${stat.index}].customSellingPrice|"
                 th:value="${item.customSellingPrice!=null ? item.customSellingPrice : item.sellingPrice}"
+                       style="margin-bottom: 0;"
                        hx-post="/pos/cart/update"
                        hx-trigger="change"
-                       hx-include="#active-cart-form , #disc , #paid ,#customerInfo"
+                       hx-include="#active-cart-form , #disc , #paid ,#customerInfo, #paymentMethod, #paymentReference"
                        hx-target="#cart-zone"
                        hx-swap="outerHTML"
                 />
 
             </td>
-            <td th:text="${item.subTotal}"></td>
+            <td th:text="${item.subTotal}" style="font-weight: 600; color: var(--brand-navy);"></td>
 
        <td>
-           <button type="button"
+           <button type="button" class="contrast outline" style="padding: 4px 10px; margin-bottom: 0;"
    th:hx-post="|/pos/cart/remove/${stat.index}|"
-   hx-include="#active-cart-form , #disc , #paid ,#customerInfo"
+   hx-include="#active-cart-form , #disc , #paid ,#customerInfo, #paymentMethod, #paymentReference"
    hx-target="#cart-zone"
    hx-swap="outerHTML"
-           >X</button>
+           >&times;</button>
        </td>
 
 
@@ -152,50 +128,90 @@
 <article>
 <header><strong th:text="#{cart.order.summary}"></strong></header>
 <label for="disc" th:text="#{cart.order.discount}"></label>
-    <input id="disc" type="number" step="0.01" name="discount" th:value="${globalDiscount!=null ? globalDiscount : 0.00}"
+    <input id="disc" type="number" min="0" step="0.01" name="discount" th:value="${globalDiscount!=null ? globalDiscount : 0.00}"
 
            hx-post="/pos/cart/update"
-           hx-include="#active-cart-form ,#disc ,#paid ,#customerInfo"
-           hx-trigger="keyup[key=='Enter']"
+           hx-include="#active-cart-form ,#disc ,#paid ,#customerInfo, #paymentMethod, #paymentReference"
+           hx-trigger="change, keyup[key=='Enter']"
            hx-on:keyup="if(event.key=='Enter') this.blur()"
            hx-target="#cart-zone"
            hx-swap="outerHTML"
     >
 
-    <label for="paid" th:text="#{cart.order.paid}"></label>
-    <input id="paid" type="number" step="0.01" name="paid" th:value="${paid!=null ? paid :0.00}"
+    <label for="paid" th:text="#{cart.order.amountTendered}"></label>
+    <input id="paid" type="number" min="0" step="0.01" name="paid" th:value="${paid!=null ? paid :0.00}"
           hx-post="/pos/cart/update"
-           hx-include="#active-cart-form , #disc , #paid ,#customerInfo"
-           hx-trigger="keyup[key=='Enter']"
+           hx-include="#active-cart-form , #disc , #paid ,#customerInfo, #paymentMethod, #paymentReference"
+           hx-trigger="change, keyup[key=='Enter']"
            hx-on:keyup="if(event.key=='Enter') this.blur()"
            hx-target="#cart-zone"
            hx-swap="outerHTML"
     >
-    <h3>
+    <div id="payment-fields">
+        <label for="paymentMethod" th:text="#{cart.order.paymentMethod}">Payment method</label>
+        <select id="paymentMethod" name="paymentMethod"
+                hx-post="/pos/cart/update" hx-trigger="change"
+                hx-include="#active-cart-form, #disc, #paid, #customerInfo, #paymentMethod, #paymentReference"
+                hx-target="#cart-zone" hx-swap="outerHTML">
+            <option value="CASH" th:selected="${paymentMethod == null or paymentMethod.name() == 'CASH'}"
+                    th:text="#{payment.method.cash}">Cash</option>
+            <option value="CARD" th:selected="${paymentMethod != null and paymentMethod.name() == 'CARD'}"
+                    th:text="#{payment.method.card}">Card</option>
+            <option value="BANK_TRANSFER" th:selected="${paymentMethod != null and paymentMethod.name() == 'BANK_TRANSFER'}"
+                    th:text="#{payment.method.bank_transfer}">Bank transfer</option>
+            <option value="E_WALLET" th:selected="${paymentMethod != null and paymentMethod.name() == 'E_WALLET'}"
+                    th:text="#{payment.method.e_wallet}">E-wallet</option>
+        </select>
+        <label for="paymentReference" th:text="#{cart.order.paymentReference}">Provider / transaction reference</label>
+        <input id="paymentReference" type="text" name="paymentReference"
+               th:value="${paymentReference}"
+               th:required="${paymentMethod != null and paymentMethod.name() == 'E_WALLET'}"
+               th:placeholder="#{cart.order.paymentReference.placeholder}">
+    </div>
+    <p th:if="${paymentMethod == null or paymentMethod.name() == 'CASH'}">
+        <span th:text="#{cart.order.cashChange}">Change due:</span>
+        <strong id="cash-change" th:text="|${cashChange ?: '0.00'} ${globalSettings.currencySymbol}|"></strong>
+    </p>
+    <p>
+        <span th:text="#{cart.order.amountApplied}">Applied to sale:</span>
+        <strong th:text="|${amountApplied ?: '0.00'} ${globalSettings.currencySymbol}|"></strong>
+    </p>
+    <h3 style="color: var(--brand-navy);">
+        <span th:text="#{cart.order.taxableSubtotal}"></span>:
+        <span id="taxable-subtotal" th:text="|${taxableSubtotal ?: '0.00'} ${globalSettings.currencySymbol}|"></span>
+    </h3>
+    <h4>
+        <span th:text="|#{cart.order.tax} (${taxRate ?: 0}%)|"></span>:
+        <span id="tax-amount" th:text="|${taxAmount ?: '0.00'} ${globalSettings.currencySymbol}|"></span>
+    </h4>
+    <h3 style="color: var(--brand-navy);">
         <span th:text="#{cart.order.grandtotal}"></span>:
-        <span th:text="|${grandTotal ?: '0.00'} ${globalSettings.currencySymbol}|"></span>
+        <span style="color: var(--brand-teal);" th:text="|${grandTotal ?: '0.00'} ${globalSettings.currencySymbol}|"></span>
     </h3>
 
     <h4>
         <span th:text="#{cart.order.remaining}"></span>:
-        <span id="remaining-display" th:text="|${remaining!=null ? remaining : 0.00} ${globalSettings.currencySymbol}|"></span>
+        <span id="remaining-display" style="color: var(--brand-amber); font-weight: 600;" th:text="|${remaining!=null ? remaining : 0.00} ${globalSettings.currencySymbol}|"></span>
     </h4>
 
-    <h5>
+    <h5 style="color: var(--pico-muted-color);">
         <span th:text="#{cart.order.ids}"></span>:
         <span id="orderNumber-display" th:text="${orderNumber}"></span>
     </h5>
 
     <input id="remaining" type="hidden" name="remaining" th:value="${remaining != null ? remaining : 0.00}" form="active-cart-form" />
     <input id="orderNumber" type="hidden" th:value="${orderNumber}" form="active-cart-form" />
-    <div id="list-error"   style="color: red; font-weight: bold; margin-top: 5px;"></div>
+    <div id="list-error" class="form-error"></div>
 
 
-    <button  type="button"    th:if="${ordId !=null}"    th:hx-patch="|/pos/update/${ordId}|"     hx-include="#active-cart-form, #disc, #paid, #customerInfo ,#remaining" hx-target="#cart-zone" th:text="#{cart.bttn.update}"></button>
+    <button  type="button"    th:if="${ordId !=null}"    th:hx-patch="|/pos/update/${ordId}|"     hx-include="#active-cart-form, #disc, #paid, #customerInfo, #paymentMethod, #paymentReference, #remaining" hx-target="#cart-zone" hx-swap="outerHTML" th:text="#{cart.bttn.update}"></button>
 
-    <button type="button"    th:if="${ordId ==null}"    hx-post="/pos/check-out"     hx-include="#active-cart-form, #disc, #paid, #customerInfo ,#remaining" hx-target="#cart-zone" th:text="#{cart.bttn.checkOut}"></button>
+    <button id="checkout-button" type="button" th:if="${ordId ==null}" hx-post="/pos/check-out"
+            hx-include="#active-cart-form, #disc, #paid, #customerInfo, #paymentMethod, #paymentReference, #remaining" hx-target="#cart-zone" hx-swap="outerHTML"
+            th:disabled="${checkoutDisabled}" th:data-shift-required="${globalSettings.shiftManagement}"
+            th:text="#{cart.bttn.checkOut}"></button>
 
-<button type="button" hx-delete="/pos/clear" hx-target="#cart-zone" th:hx-confirm="| #{cart.clear.msg} ${grandTotal}|" th:text="#{cart.bttn.clear}" ></button>
+<button type="button" class="contrast" hx-delete="/pos/clear" hx-target="#cart-zone" hx-swap="outerHTML" th:hx-confirm="| #{cart.clear.msg} ${grandTotal}|" th:text="#{cart.bttn.clear}" ></button>
 
 </article>
 </div>

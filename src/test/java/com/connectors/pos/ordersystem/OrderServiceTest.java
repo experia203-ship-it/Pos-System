@@ -10,6 +10,13 @@ import com.connectors.pos.ordersystem.orderdtos.OrderResponseDto;
 import com.connectors.pos.products.ProductRepository;
 import com.connectors.pos.products.Products;
 import com.connectors.pos.security.UserPrincipal;
+import com.connectors.pos.settings.PosStyle;
+import com.connectors.pos.settings.PrintSize;
+import com.connectors.pos.settings.SettingsService;
+import com.connectors.pos.settings.Theme;
+import com.connectors.pos.settings.settingsdtos.SettingsResponseDto;
+import com.connectors.pos.shift.ShiftService;
+import com.connectors.pos.shift.ShiftSession;
 import com.connectors.pos.users.UserRepository;
 import com.connectors.pos.users.Users;
 import org.h2.command.dml.MergeUsing;
@@ -30,6 +37,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -49,6 +57,10 @@ class OrderServiceTest {
     private OrderRepository orderRepo;
     @Mock
     private OrderNumberGenerator orderNumberGenerator;
+    @Mock
+    private SettingsService settingsService;
+    @Mock
+    private ShiftService shiftService;
     @InjectMocks
     private OrderService orderServo;
     @Spy
@@ -92,6 +104,9 @@ class OrderServiceTest {
    when(userRepo.getReferenceById(any(Long.class))).thenReturn(new Users());
 when(prodRepo.findAllByIds(anyList())).thenReturn(new ArrayList<Products>());
    when(orderNumberGenerator.nextValue()).thenReturn(1L);
+        when(settingsService.getSettings()).thenReturn(new SettingsResponseDto("Demo", null, null,
+                null, Theme.SYSTEM_DEFAULT, PrintSize.A4, "EGP", PosStyle.HORIZONTAL, null, true));
+        when(shiftService.getOpenShiftForSale(1L)).thenReturn(new ShiftSession());
 
 
         OrderItemCreateDto dummyItem = new OrderItemCreateDto(
@@ -142,6 +157,9 @@ verify(orderRepo).save(any(Order.class));
         List<OrderItemCreateDto> items = new ArrayList<>();
         items.add(item);
         OrderCreateDto order = new OrderCreateDto(new BigDecimal("2.00"),1L,items,new BigDecimal("2.00"),new BigDecimal("2.00"),123L);
+        when(settingsService.getSettings()).thenReturn(new SettingsResponseDto("Demo", null, null,
+                null, Theme.SYSTEM_DEFAULT, PrintSize.A4, "EGP", PosStyle.HORIZONTAL, null, true));
+        when(shiftService.getOpenShiftForSale(1L)).thenReturn(new ShiftSession());
         List<Long> prodIds = items.stream().map(OrderItemCreateDto::productId).toList();
         when(prodRepo.findAllByIds(prodIds)).thenReturn(List.of(prod));
 

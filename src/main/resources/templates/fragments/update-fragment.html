@@ -56,11 +56,11 @@
                                th:name="'customFields[' + ${entry.key} + ']'"
                                th:value="${entry.value}"
                                required>
-                        <button type="button" onclick="this.parentElement.remove()" th:text="#{btn.remove}">X</button>
+                        <button type="button" class="contrast outline" style="padding: 4px 10px; height: fit-content;" onclick="this.parentElement.remove()" th:text="#{btn.remove}">X</button>
                     </div>
                 </div>
 
-                <button type="button"
+                <button type="button" class="secondary"
                         hx-get="/products/custom-field-row"
                         hx-target="#custom-fields-list"
                         hx-swap="beforeend"
@@ -72,7 +72,7 @@
             <button type="submit" th:text="#{product.update.btn.submit}">Update</button>
 
         </form>
-        <button hx-get="/categories/new" hx-target="#modal-container2" hx-swap="innerHTML" th:text="#{product.update.btn.createCategory}">create category</button>
+        <button class="secondary" hx-get="/categories/new" hx-target="#modal-container2" hx-swap="innerHTML" th:text="#{product.update.btn.createCategory}">create category</button>
 
         <form method="dialog">
             <button class="secondary" th:text="#{btn.close}">close</button>

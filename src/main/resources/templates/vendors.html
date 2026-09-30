@@ -1,10 +1,14 @@
 <div id="vevid">
-    <h2 th:text="#{vendor.title}">Vendors</h2>
-    <div id="vendor-search-bar">
-        <label for="ven-search"></label>
+    <h2 class="page-heading">
+        <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+        <span th:text="#{vendor.title}">Vendors</span>
+    </h2>
+    <div id="vendor-search-bar" style="display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;">
+        <label for="ven-search" style="flex: 1; min-width: 200px;"></label>
         <input id="ven-search" name="name" type="text" hx-get="/suppliers/search" hx-target="#vtable" hx-trigger="keyup change 300ms"
                hx-swap="outerHTML"
                th:placeholder="#{vendor.search.placeholder}"
+               style="flex: 2; min-width: 200px;"
         />
 
         <button type="button"   hx-get="/suppliers/create2" hx-target="#modal-container-vendor"
@@ -12,7 +16,8 @@
                 th:text="#{vendor.btn.create}">Create</button>
     </div>
     <div id="vtable" th:fragment="vendor-fragment">
-        <table>
+        <figure>
+        <table role="grid">
             <thead>
             <tr>
                 <th scope="col" th:text="#{vendor.table.id}">ID</th>
@@ -27,16 +32,16 @@
             <tbody>
             <tr th:each="vendor : ${vendors.content}">
                 <td th:text="${vendor.id}"></td>
-                <td th:text="${vendor.name}"></td>
+                <td><strong th:text="${vendor.name}"></strong></td>
                 <td th:text="${vendor.location}"></td>
                 <td th:text="${vendor.landline}"></td>
                 <td th:text="${vendor.mobile}"></td>
                 <td>
-                    <button type="button" th:hx-get="@{/suppliers/update/{id}(id=${vendor.id})}"
+                    <button type="button" class="secondary outline" style="padding: 4px 10px;" th:hx-get="@{/suppliers/update/{id}(id=${vendor.id})}"
                             hx-target="#modal-container-vendor" hx-swap="innerHTML" th:text="#{vendor.btn.update}">Update</button>
                 </td>
                 <td>
-                    <button type="button" th:hx-delete="@{/suppliers/{id}(id=${vendor.id})}"
+                    <button type="button" class="contrast outline" style="padding: 4px 10px;" th:hx-delete="@{/suppliers/{id}(id=${vendor.id})}"
                                hx-swap="innerHTML" hx-target="#vtable"
                             th:hx-confirm="#{vendors.confirm.delete(${vendor.name})}"
                             th:text="#{vendor.btn.delete}"
@@ -47,12 +52,13 @@
             </tr>
             </tbody>
         </table>
+        </figure>
 
         <!-- Pagination & View Numbers -->
         <div th:if="${vendors.totalElements > 0}" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 10px 0;">
 
             <!-- View Numbers -->
-            <div style="font-size: 0.9em; color: #64748b;">
+            <div class="pagination-info">
                 <span th:text="#{pagination.showing}">Showing</span>
                 <span th:text="${vendors.totalElements > 0 ? (vendors.number * vendors.size + 1) : 0}"></span>
                 <span th:text="#{pagination.to}">to</span>

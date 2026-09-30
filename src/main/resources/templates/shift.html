@@ -15,7 +15,7 @@
         <p style="margin: 4px 0;">
             <strong th:text="#{shift.summary.difference}">Difference:</strong>
             <span th:with="diff=${(closedShift.countedCash != null ? closedShift.countedCash : T(java.math.BigDecimal).ZERO).subtract(closedShift.expectedCash != null ? closedShift.expectedCash : T(java.math.BigDecimal).ZERO)}"
-                  th:style="${diff.compareTo(T(java.math.BigDecimal).ZERO) < 0 ? 'color: #d9534f; font-weight: bold;' : (diff.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'color: #f0ad4e; font-weight: bold;' : 'color: #5cb85c; font-weight: bold;')}"
+                  th:style="${diff.compareTo(T(java.math.BigDecimal).ZERO) < 0 ? 'color: var(--brand-red); font-weight: bold;' : (diff.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'color: var(--brand-amber); font-weight: bold;' : 'color: var(--brand-green); font-weight: bold;')}"
                   th:text="|${diff} #{shift.currency.egp}|">
                 0.00 EGP
             </span>

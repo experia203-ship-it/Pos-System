@@ -1,6 +1,7 @@
 package com.connectors.pos.shift;
 
 import com.connectors.pos.security.UserPrincipal;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContext;
@@ -30,7 +31,7 @@ public String returnOpenShift(Model model){
 
 
     @PostMapping("/open")
-    public String openShift(@AuthenticationPrincipal UserPrincipal principal, @RequestParam("startingFloat") BigDecimal startingFloat, Model model){
+    public String openShift(@AuthenticationPrincipal UserPrincipal principal, @RequestParam("startingFloat") BigDecimal startingFloat, Model model, HttpServletResponse response){
 
         Long userId = principal.getId();
 
@@ -38,6 +39,7 @@ public String returnOpenShift(Model model){
      ShiftSession session = shiftService.openShift(userId,startingFloat);
         model.addAttribute("activeShift", session);
      model.addAttribute("sessionId",session.getId());
+        response.setHeader("HX-Trigger", "{\"shiftStatusChanged\":{\"open\":true}}");
         return "pos :: shift-widget";
     }
 
@@ -49,13 +51,15 @@ public String returnOpenShift(Model model){
     public String closeShift(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam("actualCount") BigDecimal actualCount,
-            Model model) {
+            Model model,
+            HttpServletResponse response) {
 
         ShiftSession session = shiftService.getActiveShift(principal.getId());
         ShiftSession closed = shiftService.closeShift(session.getId(), actualCount);
 
         // Pass the closed session to display the report instead of null right away
         model.addAttribute("closedShift", closed);
+        response.setHeader("HX-Trigger", "{\"shiftStatusChanged\":{\"open\":false}}");
         return "shift :: shift-summary";
     }
     @PostMapping("/event")

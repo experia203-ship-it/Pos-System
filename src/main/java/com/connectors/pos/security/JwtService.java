@@ -4,6 +4,7 @@ package com.connectors.pos.security;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,7 +31,9 @@ private JwtParser jwtParser;
 @PostConstruct
 protected void init(){
 
-hashedKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+hashedKey = secretKey == null || secretKey.isBlank()
+        ? Keys.secretKeyFor(SignatureAlgorithm.HS256)
+        : Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
 
 jwtParser= Jwts.parser().verifyWith(hashedKey).build();
 }

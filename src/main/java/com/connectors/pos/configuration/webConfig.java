@@ -1,6 +1,5 @@
 package com.connectors.pos.configuration;
 
-import com.connectors.pos.settings.LicenseCheckInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,9 +13,6 @@ import java.util.Locale;
 
 @Configuration
 public class webConfig implements WebMvcConfigurer {
-
-    @Autowired
-    private LicenseCheckInterceptor trialInterceptor;
 
     @Bean
     public LocaleResolver localeResolver() {
@@ -34,7 +30,6 @@ public class webConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(trialInterceptor);
         registry.addInterceptor(localeChangeInterceptor());
     }
 }

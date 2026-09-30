@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/suppliers")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class VendorController {
 
@@ -45,9 +47,18 @@ public class VendorController {
 
     @PostMapping
     public String createSupplier(@PageableDefault Pageable pageable,
-                                 @ModelAttribute("supplierCreate") VendorCreateDto supplierCreate,
+                                 @Valid @ModelAttribute("supplierCreate") VendorCreateDto supplierCreate,
+                                 BindingResult result,
                                  Model model,
                                  HttpServletResponse response) {
+
+        if (result.hasErrors()) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("HX-Retarget", "#supplier-form-error");
+            response.setHeader("HX-Reswap", "innerHTML");
+            model.addAttribute("errorMessage", "Please correct the vendor form.");
+            return "fragments/auth-messages :: exceptions-response";
+        }
 
         vendorServo.createVendor(supplierCreate);
         Page<Vendor> suppliers = vendorServo.viewAllVendors(pageable);
@@ -85,10 +96,11 @@ public class VendorController {
                                   Model model,
                                   HttpServletResponse response) {
         if (result.hasErrors()) {
-            response.setHeader("HX-Retarget", "#new-sup-form");
-            response.setHeader("HX-Reswap", "outerHTML");
-
-            return "fragments/supplier-form :: supplier-pop-up";
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("HX-Retarget", "#supplier-form-error");
+            response.setHeader("HX-Reswap", "innerHTML");
+            model.addAttribute("errorMessage", "Please correct the vendor form.");
+            return "fragments/auth-messages :: exceptions-response";
         }
 
         vendorServo.createVendor(supplierCreate);
@@ -111,7 +123,17 @@ public class VendorController {
     }
 
     @PostMapping("/update")
-    public String updateVendorById(@PageableDefault Pageable pageable ,@Valid@ModelAttribute("supplierUpdate") VendorCreateDto dto, Model model, @RequestParam("id") Long id,HttpServletResponse response) {
+    public String updateVendorById(@PageableDefault Pageable pageable,
+                                   @Valid @ModelAttribute("supplierUpdate") VendorCreateDto dto,
+                                   BindingResult result, Model model, @RequestParam("id") Long id,
+                                   HttpServletResponse response) {
+        if (result.hasErrors()) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("HX-Retarget", "#supplier-form-error");
+            response.setHeader("HX-Reswap", "innerHTML");
+            model.addAttribute("errorMessage", "Please correct the vendor form.");
+            return "fragments/auth-messages :: exceptions-response";
+        }
 vendorServo.updateById(id,dto);
  response.setHeader("HX-Trigger","close-modal");
    Page<Vendor> suppliers =  vendorServo.viewAllVendors(pageable);

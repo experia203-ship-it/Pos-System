@@ -89,8 +89,16 @@
 
     <!-- Totals -->
     <div class="item-row">
+        <div th:text="#{invoice.totals.subtotal}">Subtotal:</div>
+        <div class="right" th:text="|${globalSettings.currencySymbol} ${order.total + order.discount - order.taxAmount}|"></div>
+    </div>
+    <div class="item-row">
         <div th:text="#{invoice.totals.discount}">Discount:</div>
         <div class="right" th:text="|${globalSettings.currencySymbol} ${order.discount}|">0.00</div>
+    </div>
+    <div class="item-row">
+        <div th:text="|#{invoice.totals.tax} (${order.taxRate}%)|">Tax:</div>
+        <div class="right" th:text="|${globalSettings.currencySymbol} ${order.taxAmount}|"></div>
     </div>
     <div class="item-row bold" style="font-size: 14px;">
         <div th:text="#{receipt.total}">Total:</div>
@@ -99,6 +107,22 @@
     <div class="item-row">
         <div th:text="#{invoice.totals.paid}">Paid:</div>
         <div class="right" th:text="|${globalSettings.currencySymbol} ${order.paid}|"></div>
+    </div>
+    <div class="item-row">
+        <div th:text="#{invoice.payment.method}">Payment method:</div>
+        <div class="right" th:text="${#messages.msg('payment.method.' + #strings.toLowerCase(order.paymentMethod.name()))}"></div>
+    </div>
+    <div class="item-row" th:if="${order.paymentReference != null and !#strings.isEmpty(order.paymentReference)}">
+        <div th:text="#{invoice.payment.reference}">Payment reference:</div>
+        <div class="right" th:text="${order.paymentReference}"></div>
+    </div>
+    <div class="item-row" th:if="${order.paymentMethod.name() == 'CASH'}">
+        <div th:text="#{invoice.payment.cashReceived}">Cash received:</div>
+        <div class="right" th:text="|${globalSettings.currencySymbol} ${order.cashReceived}|"></div>
+    </div>
+    <div class="item-row" th:if="${order.paymentMethod.name() == 'CASH'}">
+        <div th:text="#{invoice.payment.change}">Change:</div>
+        <div class="right" th:text="|${globalSettings.currencySymbol} ${order.cashChange}|"></div>
     </div>
     <div class="item-row">
         <div th:text="#{invoice.totals.remaining}">Remaining:</div>
@@ -112,7 +136,7 @@
     </div>
 
     <div class="no-print center" style="margin-top: 20px;">
-        <button onclick="window.print()" style="padding: 10px; font-size: 14px; width: 100%; cursor: pointer;" th:text="#{receipt.btn.print}">Print Receipt</button>
+        <button onclick="window.print()" style="padding: 10px; font-size: 14px; width: 100%; cursor: pointer; background-color: #0e9488; color: white; border: none; border-radius: 6px;" th:text="#{receipt.btn.print}">Print Receipt</button>
     </div>
 </div>
 

@@ -62,11 +62,16 @@ public class CustomerController {
         return "fragments/customer-form :: customer-pop-up";
     }
     @PostMapping("/new")
-public String createCustomerCustPage( @Valid@ModelAttribute("customerCreate") CustomerCreateDto customerCreate,BindingResult bindResult, Model model, HttpServletResponse response,
-                                      @PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.ASC) Pageable pageable){
-      if(bindResult.hasErrors()){
-
-      }
+public String createCustomerCustPage(@Valid @ModelAttribute("customerCreate") CustomerCreateDto customerCreate,
+                                  BindingResult bindResult, Model model, HttpServletResponse response,
+                                  @PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.ASC) Pageable pageable){
+  if(bindResult.hasErrors()){
+      response.setStatus(HttpServletResponse.SC_OK);
+      response.setHeader("HX-Retarget", "#customer-form-error");
+      response.setHeader("HX-Reswap", "innerHTML");
+      model.addAttribute("errorMessage", "Please correct the customer form.");
+      return "fragments/auth-messages :: exceptions-response";
+  }
         customerServo.createCustomer(customerCreate);
         Page<CustomerViewDto> customers = customerServo.getAllCustomers(pageable);
 
@@ -77,15 +82,22 @@ response.setHeader("HX-Trigger","close-modal");
 }
     @PostMapping
 
-    public String createCustomer(@ModelAttribute("customerCreate") CustomerCreateDto customerCreate , Model model,
-                                 HttpServletResponse response){
+    public String createCustomer(@Valid @ModelAttribute("customerCreate") CustomerCreateDto customerCreate,
+                                 BindingResult bindResult, Model model, HttpServletResponse response){
 
+        if (bindResult.hasErrors()) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("HX-Retarget", "#customer-form-error");
+            response.setHeader("HX-Reswap", "innerHTML");
+            model.addAttribute("errorMessage", "Please correct the customer form.");
+            return "fragments/auth-messages :: exceptions-response";
+        }
 
         customerServo.createCustomer(customerCreate);
         List<Customer> customers =customerServo.viewAllCustomers();
         model.addAttribute("customers",customers);
 
-
+        response.setHeader("HX-Trigger", "close-modal");
         return "fragments/cart :: customer-fragment";
 
 
@@ -142,7 +154,7 @@ public String findByCustomerNameForStats(@RequestParam(name = "name") String nam
 
         if(bindingResult.hasErrors()){
 
-            response.setHeader("HX-Retarget","#modal-container-cust");
+            response.setHeader("HX-Retarget","#pop-customer-container");
             response.setHeader("HX-Reswap","innerHTML");
 
     return "customer-update :: customer-update-fragment";

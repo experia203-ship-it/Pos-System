@@ -4,9 +4,7 @@ import com.connectors.pos.customersystem.customerdtos.CustomerCreateDto;
 import com.connectors.pos.customersystem.customerdtos.CustomerMapper;
 import com.connectors.pos.customersystem.customerdtos.CustomerUpdateDto;
 import com.connectors.pos.customersystem.customerdtos.CustomerViewDto;
-import com.connectors.pos.exceptions.CategoryNotFoundException;
 import com.connectors.pos.exceptions.CustomerNotFoundException;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,8 +28,8 @@ public class CustomerService {
 
         Customer customer = Customer.builder()
                 .name(create.name())
-                .shippingCompany(create.shippingCompany())
-                .location(create.location())
+                .shippingCompany(create.shippingCompany() == null ? "" : create.shippingCompany())
+                .location(create.location() == null ? "" : create.location())
                 .build();
 
         if (create.phoneNumbers() != null) {
@@ -60,7 +58,7 @@ public class CustomerService {
     public CustomerViewDto findByCustomerId(Long id) {
 
         Customer customer = customerRepo.findById(id).
-                orElseThrow(() -> new EntityNotFoundException(" customer was not found"));
+                orElseThrow(() -> new CustomerNotFoundException("Customer was not found."));
 
         return customerMapper.toResponse(customer);
     }
@@ -99,7 +97,7 @@ public class CustomerService {
     public CustomerViewDto updateCustomerInformation(Long customerId, CustomerUpdateDto update) {
 
         Customer customer = customerRepo.findById(customerId)
-                .orElseThrow(() -> new CategoryNotFoundException("no customer was found with this id " + customerId));
+                .orElseThrow(() -> new CustomerNotFoundException("No customer was found with this id " + customerId));
 
         customerMapper.updateCustomerFromDto(update, customer);
 
@@ -135,7 +133,7 @@ public class CustomerService {
     @Transactional
     public void deleteCustomerById(Long id) {
         if (id == null) {
-            throw new RuntimeException("you need to provide a valid id number");
+            throw new CustomerNotFoundException("A valid customer id must be provided.");
         }
 
         Customer customer = customerRepo.findById(id)
@@ -145,5 +143,3 @@ public class CustomerService {
     }
 
 }
-
-

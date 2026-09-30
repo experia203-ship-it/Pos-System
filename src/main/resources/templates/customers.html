@@ -1,14 +1,18 @@
 <div>
 
-    <h2 th:text="#{customers.title}">customers</h2>
+    <h2 class="page-heading">
+        <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span th:text="#{customers.title}">customers</span>
+    </h2>
 
-    <div id="search-bar">
+    <div id="search-bar" style="display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;">
 
-        <label for="customer-search" th:text="#{customers.search.label}">search for customers</label>
+        <label for="customer-search" th:text="#{customers.search.label}" style="flex: 1; min-width: 200px;">search for customers</label>
         <input id="customer-search" name="keyword" th:placeholder="#{customers.search.placeholder}" type="text" hx-get="/customers/part-search"
                hx-target="#table-customers"
                hx-swap="innerHTML"
                hx-trigger="keyup changed delay:500ms"
+               style="flex: 2; min-width: 200px;"
         />
         <button hx-get="customers/create2"
                 hx-target="#modal-container-cust2"
@@ -19,7 +23,8 @@
     <h3 th:text="#{customers.viewAll}">view all customers</h3>
     <!-- We moved the id and fragment to a wrapper div so HTMX can swap the table AND the page numbers together -->
     <div id="table-customers" th:fragment="customers">
-        <table>
+        <figure>
+        <table role="grid">
             <thead>
             <tr>
                 <th th:text="#{customers.table.name}">name</th>
@@ -32,12 +37,12 @@
             </thead>
             <tbody>
             <tr th:each="cust : ${custs.content}">
-                <td th:text="${cust.name}"></td>
+                <td><strong th:text="${cust.name}"></strong></td>
                 <td th:text="${cust.location}"></td>
                 <td th:text="${cust.shippingCompany}"></td>
                 <td th:text="${cust.phoneNumber}"></td>
                 <td>
-                    <button type="button" th:hx-get="@{/customers/update/{id}(id=${cust.id})}"
+                    <button type="button" class="secondary outline" style="padding: 4px 10px;" th:hx-get="@{/customers/update/{id}(id=${cust.id})}"
                             hx-target="#pop-customer-container"
                             hx-swap="innerHTML"
                             th:text="#{btn.update}">
@@ -45,7 +50,7 @@
                     </button>
                 </td>
                 <td>
-                    <button type="button" th:hx-delete="@{/customers/{id}(id=${cust.id})}"
+                    <button type="button" class="contrast outline" style="padding: 4px 10px;" th:hx-delete="@{/customers/{id}(id=${cust.id})}"
                             hx-target="#table-customers"
                             hx-swap="innerHTML"
                             th:hx-confirm="#{customers.confirm.delete(${cust.name})}"
@@ -56,12 +61,13 @@
             </tr>
             </tbody>
         </table>
+        </figure>
 
         <!-- Pagination & View Numbers -->
         <div th:if="${custs.totalElements > 0}" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 10px 0;">
 
             <!-- View Numbers -->
-            <div style="font-size: 0.9em; color: #64748b;"
+            <div class="pagination-info"
                  th:text="#{pagination.showing(${custs.totalElements > 0 ? (custs.number * custs.size + 1) : 0}, ${custs.number * custs.size + custs.numberOfElements}, ${custs.totalElements})}">
                 Showing 1 to 10 of 20 entries
             </div>

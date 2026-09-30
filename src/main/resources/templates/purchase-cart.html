@@ -10,10 +10,10 @@
 <div id="cart-zone" th:fragment="cart-zone">
 
     <!-- SUPPLIER SECTION -->
-    <div id="supplier-fragment" th:fragment="supplier-fragment">
-        <form id="supplierInfo">
-            <label for="supplier-list" th:text="#{purchase.cart.supplier}">Supplier: </label>
-            <select id="supplier-list" name="supplierId" form="active-cart-form"
+    <div id="supplier-fragment" th:fragment="supplier-fragment" style="display: flex; align-items: flex-end; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+        <form id="supplierInfo" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+            <label for="supplier-list" th:text="#{purchase.cart.supplier}" style="font-weight: 600; font-size: 0.85rem;">Supplier: </label>
+            <select id="supplier-list" name="supplierId" form="active-cart-form" style="margin-bottom: 0;"
                     hx-post="/purchase/update"
                     hx-trigger="change"
                     hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
@@ -26,10 +26,10 @@
                         th:text="${sup.name}"
                         th:selected="${sup.id == currentSupplierId}">Supplier Name</option>
             </select>
-            <div id="supplier-error" style="color: red; font-weight: bold; margin-top: 5px;"></div>
+            <div id="supplier-error" class="form-error"></div>
         </form>
 
-        <button hx-get="/suppliers/create"
+        <button type="button" class="secondary" hx-get="/suppliers/create"
                 hx-target="#modal-container-sup"
                 hx-swap="innerHTML" th:text="#{purchase.btn.createSupplier}">Create Supplier</button>
 
@@ -61,6 +61,7 @@
 
                     <input type="text" th:name="|itemsList[${stat.index}].customName|"
                            th:value="${item.productName}"
+                           style="margin-bottom: 0;"
                            hx-post="/purchase/update"
                            hx-trigger="change delay:500ms"
                            hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
@@ -70,6 +71,7 @@
 
                 <td>
                     <input type="number" th:name="|itemsList[${stat.index}].quantity|" th:value="${item.quantity}"
+                           style="margin-bottom: 0;"
                            hx-post="/purchase/update"
                            hx-trigger="change, keyup[key=='Enter']"
                            hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
@@ -79,6 +81,7 @@
 
                 <td>
                     <input type="number" step="0.01" th:name="|itemsList[${stat.index}].subDiscount|" th:value="${item.subDiscount}"
+                           style="margin-bottom: 0;"
                            hx-post="/purchase/update"
                            hx-trigger="change"
                            hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
@@ -89,6 +92,7 @@
                 <td>
                     <input type="number" step="0.01" th:name="|itemsList[${stat.index}].customPurchasePrice|"
                            th:value="${item.customPurchasePrice !=null ? item.customPurchasePrice : item.sellingPrice}"
+                           style="margin-bottom: 0;"
                            hx-post="/purchase/update"
                            hx-trigger="change"
                            hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
@@ -96,14 +100,14 @@
                            hx-swap="outerHTML" />
                 </td>
 
-                <td th:text="${item.subTotal}"></td>
+                <td th:text="${item.subTotal}" style="font-weight: 600; color: var(--brand-navy);"></td>
 
                 <td>
-                    <button type="button"
+                    <button type="button" class="contrast outline" style="padding: 4px 10px; margin-bottom: 0;"
                             th:hx-delete="|/purchase/remove/${stat.index}|"
                             hx-include="#active-cart-form, #disc, #paid, #supplierInfo"
                             hx-target="#cart-zone"
-                            hx-swap="outerHTML">X</button>
+                            hx-swap="outerHTML">&times;</button>
                 </td>
             </tr>
             </tbody>
@@ -129,15 +133,15 @@
                hx-target="#cart-zone"
                hx-swap="outerHTML">
 
-        <h3>
+        <h3 style="color: var(--brand-navy);">
             <span th:text="#{purchase.summary.grandTotal}">Grand Total:</span>
-            <span th:text="|${grandTotal ?: '0.00'} ${globalSettings.currencySymbol}|"></span>
+            <span style="color: var(--brand-teal);" th:text="|${grandTotal ?: '0.00'} ${globalSettings.currencySymbol}|"></span>
         </h3>
         <h4>
             <span th:text="#{purchase.summary.remaining}">Remaining:</span>
-            <span id="remaining-display" th:text="|${remaining != null ? remaining : 0.00} ${globalSettings.currencySymbol}|"></span>
+            <span id="remaining-display" style="color: var(--brand-amber); font-weight: 600;" th:text="|${remaining != null ? remaining : 0.00} ${globalSettings.currencySymbol}|"></span>
         </h4>
-        <h5>
+        <h5 style="color: var(--pico-muted-color);">
             <span th:text="#{purchase.summary.orderId}">Order ID:</span>
             <span id="orderNumber-display" th:text="${orderNumber}"></span>
         </h5>
@@ -145,7 +149,7 @@
         <input id="remaining" type="hidden" name="remaining" th:value="${remaining != null ? remaining : 0.00}" form="active-cart-form" />
         <input id="orderNumber" type="hidden" name="orderNumber" th:value="${orderNumber}" form="active-cart-form" />
 
-        <div id="list-error" style="color: red; font-weight: bold; margin-top: 5px;"></div>
+        <div id="list-error" class="form-error"></div>
 
         <button type="button" th:if="${ordId != null}" th:hx-patch="|/purchase/update/${ordId}|"
                 hx-include="#active-cart-form, #disc, #paid, #supplierInfo, #remaining" hx-target="#cart-zone" th:text="#{purchase.btn.update}">Update</button>
@@ -153,7 +157,7 @@
         <button type="button" th:if="${ordId == null}" hx-post="/purchase/check-out"
                 hx-include="#active-cart-form, #disc, #paid, #supplierInfo, #remaining" hx-target="#cart-zone" th:text="#{purchase.btn.checkout}">Check Out</button>
 
-        <button type="button" hx-delete="/purchase/clear" hx-target="#cart-zone"
+        <button type="button" class="contrast" hx-delete="/purchase/clear" hx-target="#cart-zone"
                 th:hx-confirm="#{purchase.alert.clear(${grandTotal})}" th:text="#{purchase.btn.clear}">Clear</button>
     </article>
 </div>

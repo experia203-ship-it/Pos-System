@@ -1,7 +1,16 @@
+<div th:fragment="summary-error" class="form-error" th:text="#{stat.invalidDateRange}">
+    Please select a valid date range.
+</div>
+
 <div id="summary-result" th:fragment="summary-result" th:object="${summary}">
+    <input id="summary-customer-id" type="hidden" name="customerId" th:value="${customerId}">
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
         <strong th:text="#{summary.label.name}">Name:</strong>
         <input type="text" th:value="*{name}" class="plaintext-input" readonly />
+    </div>
+
+    <div th:fragment="select-customer" th:text="#{stats.select.customer}">
+        Select a customer to view their order summary.
     </div>
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
         <strong th:text="#{summary.label.startDate}">startDate:</strong>

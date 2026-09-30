@@ -23,6 +23,7 @@ public record ProductUpdateDto(
         @PositiveOrZero(message ="stock can't be below zero ")
         Long stock,
         Long categoryId,
+        @Size(max=50,message="you exceeded the max length allowed")
         String barcode,
         @PositiveOrZero(message="orderPoint can't be below zero")
         Long reorderPoint,

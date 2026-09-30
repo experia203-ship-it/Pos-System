@@ -1,23 +1,23 @@
 <div id="reorder-div">
 
-    <!-- 1. Use hgroup to bind the title and count cleanly together -->
     <hgroup style="margin-bottom: 2rem;">
-        <h2 th:text="#{reorder.title}">Restock Required</h2>
+        <h2 class="page-heading" style="margin-bottom: 0.25rem;">
+            <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span th:text="#{reorder.title}">Restock Required</span>
+        </h2>
         <p>
             <span th:text="#{reorder.totalBelowThreshold}">Total items below minimum threshold:</span>
-            <strong th:text="${count}" style="color: var(--pico-primary);">0</strong>
+            <strong th:text="${count}" style="color: var(--brand-red);">0</strong>
         </p>
     </hgroup>
 
-    <!-- 2. Make the empty state look like a positive dashboard alert -->
-    <article th:if="${!products.hasContent()}" style="text-align: center; padding: 3rem 1rem;">
-        <h3 style="margin-bottom: 0.5rem;" th:text="#{reorder.healthy.title}">✅ Inventory Healthy</h3>
+    <article th:if="${!products.hasContent()}" class="empty-state">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 0.75rem; display: block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <h3 style="margin-bottom: 0.5rem;" th:text="#{reorder.healthy.title}">Inventory Healthy</h3>
         <p style="color: var(--pico-muted-color); margin: 0;" th:text="#{reorder.healthy.desc}">No restock is needed for now. Check back later.</p>
     </article>
 
-    <!-- 3. Wrap the table in a <figure> so Pico makes it responsive and scrollable on small screens -->
     <figure th:if="${products.hasContent()}">
-        <!-- 4. role="grid" gives Pico's beautiful hover states and borders -->
         <table role="grid" class="striped">
             <thead>
             <tr>
@@ -32,18 +32,10 @@
             <tbody>
             <tr th:each="product : ${products.content}">
                 <td th:text="${product.id}" style="color: var(--pico-muted-color);"></td>
-
-                <!-- Emphasize the name -->
                 <td><strong th:text="${product.name}"></strong></td>
-
-                <!-- Monospace font looks great for part numbers -->
                 <td th:text="${product.partNumber}" style="font-family: monospace;"></td>
-
-                <!-- Highlight the low stock in red/warning color so the cashier notices immediately -->
-                <td th:text="${product.stock}" style="color: var(--pico-del-color); font-weight: bold;"></td>
-
+                <td th:text="${product.stock}" style="color: var(--brand-red); font-weight: bold;"></td>
                 <td th:text="${product.reorderPoint}"></td>
-
                 <td th:text="${catMap != null and product.categoryId != null ? (catMap.get(product.categoryId) ?: #messages.msg('reorder.category.none')) : #messages.msg('reorder.category.none')}"></td>
             </tr>
             </tbody>
@@ -53,8 +45,7 @@
     <!-- Pagination Footer -->
     <div th:if="${products.hasContent()}" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 10px 0;">
 
-        <!-- View Numbers -->
-        <div style="font-size: 0.9em; color: #64748b;">
+        <div class="pagination-info">
             <span th:text="#{pagination.showing}">Showing</span>
             <span th:text="${products.totalElements > 0 ? (products.number * products.size + 1) : 0}"></span>
             <span th:text="#{pagination.to}">to</span>
@@ -63,7 +54,6 @@
             <strong th:text="${products.totalElements}"></strong> <span th:text="#{pagination.entries}">entries</span>
         </div>
 
-        <!-- Page Controllers -->
         <nav style="display: flex; align-items: center; gap: 10px;">
             <button th:if="${products.hasPrevious()}"
                     th:hx-get="@{/products/reorder-point(page=${products.number-1})}"

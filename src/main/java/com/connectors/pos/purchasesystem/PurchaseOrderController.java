@@ -5,12 +5,18 @@ import com.connectors.pos.exceptions.ProductNotFoundException;
 import com.connectors.pos.ordersystem.orderdtos.CartItemView;
 import com.connectors.pos.products.ProductRepository;
 import com.connectors.pos.products.Products;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import com.connectors.pos.purchasesystem.purchasedtos.CreatePurchaseOrderDto;
 import com.connectors.pos.purchasesystem.purchasedtos.CreatePurchaseOrderItemDto;
+import com.connectors.pos.purchasesystem.purchasedtos.PurchaseReturnLineOption;
+import com.connectors.pos.purchasesystem.purchasedtos.PurchaseReturnRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +28,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/purchase")
+@PreAuthorize("hasRole('ADMIN')")
 public class PurchaseOrderController {
 
     private final ProductRepository prodRepo;
@@ -287,6 +294,7 @@ public class PurchaseOrderController {
             response.setHeader("HX-Retarget", "#list-error");
             response.setHeader("HX-Reswap", "innerHTML");
             model.addAttribute("errorMessage", "Invalid purchase order data provided.");
+            response.setStatus(HttpServletResponse.SC_OK);
             return "fragments/auth-messages :: exceptions-response";
         }
 
@@ -305,15 +313,71 @@ public class PurchaseOrderController {
             Model model) {
 
         if (bindResult.hasErrors()) {
-            response.setHeader("HX-Retarget", "#cart-zone");
+            response.setHeader("HX-Retarget", "#list-error");
             response.setHeader("HX-Reswap", "innerHTML");
-            return "purchase-cart :: cart-zone";
+            response.setStatus(HttpServletResponse.SC_OK);
+            model.addAttribute("errorMessage", "Invalid purchase order data provided.");
+            return "fragments/auth-messages :: exceptions-response";
         }
 
-        orderServo.updatePurchaseOrder(ordId, updateDto);
+        try {
+            orderServo.updatePurchaseOrder(ordId, updateDto);
+            recalculateAndPopulateModel(new ArrayList<>(), BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, model);
+            return "purchase-cart :: cart-zone";
+        } catch (BusinessRuleException ex) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("HX-Retarget", "#list-error");
+            response.setHeader("HX-Reswap", "innerHTML");
+            model.addAttribute("errorMessage", ex.getMessage());
+            return "fragments/auth-messages :: exceptions-response";
+        }
+    }
 
-        recalculateAndPopulateModel(new ArrayList<>(), BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, model);
-        return "purchase-cart :: cart-zone";
+    @GetMapping("/returns")
+    public String viewPurchaseReturns(@PageableDefault(size = 20) Pageable pageable, Model model) {
+        model.addAttribute("purchaseOrders", orderServo.viewPurchaseOrders(pageable));
+        return "purchase-returns :: purchase-returns";
+    }
+
+    @GetMapping("/returns/{id}")
+    public String openVendorReturn(@PathVariable Long id, Model model) {
+        List<PurchaseReturnLineOption> items = orderServo.getReturnableItems(id);
+        model.addAttribute("purchaseOrderId", id);
+        model.addAttribute("returnItems", items);
+        model.addAttribute("returnRequest", new PurchaseReturnRequest(null, null, ""));
+        return "fragments/purchase-return-form :: return-form";
+    }
+
+    @PostMapping("/returns/{id}")
+    public String processVendorReturn(@PathVariable Long id,
+                                      @Valid @ModelAttribute("returnRequest") PurchaseReturnRequest request,
+                                      BindingResult bindingResult,
+                                      HttpServletResponse response,
+                                      Model model) {
+        if (bindingResult.hasErrors()) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("HX-Retarget", "#purchase-return-error");
+            response.setHeader("HX-Reswap", "innerHTML");
+            model.addAttribute("errorMessage", bindingResult.getFieldError().getDefaultMessage());
+            model.addAttribute("purchaseOrderId", id);
+            model.addAttribute("returnItems", orderServo.getReturnableItems(id));
+            return "fragments/auth-messages :: exceptions-response";
+        }
+
+        try {
+            orderServo.processVendorReturn(id, request);
+            model.addAttribute("purchaseOrders", orderServo.viewPurchaseOrders(PageRequest.of(0, 20)));
+            response.setHeader("HX-Trigger", "close-modal");
+            return "purchase-returns :: purchase-returns";
+        } catch (BusinessRuleException ex) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("HX-Retarget", "#purchase-return-error");
+            response.setHeader("HX-Reswap", "innerHTML");
+            model.addAttribute("errorMessage", ex.getMessage());
+            model.addAttribute("purchaseOrderId", id);
+            model.addAttribute("returnItems", orderServo.getReturnableItems(id));
+            return "fragments/auth-messages :: exceptions-response";
+        }
     }
 
     @DeleteMapping("/clear")

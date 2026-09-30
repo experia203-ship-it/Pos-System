@@ -16,7 +16,6 @@ public interface ProductMapper {
      @Mapping(target = "id", ignore = true)
      @Mapping(target = "createdAt", ignore = true)
      @Mapping(target = "category", ignore = true)
-     @Mapping(target = "barcode", ignore = true)
 
      Products toEntity(CreateProductDto dto);
 
@@ -30,7 +29,6 @@ public interface ProductMapper {
         @Mapping(target = "id", ignore = true)
         @Mapping(target = "createdAt", ignore = true)
         @Mapping(target = "category", ignore=true)
-        @Mapping(target = "barcode", ignore=true)
 
         @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
         void updateEntityFromDto(ProductUpdateDto dto, @MappingTarget Products product);
@@ -64,5 +62,4 @@ public interface ProductMapper {
             return new HashMap<>(customFields);
         }
     }
-
 

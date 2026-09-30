@@ -1,5 +1,8 @@
 <div>
-    <h2 th:text="#{stat.title}">Statistics</h2>
+    <h2 class="page-heading">
+        <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+        <span th:text="#{stat.title}">Statistics</span>
+    </h2>
 
     <form   hx-get="/statics/custom"
             hx-target="#stat-res"
@@ -16,7 +19,7 @@
         </div>
         <div style="margin-top: 15px;">
             <label for="top-size" th:text="#{stat.label.topSellers}">show-top-sellers</label>
-            <select id="top-size" name="size" style="padding: 5px; border-radius: 4px;">
+            <select id="top-size" name="size">
                 <option value="1" th:text="#{stat.option.top('1')}">top-1</option>
                 <option value="5" selected th:text="#{stat.option.top('5')}">top-5 </option>
                 <option value="10" th:text="#{stat.option.top('10')}">top-10 </option>
@@ -26,7 +29,7 @@
         </div>
         <div style="margin-top: 15px;">
             <label for="least-items" th:text="#{stat.label.leastSellers}">show-least-sellers</label>
-            <select id="least-items" name="leastSize" style="padding: 5px; border-radius: 4px;">
+            <select id="least-items" name="leastSize">
                 <option value="1" selected th:text="#{stat.option.least('1')}">least-1</option>
                 <option value="5" th:text="#{stat.option.least('5')}">least-5</option>
                 <option value="10" th:text="#{stat.option.least('10')}">least-10</option>
@@ -37,9 +40,9 @@
 
     </form>
 
-    <div id="stat-res" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;" th:text="#{stat.initial.message}">
+    <article id="stat-res" style="margin-top: 20px;" th:text="#{stat.initial.message}">
         Select dates to view stats
-    </div>
+    </article>
 </div>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">

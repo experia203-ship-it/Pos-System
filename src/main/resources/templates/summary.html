@@ -1,21 +1,22 @@
 <div>
-    <h2 th:text="#{stats.title}">Statistics</h2>
+    <h2 class="page-heading">
+        <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+        <span th:text="#{stats.title}">Statistics</span>
+    </h2>
 
-    <form   hx-get="/pos/CustomerOrderSummary"
-            hx-target="#stat-res"
-            hx-swap="innerHTML"
-
-    >
-        <div>
-            <label for="time-range" th:text="#{stats.timeframe.label}">Select timeframe:</label>
-            <input id="time-range"
-                   type="text"
-                   name="dateRange"
-                   th:placeholder="#{stats.timeframe.placeholder}"
-                   readonly>
-        </div>
-
-    </form>
+    <div>
+        <label for="time-range" th:text="#{stats.timeframe.label}">Select timeframe:</label>
+        <input id="time-range"
+               type="text"
+               name="dateRange"
+               hx-get="/pos/CustomerOrderSummary"
+               hx-trigger="change"
+               hx-include="#summary-customer-id"
+               hx-target="#stat-res"
+               hx-swap="innerHTML"
+               th:placeholder="#{stats.timeframe.placeholder}"
+               readonly>
+    </div>
 
 </div>
 
@@ -31,10 +32,9 @@
 
 </div>
 
-<div id="stat-res" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;" th:text="#{stats.select.dates}">
+<article id="stat-res" style="margin-top: 20px;" th:text="#{stats.select.dates}">
     Select dates to view stats
-</div>
-</div>
+</article>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>

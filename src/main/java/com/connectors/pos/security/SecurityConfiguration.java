@@ -20,9 +20,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
+import org.springframework.beans.factory.annotation.Value;
 
 @RequiredArgsConstructor
 @Configuration
@@ -33,25 +34,31 @@ public class SecurityConfiguration {
     private final JwtFilter jwtFilter;
     private final UserDetailsService userDetails;
 
+    @Value("${app.security.cookie-secure:false}")
+    private boolean secureCookies;
 
     @Bean
-public SecurityFilterChain filterChain(HttpSecurity http){
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        CookieCsrfTokenRepository csrfTokens = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        csrfTokens.setCookiePath("/");
+        csrfTokens.setCookieCustomizer(cookie -> cookie.sameSite("Lax").secure(secureCookies));
 
-
-    return http
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(cust->cust.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .formLogin(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth->auth.requestMatchers("/","/auth/**" ,"/pos/print/**","/error").permitAll()
-                    .anyRequest().authenticated())
-            //.formLogin(form->form.loginPage("/auth/login").permitAll())
-             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-            .build();
-
-
-
-
-}
+        return http
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                        .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
+                )
+                .sessionManagement(cust -> cust.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .formLogin(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/auth/login", "/auth/register", "/error",
+                                "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/auth/logout").authenticated()
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
 
 @Bean
     public PasswordEncoder getPasswordEncoder(){
@@ -78,4 +85,3 @@ public SecurityFilterChain filterChain(HttpSecurity http){
     return provider;
 }
     }
-

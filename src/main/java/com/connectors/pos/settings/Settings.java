@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name="settings")
@@ -29,6 +29,9 @@ public class Settings {
 private String address;
 @Column(name="tax_registration_number")
 private String taxRegistrationNumber;
+@Builder.Default
+@Column(name = "tax_rate", nullable = false, precision = 5, scale = 2)
+private BigDecimal taxRate = BigDecimal.ZERO;
 
 @Column(name="default_theme",length=50,columnDefinition = "varchar(50) default 'SYSTEM_DEFAULT'")
 @NotNull(message="theme is required")
@@ -47,13 +50,4 @@ private byte[] logo;
 @Column(name="shift_management",nullable = false)
 private boolean shiftManagement = true;
 
-    @Column(name = "is_licensed")
-    private boolean licensed = false;
-
-    @Column(name = "trial_ends_at")
-    private LocalDateTime trialEndsAt;
-
-    @Column(name = "last_accessed_at")
-    private LocalDateTime lastAccessedAt;
 }
-

@@ -7,8 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GeneratedColumn;
+import jakarta.persistence.Transient;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,13 +42,16 @@ private BigDecimal discount=BigDecimal.ZERO ;
 @JoinColumn(name = "user_id",nullable = false)
     private Users user;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vendor_id",nullable = false)
+    @JoinColumn(name = "vendor_id")
 private Vendor vendor;
     @Column(name="paid",precision = 10,scale = 2)
    private BigDecimal paid = BigDecimal.ZERO;
-   @Column(name="remaining",precision = 10,scale=2,insertable=false,updatable = false)
-   @Generated
+   @Transient
    private BigDecimal remaining;
+
+    @Column(name = "vendor_credit", nullable = false, precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal vendorCredit = BigDecimal.ZERO;
 
     @Column(name="order_number" , unique = true)
     @Size(max=20)
@@ -57,6 +59,14 @@ private Vendor vendor;
 @Builder.Default
 @OneToMany(mappedBy = "purchaseOrder",cascade = CascadeType.ALL,orphanRemoval = true)
 private List<PurchaseOrderItem> items = new ArrayList<>();
+
+public BigDecimal getRemaining() {
+    BigDecimal netTotal = total == null ? BigDecimal.ZERO : total;
+    BigDecimal orderDiscount = discount == null ? BigDecimal.ZERO : discount;
+    BigDecimal paidAmount = paid == null ? BigDecimal.ZERO : paid;
+    BigDecimal credits = vendorCredit == null ? BigDecimal.ZERO : vendorCredit;
+    return netTotal.subtract(orderDiscount).subtract(paidAmount).subtract(credits);
+}
 
 public void addItem(PurchaseOrderItem item){
 

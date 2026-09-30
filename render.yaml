@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: pos-system-demo
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    numInstances: 1
+    healthCheckPath: /auth/login
+    disk:
+      name: pos-demo-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: demo
+      - key: SQLITE_DATABASE_PATH
+        value: /var/data/pos_database.sqlite
+      - key: APP_DEMO_AUTO_RESET
+        value: "true"
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true

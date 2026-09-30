@@ -1,18 +1,21 @@
-version: '3.8'
-
 services:
   postgres-db:
     image: postgres:16
     container_name: pos-postgres-container
     restart: always
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment or .env file}"
       POSTGRES_DB: pos_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 
   # 2. The Redis Cache
@@ -25,14 +28,16 @@ services:
     ports:
       - "80:8080" # Maps the server's port 80 (web standard) to your app's port 8080
     environment:
-      # We pass the live database credentials to Spring Boot here
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/pos_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=password
-      - SPRING_CACHE_REDIS_HOST=redis
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/pos_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment or .env file}"
+      SPRING_CACHE_REDIS_HOST: redis
     depends_on:
-      - db
-      - redis
+      postgres-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 
 volumes:

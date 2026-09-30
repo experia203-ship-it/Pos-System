@@ -8,6 +8,7 @@ target/
 *.db
 *.sqlite
 *.sqlite3
+.env
 
 # --- Binaries & Installers ---
 *.jar

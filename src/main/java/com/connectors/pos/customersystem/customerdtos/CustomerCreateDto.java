@@ -11,9 +11,11 @@ public record CustomerCreateDto(
         @NotBlank(message="customer name is required")
        @Size(max=50)
         String name,
-         String location,
+        @Size(max = 1000)
+        String location,
+        @Size(max = 50)
         String shippingCompany,
-        List<String> phoneNumbers
+        List<@Size(max = 50) String> phoneNumbers
 
 
 ) {

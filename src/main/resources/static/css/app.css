@@ -1,0 +1,465 @@
+/* =========================================================
+   POS System — App Stylesheet
+   Built on top of Pico CSS. Professional deep navy/teal theme.
+   ========================================================= */
+
+:root {
+  --brand-navy: #0b3455;
+  --brand-navy-light: #123b63;
+  --brand-navy-lighter: #1d4d7a;
+  --brand-teal: #0e9488;
+  --brand-teal-dark: #0b7a70;
+  --brand-teal-light: #2dd4bf;
+  --brand-amber: #d97706;
+  --brand-red: #dc2626;
+  --brand-red-dark: #b91c1c;
+  --brand-green: #16a34a;
+  --brand-gray-bg: #f1f5f9;
+  --brand-gray-border: #cbd5e1;
+  --app-radius: 10px;
+  --app-shadow: 0 1px 3px rgba(11, 52, 85, 0.08), 0 1px 2px rgba(11, 52, 85, 0.06);
+  --app-shadow-lg: 0 8px 20px rgba(11, 52, 85, 0.18);
+}
+
+/* ---------- Pico theme overrides (light) ---------- */
+:root:not([data-theme="dark"]),
+[data-theme="light"] {
+  --pico-primary: var(--brand-teal);
+  --pico-primary-background: var(--brand-teal);
+  --pico-primary-border: var(--brand-teal);
+  --pico-primary-underline: var(--brand-teal);
+  --pico-primary-hover: var(--brand-teal-dark);
+  --pico-primary-hover-background: var(--brand-teal-dark);
+  --pico-primary-hover-border: var(--brand-teal-dark);
+  --pico-primary-focus: rgba(14, 148, 136, 0.25);
+  --pico-primary-inverse: #ffffff;
+  --pico-background-color: #f8fafc;
+}
+
+/* ---------- Pico theme overrides (dark) ---------- */
+[data-theme="dark"] {
+  --pico-primary: var(--brand-teal-light);
+  --pico-primary-background: var(--brand-teal-dark);
+  --pico-primary-border: var(--brand-teal-light);
+  --pico-primary-hover: var(--brand-teal-light);
+  --pico-primary-hover-background: var(--brand-teal);
+  --pico-primary-focus: rgba(45, 212, 191, 0.3);
+  --pico-primary-inverse: #04201d;
+}
+
+body {
+  background: var(--pico-background-color);
+}
+
+/* =========================================================
+   APP SHELL / SIDEBAR
+   ========================================================= */
+#sidebar {
+  background: linear-gradient(180deg, var(--brand-navy) 0%, var(--brand-navy-light) 100%) !important;
+  color: #e2e8f0 !important;
+  border: none !important;
+  box-shadow: var(--app-shadow-lg);
+}
+
+#sidebar h2 {
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+}
+
+#sidebar h2::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--brand-teal-light);
+  box-shadow: 0 0 8px var(--brand-teal-light);
+}
+
+#toggle-btn {
+  color: #93c5fd !important;
+}
+
+#sidebar nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#sidebar nav li {
+  list-style: none;
+}
+
+#sidebar nav button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: transparent !important;
+  color: #cbd5e1 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  margin-bottom: 0 !important;
+  font-weight: 500;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+#sidebar nav button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+#sidebar nav button .nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+#sidebar nav button:last-child {
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 0 !important;
+  padding-top: 14px !important;
+  color: #fca5a5 !important;
+}
+
+#sidebar nav button:last-child:hover {
+  color: #fecaca !important;
+  background: rgba(220, 38, 38, 0.12) !important;
+}
+
+#sidebar.collapsed nav button {
+  justify-content: center;
+  padding: 10px 0 !important;
+}
+
+/* =========================================================
+   ZONES / CARDS
+   ========================================================= */
+.zone {
+  background: var(--pico-background-color) !important;
+  border: 1px solid var(--brand-gray-border) !important;
+  border-radius: var(--app-radius) !important;
+  box-shadow: var(--app-shadow);
+}
+
+[data-theme="dark"] .zone {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.zone > .toggle-container span,
+#searchbar > div > div {
+  color: var(--pico-color);
+}
+
+article {
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow);
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+button, [role="button"] {
+  border-radius: 8px !important;
+}
+
+button.contrast, button[style*="d9534f"] {
+  background-color: var(--brand-red) !important;
+  border-color: var(--brand-red) !important;
+}
+button.contrast:hover, button[style*="d9534f"]:hover {
+  background-color: var(--brand-red-dark) !important;
+  border-color: var(--brand-red-dark) !important;
+}
+
+button.secondary {
+  background-color: transparent !important;
+  color: var(--brand-navy) !important;
+  border-color: var(--brand-gray-border) !important;
+}
+[data-theme="dark"] button.secondary {
+  color: #e2e8f0 !important;
+}
+button.secondary:hover {
+  background-color: var(--brand-gray-bg) !important;
+}
+
+/* =========================================================
+   TOGGLE SWITCH
+   ========================================================= */
+.toggle-label {
+  background-color: var(--brand-gray-border) !important;
+}
+.hidden-checkbox:checked + .toggle-label {
+  background-color: var(--brand-teal) !important;
+}
+
+/* =========================================================
+   SEARCH DROPDOWNS (shared by search-wrapper & dropdown-anchor)
+   ========================================================= */
+.search-wrapper, .dropdown-anchor {
+  position: relative;
+  width: 100%;
+}
+
+#searchbar, #orderSearch {
+  position: relative;
+  z-index: 10;
+  overflow: visible !important;
+}
+#searchbar:focus-within, #orderSearch:focus-within {
+  z-index: 999 !important;
+}
+
+.dropdown-results {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  width: 100%;
+  min-width: 340px;
+  max-width: min(480px, 90vw);
+  background-color: var(--pico-background-color) !important;
+  border: 1px solid var(--brand-teal);
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  display: none;
+  z-index: 10000;
+  box-shadow: var(--app-shadow-lg);
+}
+.dropdown-results:not(:empty) { display: block; }
+
+.dropdown-results table { width: 100%; table-layout: fixed; border-collapse: collapse; background-color: var(--pico-background-color) !important; margin: 0; }
+.dropdown-results th {
+  position: sticky;
+  top: 0;
+  background-color: var(--brand-gray-bg) !important;
+  color: var(--brand-navy);
+  z-index: 2;
+}
+[data-theme="dark"] .dropdown-results th {
+  background-color: var(--brand-navy) !important;
+  color: #e2e8f0;
+}
+.dropdown-results th, .dropdown-results td {
+  padding: 8px 6px;
+  text-align: left;
+  vertical-align: middle;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.clickable-row { cursor: pointer; transition: background-color 0.15s ease; }
+.clickable-row:hover td {
+  background-color: rgba(14, 148, 136, 0.1) !important;
+  color: var(--pico-color);
+}
+
+.truncate-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wrap-text { white-space: normal; word-break: break-word; }
+
+/* =========================================================
+   TABLES (general)
+   ========================================================= */
+table thead th {
+  background-color: var(--brand-gray-bg);
+  color: var(--brand-navy);
+  font-weight: 600;
+}
+[data-theme="dark"] table thead th {
+  background-color: var(--brand-navy-light);
+  color: #e2e8f0;
+}
+
+/* =========================================================
+   BADGES (custom fields, tags, status)
+   ========================================================= */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--brand-gray-bg);
+  color: #334155;
+  border: 1px solid var(--brand-gray-border);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+[data-theme="dark"] .badge {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.badge--danger { color: var(--brand-red); border-color: var(--brand-red); background: rgba(220, 38, 38, 0.08); }
+.badge--success { color: var(--brand-green); border-color: var(--brand-green); background: rgba(22, 163, 74, 0.08); }
+
+/* =========================================================
+   STAT / DASHBOARD CARDS (statics.html, stat.html)
+   ========================================================= */
+.stat-card {
+  text-align: center;
+  padding: 20px;
+  border-top: 4px solid var(--brand-teal);
+}
+.stat-card--profit { border-top-color: var(--brand-green); }
+.stat-card--warn { border-top-color: var(--brand-amber); }
+
+/* =========================================================
+   TOASTS
+   ========================================================= */
+#toast-container article {
+  box-shadow: var(--app-shadow-lg);
+}
+
+/* =========================================================
+   MODALS / DIALOGS
+   ========================================================= */
+dialog article {
+  border-radius: 12px;
+  box-shadow: var(--app-shadow-lg);
+}
+dialog article h2 {
+  color: var(--brand-navy);
+  border-bottom: 2px solid var(--brand-teal);
+  padding-bottom: 10px;
+  margin-bottom: 1.2rem;
+}
+[data-theme="dark"] dialog article h2 {
+  color: #e2e8f0;
+}
+
+/* =========================================================
+   FORM ERRORS / INLINE MESSAGES
+   ========================================================= */
+.form-error {
+  color: var(--brand-red) !important;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.form-success {
+  color: var(--brand-green) !important;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.plaintext-input {
+  border: none !important;
+  background: transparent !important;
+  font-weight: 600;
+  color: var(--brand-navy);
+  padding: 0 !important;
+}
+[data-theme="dark"] .plaintext-input { color: #e2e8f0; }
+
+/* =========================================================
+   TOASTS (success / error banners)
+   ========================================================= */
+.toast {
+  border-radius: 8px !important;
+  box-shadow: var(--app-shadow-lg);
+  padding: 12px 16px !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.toast--success { border-left: 4px solid var(--brand-green) !important; }
+.toast--danger { border-left: 4px solid var(--brand-red) !important; }
+
+/* =========================================================
+   EMPTY STATES
+   ========================================================= */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--pico-muted-color);
+}
+.empty-state .empty-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--brand-teal);
+  margin-bottom: 0.75rem;
+}
+
+/* =========================================================
+   AUTH PAGES (login / register)
+   ========================================================= */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--brand-navy) 0%, var(--brand-navy-light) 45%, #0f766e 100%);
+  padding: 20px;
+}
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--pico-background-color);
+  border-radius: 14px;
+  box-shadow: var(--app-shadow-lg);
+  padding: 2.25rem 2rem;
+}
+.auth-card .auth-icon {
+  width: 42px;
+  height: 42px;
+  color: var(--brand-teal);
+  margin: 0 auto 0.75rem;
+  display: block;
+}
+.auth-card h2 {
+  text-align: center;
+  color: var(--brand-navy);
+  margin-bottom: 1.5rem;
+}
+[data-theme="dark"] .auth-card h2 { color: #e2e8f0; }
+
+/* =========================================================
+   SECTION HEADINGS (used across pages: products, customers, etc.)
+   ========================================================= */
+.page-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--brand-navy);
+  margin-bottom: 1rem;
+}
+[data-theme="dark"] .page-heading { color: #e2e8f0; }
+.page-heading .heading-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--brand-teal);
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   PAGINATION
+   ========================================================= */
+.pagination-info {
+  font-size: 0.9em;
+  color: var(--pico-muted-color) !important;
+}
+
+/* =========================================================
+   SCROLLBAR POLISH (webkit)
+   ========================================================= */
+.zone::-webkit-scrollbar, .dropdown-results::-webkit-scrollbar {
+  width: 8px;
+}
+.zone::-webkit-scrollbar-thumb, .dropdown-results::-webkit-scrollbar-thumb {
+  background-color: var(--brand-gray-border);
+  border-radius: 8px;
+}
