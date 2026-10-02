@@ -43,8 +43,14 @@ public class DemoDataReset {
 
         try {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-            Integer settingsCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM settings", Integer.class);
-            if (settingsCount != null && settingsCount > 0) {
+            // NOTE: don't check the "settings" table here — spring.sql.init.mode=always
+            // runs src/main/resources/data.sql on every boot, which always INSERT OR
+            // IGNOREs a default settings row before this listener fires. That made
+            // this count always >= 1, so the startup seed never actually ran. The
+            // "products" table is only ever populated by the demo reset script
+            // below, so it is a reliable empty/non-empty signal for demo data.
+            Integer productCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM products", Integer.class);
+            if (productCount != null && productCount > 0) {
                 log.info("Demo database already contains data; skipping startup seed.");
                 return;
             }
