@@ -3,13 +3,7 @@ package com.connectors.pos.ordersystem;
 import com.connectors.pos.customersystem.Customer;
 import com.connectors.pos.exceptions.InsuffecientStockException;
 import com.connectors.pos.exceptions.YouMustProvideAtLeastOneItem;
-import com.connectors.pos.ordersystem.orderdtos.OrderCreateDto;
-import com.connectors.pos.ordersystem.orderdtos.OrderItemCreateDto;
-import com.connectors.pos.ordersystem.orderdtos.OrderItemMapper;
-import com.connectors.pos.ordersystem.orderdtos.OrderMapper;
-import com.connectors.pos.ordersystem.orderdtos.OrderResponseDto;
-import com.connectors.pos.ordersystem.orderdtos.OrderUpdateDto;
-import com.connectors.pos.ordersystem.orderdtos.CustomerSummary;
+import com.connectors.pos.ordersystem.orderdtos.*;
 import com.connectors.pos.products.ProductRepository;
 import com.connectors.pos.products.Products;
 import com.connectors.pos.security.UserPrincipal;
@@ -418,7 +412,7 @@ class OrderServiceBusinessTest {
         when(orderRepo.findOrdersByCustomerIdBetweenDates(9L, start, end, pageable))
                 .thenReturn(Page.empty(pageable));
         when(orderRepo.sumAllOrdersSummaryBetweenDatesById(9L, start, end))
-                .thenReturn(new Object[]{money("25.00"), money("15.00"), money("10.00")});
+                .thenReturn(new OrderTotals(money("25.00"), money("15.00"), money("10.00")));
         when(customerRepo.findById(9L))
                 .thenReturn(Optional.of(Customer.builder().id(9L).name("Sam").build()));
 
