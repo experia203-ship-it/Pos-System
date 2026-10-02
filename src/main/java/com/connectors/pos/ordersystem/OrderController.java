@@ -127,7 +127,15 @@ public boolean isReturnsDisabled(@AuthenticationPrincipal UserPrincipal principa
 
     @GetMapping("/purchase")
     @PreAuthorize("hasRole('ADMIN')")
-    public String viewPurchasePage(Model model){
+    public String viewPurchasePage(@AuthenticationPrincipal UserPrincipal principal, Model model){
+
+        SettingsResponseDto res = settings.getSettings();
+        model.addAttribute("allow_shift", res.shiftManagement());
+
+        ShiftSession activeShift = principal == null ? null
+                : shiftService.findActiveShift(principal.getId()).orElse(null);
+        model.addAttribute("activeShift", activeShift);
+
         model.addAttribute("mode", "purchase");
         return resolvePosView();
     }
