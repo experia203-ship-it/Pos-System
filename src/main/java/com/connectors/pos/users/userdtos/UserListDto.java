@@ -4,6 +4,7 @@ public record UserListDto(
         Long id,
         String name,
         String email,
-        boolean admin
+        boolean admin,
+        boolean protectedAccount
 ) {
 }

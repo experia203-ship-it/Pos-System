@@ -1,7 +1,10 @@
 package com.connectors.pos.users;
 
+import com.connectors.pos.exceptions.UserManagementException;
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.security.UserPrincipal;
 import com.connectors.pos.users.userdtos.ResetPasswordDto;
+import com.connectors.pos.users.userdtos.UserListDto;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +49,11 @@ public class UserManagementController {
 
     @GetMapping("/{id}/reset-password")
     public String showResetPasswordDialog(@PathVariable Long id, Model model) {
-        model.addAttribute("targetUser", userServo.getUserSummary(id));
+        UserListDto targetUser = userServo.getUserSummary(id);
+        if (targetUser.protectedAccount()) {
+            throw new UserManagementException(Messages.get("error.user.demoAccountProtected"));
+        }
+        model.addAttribute("targetUser", targetUser);
         model.addAttribute("resetPasswordForm", new ResetPasswordDto("", ""));
         return "users :: reset-password-dialog";
     }

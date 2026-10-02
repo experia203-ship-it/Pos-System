@@ -10,6 +10,8 @@ import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.users.userdtos.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
@@ -32,13 +34,28 @@ public class UserService {
     private final PasswordEncoder encoder;
     private final AuditLogService auditLogService;
     private final ApplicationEventPublisher applicationEventPublisher;   // the injected instance
+    private final Environment environment;
 
     /**
-     * this service should contain 2 methods
-     * 1 for create a new user
-     * 2 add role to existing user
-     * 3 passwords must be hashed
+     * Seeded by DemoInitializer only when the "demo" profile is active (i.e. the
+     * public Render demo deployment). This account must stay usable as a live demo
+     * admin, so any mutation that could lock visitors out (demotion, forced password
+     * reset, or self password change) is blocked while running under that profile.
      */
+    private static final String PROTECTED_DEMO_EMAIL = "user123@gmail.com";
+
+    private boolean isProtectedDemoAccount(Users user) {
+        return user != null
+                && user.getEmail() != null
+                && user.getEmail().equalsIgnoreCase(PROTECTED_DEMO_EMAIL)
+                && environment.acceptsProfiles(Profiles.of("demo"));
+    }
+
+    private void assertNotProtectedDemoAccount(Users user) {
+        if (isProtectedDemoAccount(user)) {
+            throw new UserManagementException(Messages.get("error.user.demoAccountProtected"));
+        }
+    }
 
 @Transactional
     public UserResponseDto createUser(CreateUserDto create){
@@ -100,7 +117,7 @@ user.setPassword(encoder.encode(create.password()));
     @Transactional(readOnly = true)
     public List<UserListDto> getAllUsers() {
         return userRepo.findAll(Sort.by(Sort.Direction.ASC, "name")).stream()
-                .map(u -> new UserListDto(u.getId(), u.getName(), u.getEmail(), isAdmin(u)))
+                .map(u -> new UserListDto(u.getId(), u.getName(), u.getEmail(), isAdmin(u), isProtectedDemoAccount(u)))
                 .toList();
     }
 
@@ -141,6 +158,8 @@ user.setPassword(encoder.encode(create.password()));
             return;
         }
 
+        assertNotProtectedDemoAccount(user);
+
         if (userRepo.countByRoleName("ROLE_ADMIN") <= 1) {
             throw new UserManagementException(Messages.get("error.user.atLeastOneAdminRequired"));
         }
@@ -158,6 +177,8 @@ user.setPassword(encoder.encode(create.password()));
         Users user = userRepo.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(Messages.get("error.user.notFound")));
 
+        assertNotProtectedDemoAccount(user);
+
         user.setPassword(encoder.encode(newPassword));
         userRepo.save(user);
             //publish an audit event for the password reset action
@@ -171,6 +192,8 @@ user.setPassword(encoder.encode(create.password()));
     public void changeOwnPassword(Long userId, String currentPassword, String newPassword) {
         Users user = userRepo.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(Messages.get("error.user.notFound")));
+
+        assertNotProtectedDemoAccount(user);
 
         if (!encoder.matches(currentPassword, user.getPassword())) {
             throw new UserManagementException(Messages.get("error.user.currentPasswordIncorrect"));
@@ -188,7 +211,7 @@ user.setPassword(encoder.encode(create.password()));
     public UserListDto getUserSummary(Long userId) {
         Users user = userRepo.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(Messages.get("error.user.notFound")));
-        return new UserListDto(user.getId(), user.getName(), user.getEmail(), isAdmin(user));
+        return new UserListDto(user.getId(), user.getName(), user.getEmail(), isAdmin(user), isProtectedDemoAccount(user));
     }
 
     private static boolean isAdmin(Users user) {

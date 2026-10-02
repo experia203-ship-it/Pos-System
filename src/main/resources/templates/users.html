@@ -35,7 +35,7 @@
                             th:text="#{users.btn.promote}">
                         promote
                     </button>
-                    <button th:if="${u.admin}" type="button" class="contrast outline" style="padding: 4px 10px;"
+                    <button th:if="${u.admin and !u.protectedAccount}" type="button" class="contrast outline" style="padding: 4px 10px;"
                             th:hx-post="@{/users/{id}/demote(id=${u.id})}"
                             hx-target="#users-table"
                             hx-swap="outerHTML"
@@ -43,13 +43,16 @@
                             th:text="#{users.btn.demote}">
                         demote
                     </button>
-                    <button type="button" class="outline" style="padding: 4px 10px;"
+                    <button th:unless="${u.protectedAccount}" type="button" class="outline" style="padding: 4px 10px;"
                             th:hx-get="@{/users/{id}/reset-password(id=${u.id})}"
                             hx-target="#modal-container-users"
                             hx-swap="innerHTML"
                             th:text="#{users.btn.resetPassword}">
                         reset password
                     </button>
+                    <span th:if="${u.protectedAccount}" class="badge" th:text="#{users.demo.protected}">
+                        Protected demo account
+                    </span>
                 </td>
             </tr>
             </tbody>
