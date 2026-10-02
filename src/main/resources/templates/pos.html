@@ -92,22 +92,33 @@
 
     <!-- POS Specific Scripts (Note the th:inline="javascript") -->
     <script th:inline="javascript">
-        // Automatically clear and close dropdowns when an item is clicked
+        // Automatically clear and close dropdowns when a result row is clicked
         document.body.addEventListener('click', function(event) {
             const clickableRow = event.target.closest('.clickable-row');
-            if (clickableRow) {
-                const resultsArea = clickableRow.closest('#search-results-area');
-                if (resultsArea) {
-                    resultsArea.innerHTML = '';
-                    const searchInput = document.getElementById('search-bar');
-                    if (searchInput) {
-                        searchInput.value = '';
-                        setTimeout(() => {
-                            searchInput.focus();
-                        }, 50);
-                    }
-                }
+            if (!clickableRow) {
+                return;
             }
+
+            const dropdownConfigs = [
+                { resultsId: 'search-results-area', inputId: 'search-bar' },
+                { resultsId: 'orderSearchByNumberResults', inputId: 'orderSearchIn' },
+                { resultsId: 'orderSearchByNameResults', inputId: 'ordersearchcustomer' }
+            ];
+
+            dropdownConfigs.forEach(function(config) {
+                const resultsArea = clickableRow.closest('#' + config.resultsId);
+                if (!resultsArea) {
+                    return;
+                }
+                resultsArea.innerHTML = '';
+                const searchInput = document.getElementById(config.inputId);
+                if (searchInput) {
+                    searchInput.value = '';
+                    setTimeout(() => {
+                        searchInput.focus();
+                    }, 50);
+                }
+            });
         });
 
         // Close ANY open dropdown when clicking outside of its search wrapper

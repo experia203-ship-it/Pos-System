@@ -3,6 +3,7 @@ package com.connectors.pos.ordersystem;
 import com.connectors.pos.customersystem.Customer;
 import com.connectors.pos.customersystem.CustomerRepository;
 import com.connectors.pos.exceptions.*;
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.ordersystem.orderdtos.*;
 import com.connectors.pos.ordersystem.orderdtos.SaleReturnLineOption;
 import com.connectors.pos.ordersystem.orderdtos.SaleReturnRequest;
@@ -58,11 +59,11 @@ public class OrderService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            throw new AccessDeniedException("Unauthorized: No active cashier session found.");
+            throw new AccessDeniedException(Messages.get("error.auth.noActiveCashier"));
 
         }
         if (!(auth.getPrincipal() instanceof UserPrincipal)) {
-            throw new AccessDeniedException("Unauthorized: Invalid user token.");
+            throw new AccessDeniedException(Messages.get("error.auth.invalidUserToken"));
 
         }
         UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
@@ -76,7 +77,7 @@ public class OrderService {
             try {
                 activeShift = shiftService.getOpenShiftForSale(principal.getId());
             } catch (ShiftOperationException exception) {
-                throw new ShiftRequiredException("Open a shift before completing a sale.");
+                throw new ShiftRequiredException(Messages.get("error.sale.openShiftRequired"));
             }
             order.setShiftSession(activeShift);
         }
@@ -90,7 +91,7 @@ public class OrderService {
         }
         List<OrderItemCreateDto> itemsDto = create.itemsList();
 if(create.itemsList() == null || create.itemsList().isEmpty()){
-    throw new YouMustProvideAtLeastOneItem("please provide at least on item");
+    throw new YouMustProvideAtLeastOneItem(Messages.get("error.sale.itemsRequired"));
 
 }
         List<Long> allProductIds = itemsDto.stream().map(OrderItemCreateDto::productId)
@@ -104,7 +105,7 @@ if(create.itemsList() == null || create.itemsList().isEmpty()){
 
         BigDecimal total = BigDecimal.ZERO;
         BigDecimal revenue = BigDecimal.ZERO;
-        BigDecimal orderDiscount = nonNegative(create.discount(), "Sale discount cannot be negative.");
+        BigDecimal orderDiscount = nonNegative(create.discount(), Messages.get("error.sale.discountNegative"));
 
         for (OrderItemCreateDto item : itemsDto) {
             String name;
@@ -112,29 +113,29 @@ if(create.itemsList() == null || create.itemsList().isEmpty()){
             BigDecimal sellingPrice;
             Products prod = null;
             Long stock;
-            BigDecimal discount = nonNegative(item.subDiscount(), "Line discount cannot be negative.");
+            BigDecimal discount = nonNegative(item.subDiscount(), Messages.get("error.sale.lineDiscountNegative"));
             Long prodId = item.productId();
             int quantity = item.quantity();
             requirePositiveQuantity(quantity);
             if (prodId == null) {
                 name = requireCustomName(item.customName());
-                sellingPrice = nonNegative(item.customSellingPrice(), "Custom item selling price is required.");
+                sellingPrice = nonNegative(item.customSellingPrice(), Messages.get("error.sale.customSellingPriceRequired"));
                 purchasePrice = item.customPurchasePrice() != null
-                        ? nonNegative(item.customPurchasePrice(), "Purchase cost cannot be negative.")
+                        ? nonNegative(item.customPurchasePrice(), Messages.get("error.sale.purchaseCostNegative"))
                         : BigDecimal.ZERO;
                 stock=0L;
             } else {
 
                 prod = productsWithIds.get(prodId);
                 if (prod == null) {
-                    throw new ProductNotFoundException("no product was found with this id " + prodId);
+                    throw new ProductNotFoundException(Messages.get("error.sale.productNotFoundWithId", prodId));
                 }
                 name = prod.getName();
                 sellingPrice = prod.getSellingPrice();
                 purchasePrice = prod.getPurchasePrice();
                 if(quantity>prod.getStock()){
 
-throw new InsuffecientStockException("insuffesient stock the availabele quantity is :"+prod.getName()+"  " +prod.getStock());
+throw new InsuffecientStockException(Messages.get("error.sale.insufficientStockDetailed", prod.getName(), prod.getStock()));
                 }
                 stock = prod.getStock()-quantity;
                 prod.setStock(stock);
@@ -151,7 +152,7 @@ throw new InsuffecientStockException("insuffesient stock the availabele quantity
 
             order.addOrderItem(createItem);
             BigDecimal extendedPrice = sellingPrice.multiply(BigDecimal.valueOf(quantity));
-            validateDiscount(discount, extendedPrice, "Line discount cannot exceed the line total.");
+            validateDiscount(discount, extendedPrice, Messages.get("error.sale.lineDiscountExceedsLineTotal"));
             BigDecimal subTotal = extendedPrice.subtract(discount);
             total = total.add(subTotal);
 
@@ -163,13 +164,13 @@ throw new InsuffecientStockException("insuffesient stock the availabele quantity
 
         }
 
-        validateDiscount(orderDiscount, total, "Sale discount cannot exceed the subtotal.");
+        validateDiscount(orderDiscount, total, Messages.get("error.sale.discountExceedsSubtotal"));
         total = total.subtract(orderDiscount);
         revenue = revenue.subtract(orderDiscount);
         BigDecimal taxRate = nonNegative(
-                currentSettings.taxRate(), "Configured tax rate cannot be negative.");
+                currentSettings.taxRate(), Messages.get("error.sale.taxRateNegative"));
         if (taxRate.compareTo(BigDecimal.valueOf(100)) > 0) {
-            throw new SaleValidationException("Configured tax rate cannot exceed 100%.");
+            throw new SaleValidationException(Messages.get("error.sale.taxRateExceeds100"));
         }
         BigDecimal taxAmount = SalesTaxCalculator.calculateTax(total, taxRate);
         total = total.add(taxAmount);
@@ -209,7 +210,7 @@ String orderNumber = generateOrderNumber();
     public OrderResponseDto findOrderById(Long id){
 
         Order found = orderRepo.findById(id)
-                .orElseThrow(() -> new OrderNotFoundException("Order was not found."));
+                .orElseThrow(() -> new OrderNotFoundException(Messages.get("error.sale.notFound")));
 
 
         return orderMapper.toResponse(found);
@@ -222,21 +223,21 @@ String orderNumber = generateOrderNumber();
     public OrderResponseDto updateOrder(Long orderId , OrderUpdateDto update){
 
         Order order = orderRepo.findById(orderId)
-                .orElseThrow(()->new OrderNotFoundException("order wasn't found"));
+                .orElseThrow(()->new OrderNotFoundException(Messages.get("error.sale.notFound")));
         if (order.isVoided() || zeroIfNull(order.getReturnCredit()).signum() > 0
                 || saleReturnRepo.existsByOrder_Id(orderId)) {
-            throw new SaleValidationException("A sale with returns or a void cannot be edited.");
+            throw new SaleValidationException(Messages.get("error.sale.cannotEditWithReturnsOrVoid"));
         }
 
         Customer customer = update.customerId() == null
                 ? null
                 : customerRepo.findById(update.customerId())
-                        .orElseThrow(() -> new EntityNotFoundException("customer wasn't found"));
+                        .orElseThrow(() -> new EntityNotFoundException(Messages.get("error.customer.notFound")));
         order.setCustomer(customer);
 
            List<OrderItemCreateDto> items = update.itemsList();
            if (items == null || items.isEmpty()) {
-               throw new YouMustProvideAtLeastOneItem("Please provide at least one sale item.");
+               throw new YouMustProvideAtLeastOneItem(Messages.get("error.sale.itemsRequired"));
            }
            List<Long> allProdIds =items.stream().map(OrderItemCreateDto::productId)
                    .filter(Objects::nonNull)
@@ -266,7 +267,7 @@ String orderNumber = generateOrderNumber();
                @Transactional(readOnly = true)
                public List<SaleReturnLineOption> getReturnableItems(Long orderId) {
                    Order order = orderRepo.findById(orderId)
-                           .orElseThrow(() -> new OrderNotFoundException("Sale was not found."));
+                           .orElseThrow(() -> new OrderNotFoundException(Messages.get("error.sale.notFound")));
                    if (order.isVoided()) {
                        return List.of();
                    }
@@ -287,7 +288,7 @@ String orderNumber = generateOrderNumber();
                @Transactional(readOnly = true)
                public List<SaleReturnHistoryRow> getSaleReturnHistory(Long orderId) {
                    if (!orderRepo.existsById(orderId)) {
-                       throw new OrderNotFoundException("Sale was not found.");
+                       throw new OrderNotFoundException(Messages.get("error.sale.notFound"));
                    }
                    return saleReturnRepo.findByOrder_IdOrderByCreatedAtDesc(orderId).stream()
                            .map(saleReturn -> new SaleReturnHistoryRow(
@@ -311,31 +312,31 @@ String orderNumber = generateOrderNumber();
                public SaleReturn recordSaleReturn(Long orderId, SaleReturnRequest request) {
                    Users user = authenticatedUser();
                    ShiftSession activeShift = resolveActiveShiftForReturn(user.getId(),
-                           "Open a shift before processing a sale return.");
+                           Messages.get("error.sale.openShiftRequiredForReturn"));
                    Order order = lockedSale(orderId);
                    validateReturnOrder(order);
                    if (request == null || request.orderItemId() == null || request.quantity() == null
                            || request.quantity() <= 0 || request.reason() == null || request.reason().isBlank()) {
-                       throw new SaleValidationException("Select an item, a positive quantity, and a return reason.");
+                       throw new SaleValidationException(Messages.get("error.sale.returnSelectValid"));
                    }
 
                    OrderItem item = order.getOrderItems().stream()
                            .filter(candidate -> candidate.getId().equals(request.orderItemId()))
                            .findFirst()
-                           .orElseThrow(() -> new SaleValidationException("The selected item is not on this sale."));
+                           .orElseThrow(() -> new SaleValidationException(Messages.get("error.sale.itemNotOnSale")));
                    long returnedQuantity = saleReturnRepo.sumReturnedQuantity(item.getId());
                    long remainingQuantity = item.getQuantity() - returnedQuantity;
                    if (request.quantity() > remainingQuantity) {
-                       throw new SaleValidationException("Return quantity exceeds the unreturned quantity on this sale.");
+                       throw new SaleValidationException(Messages.get("error.sale.returnExceedsUnreturned"));
                    }
                    if (request.restock() && item.getProduct() == null) {
-                       throw new SaleValidationException("Custom sale items cannot be restocked.");
+                       throw new SaleValidationException(Messages.get("error.sale.customItemsCannotRestock"));
                    }
                    if (request.restock()) {
                        Products product = productRepo.findAllByIds(List.of(item.getProduct().getId())).stream()
                                .filter(candidate -> candidate.getId().equals(item.getProduct().getId()))
                                .findFirst()
-                               .orElseThrow(() -> new SaleValidationException("The returned product is no longer available."));
+                               .orElseThrow(() -> new SaleValidationException(Messages.get("error.sale.returnedProductNoLongerAvailable")));
                        product.setStock(incrementStock(product.getStock(), request.quantity()));
                    }
 
@@ -362,11 +363,11 @@ String orderNumber = generateOrderNumber();
                public SaleReturn voidSale(Long orderId, String reason) {
                    Users user = authenticatedUser();
                    ShiftSession activeShift = resolveActiveShiftForReturn(user.getId(),
-                           "Open a shift before voiding a sale.");
+                           Messages.get("error.sale.openShiftRequiredForVoid"));
                    Order order = lockedSale(orderId);
                    validateReturnOrder(order);
                    if (reason == null || reason.isBlank() || reason.length() > 255) {
-                       throw new SaleValidationException("A void reason of 1 to 255 characters is required.");
+                       throw new SaleValidationException(Messages.get("error.sale.voidReasonRequired"));
                    }
 
                    BigDecimal oldOrderCredit = zeroIfNull(order.getReturnCredit());
@@ -403,7 +404,7 @@ String orderNumber = generateOrderNumber();
                                .build());
                    }
                    if (!returnedAnyUnits && order.getTotal().signum() > 0) {
-                       throw new SaleValidationException("All sale items have already been returned.");
+                       throw new SaleValidationException(Messages.get("error.sale.allItemsAlreadyReturned"));
                    }
                    BigDecimal refund = refundDue(order, oldOrderCredit.add(returnCredit));
                    saleReturn.setCreditTotal(returnCredit);
@@ -419,7 +420,7 @@ String orderNumber = generateOrderNumber();
                            || !(auth.getPrincipal() instanceof UserPrincipal principal)
                            || principal.getAuthorities().stream()
                                    .noneMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()))) {
-                       throw new AccessDeniedException("An administrator session is required to process sale returns.");
+                       throw new AccessDeniedException(Messages.get("error.auth.adminRequiredForSaleReturns"));
                    }
                    return userRepo.getReferenceById(principal.getId());
                }
@@ -437,12 +438,12 @@ String orderNumber = generateOrderNumber();
 
                private Order lockedSale(Long orderId) {
                    return orderRepo.findForUpdateById(orderId)
-                           .orElseThrow(() -> new OrderNotFoundException("Sale was not found."));
+                           .orElseThrow(() -> new OrderNotFoundException(Messages.get("error.sale.notFound")));
                }
 
                private static void validateReturnOrder(Order order) {
                    if (order.isVoided()) {
-                       throw new SaleValidationException("This sale has already been voided.");
+                       throw new SaleValidationException(Messages.get("error.sale.alreadyVoided"));
                    }
                }
 
@@ -531,12 +532,12 @@ String orderNumber = generateOrderNumber();
 
                private static long incrementStock(Long currentStock, int returnedQuantity) {
                    if (currentStock == null || currentStock < 0) {
-                       throw new SaleValidationException("Current product stock is invalid.");
+                       throw new SaleValidationException(Messages.get("error.sale.stockInvalid"));
                    }
                    try {
                        return Math.addExact(currentStock, returnedQuantity);
                    } catch (ArithmeticException exception) {
-                       throw new SaleValidationException("Returned quantity exceeds the available stock range.");
+                       throw new SaleValidationException(Messages.get("error.sale.returnedQuantityOutOfRange"));
                    }
                }
 
@@ -549,21 +550,21 @@ String orderNumber = generateOrderNumber();
 
   BigDecimal total = BigDecimal.ZERO;
 BigDecimal revenue = BigDecimal.ZERO;
-BigDecimal orderDiscount = nonNegative(update.discount(), "Sale discount cannot be negative.");
+BigDecimal orderDiscount = nonNegative(update.discount(), Messages.get("error.sale.discountNegative"));
 
    for(OrderItemCreateDto item : items){
        requirePositiveQuantity(item.quantity());
        BigDecimal bigQuantity = BigDecimal.valueOf(item.quantity());
-       BigDecimal subDiscount = nonNegative(item.subDiscount(), "Line discount cannot be negative.");
+       BigDecimal subDiscount = nonNegative(item.subDiscount(), Messages.get("error.sale.lineDiscountNegative"));
         String name;
         BigDecimal price;
          BigDecimal purchase;
          Products prod = null;
         if(item.productId()==null){
             name = requireCustomName(item.customName());
-            price = nonNegative(item.customSellingPrice(), "Custom item selling price is required.");
+            price = nonNegative(item.customSellingPrice(), Messages.get("error.sale.customSellingPriceRequired"));
             purchase = item.customPurchasePrice()!=null
-                    ? nonNegative(item.customPurchasePrice(), "Purchase cost cannot be negative")
+                    ? nonNegative(item.customPurchasePrice(), Messages.get("error.sale.purchaseCostNegative"))
                     : BigDecimal.ZERO;
         }
 
@@ -576,21 +577,21 @@ prod = productRepo.findProductByIdAndIsActiveFalse(item.productId());
 
             if(prod==null){
 
-                throw new ProductNotFoundException("prod doesn't exist");
+                throw new ProductNotFoundException(Messages.get("error.sale.productNotFoundSimple"));
             }
             name = prod.getName();
             price = prod.getSellingPrice();
             purchase=prod.getPurchasePrice();
 
             if(item.quantity()>prod.getStock()){
-                throw new InsuffecientStockException("insufficient stock available");
+                throw new InsuffecientStockException(Messages.get("error.sale.insufficientStockSimple"));
             }
 
             prod.setStock(prod.getStock()-item.quantity());
         }
 
         BigDecimal extendedPrice = price.multiply(bigQuantity);
-        validateDiscount(subDiscount, extendedPrice, "Line discount cannot exceed the line total.");
+        validateDiscount(subDiscount, extendedPrice, Messages.get("error.sale.lineDiscountExceedsLineTotal"));
         BigDecimal subTotal = extendedPrice.subtract(subDiscount);
 
         total = total.add(subTotal);
@@ -613,13 +614,13 @@ prod = productRepo.findProductByIdAndIsActiveFalse(item.productId());
 
    productRepo.saveAll(prodsWithIds.values());
 
-validateDiscount(orderDiscount, total, "Sale discount cannot exceed the subtotal.");
+validateDiscount(orderDiscount, total, Messages.get("error.sale.discountExceedsSubtotal"));
 total = total.subtract(orderDiscount);
 revenue = revenue.subtract(orderDiscount);
 BigDecimal taxRate = nonNegative(
-        settingsService.getSettings().taxRate(), "Configured tax rate cannot be negative.");
+        settingsService.getSettings().taxRate(), Messages.get("error.sale.taxRateNegative"));
 if (taxRate.compareTo(BigDecimal.valueOf(100)) > 0) {
-    throw new SaleValidationException("Configured tax rate cannot exceed 100%.");
+    throw new SaleValidationException(Messages.get("error.sale.taxRateExceeds100"));
 }
 BigDecimal taxAmount = SalesTaxCalculator.calculateTax(total, taxRate);
 total = total.add(taxAmount);
@@ -655,14 +656,14 @@ return orderMapper.toResponse(savedOrder);
 
     private static PaymentSettlement settlePayment(PaymentMethod requestedMethod, String reference,
                                                    BigDecimal tendered, BigDecimal total) {
-        BigDecimal amountTendered = nonNegative(tendered, "Payment amount cannot be negative.");
+        BigDecimal amountTendered = nonNegative(tendered, Messages.get("error.sale.paymentAmountNegative"));
         PaymentMethod method = requestedMethod == null ? PaymentMethod.CASH : requestedMethod;
         String normalizedReference = reference == null || reference.isBlank() ? null : reference.trim();
         if (method == PaymentMethod.E_WALLET && amountTendered.signum() > 0 && normalizedReference == null) {
-            throw new SaleValidationException("Provide the e-wallet provider or transaction reference.");
+            throw new SaleValidationException(Messages.get("error.sale.eWalletReferenceRequired"));
         }
         if (method != PaymentMethod.CASH && amountTendered.compareTo(total) > 0) {
-            throw new SaleValidationException("Payment cannot exceed the sale total.");
+            throw new SaleValidationException(Messages.get("error.sale.paymentExceedsTotal"));
         }
 
         BigDecimal amountApplied = method == PaymentMethod.CASH
@@ -687,13 +688,13 @@ return orderMapper.toResponse(savedOrder);
 
     private static void requirePositiveQuantity(int quantity) {
         if (quantity <= 0) {
-            throw new SaleValidationException("Sale item quantity must be at least one.");
+            throw new SaleValidationException(Messages.get("error.sale.quantityAtLeastOne"));
         }
     }
 
     private static String requireCustomName(String name) {
         if (name == null || name.isBlank()) {
-            throw new SaleValidationException("Custom sale items require a name.");
+            throw new SaleValidationException(Messages.get("error.sale.customItemNameRequired"));
         }
         return name.trim();
     }
@@ -725,16 +726,13 @@ System.out.println(results);
     public CustomerSummary getCustomerSummaryInPeriodById(Long id , LocalDateTime start,LocalDateTime end,Pageable pageable){
 
         Page<Order> res = orderRepo.findOrdersByCustomerIdBetweenDates(id,start,end,pageable);
-        Object[] totals = orderRepo.sumAllOrdersSummaryBetweenDatesById(id,start,end);
-        BigDecimal totalSelling = (BigDecimal) totals[0];
-        BigDecimal totalPaid = (BigDecimal) totals[1];
-        BigDecimal totalRemaining = (BigDecimal) totals[2];
+         OrderTotals totals = orderRepo.sumAllOrdersSummaryBetweenDatesById(id,start,end);
 
  Page<OrderResponseDto> response = res.map(orderMapper::toResponse);
   Customer found = customerRepo.findById(id)
-          .orElseThrow(() -> new CustomerNotFoundException("Customer was not found."));
+          .orElseThrow(() -> new CustomerNotFoundException(Messages.get("error.customer.notFound")));
   String name = found.getName();
- CustomerSummary summary  = new CustomerSummary(name,start,end,totalSelling,totalPaid,totalRemaining,response);
+ CustomerSummary summary  = new CustomerSummary(name,start,end,totals.orderTotal(),totals.paidTotal(),totals.remainingTotal(),response);
        return summary;
    }
 

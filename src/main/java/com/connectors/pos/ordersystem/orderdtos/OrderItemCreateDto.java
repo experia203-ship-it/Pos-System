@@ -9,18 +9,18 @@ import java.math.BigDecimal;
 
 public record OrderItemCreateDto(
        Long productId,
-@NotNull(message = "quantity is required")
-@Positive(message ="quantity needs to be at least 1")
+@NotNull(message = "{validation.orderItem.quantity.required}")
+@Positive(message ="{validation.orderItem.quantity.positive}")
        int quantity,
 
-     @NotNull(message="sub discount is required , use 0% for no discount")
-     @PositiveOrZero(message="discount can't be below 0")
+     @NotNull(message="{validation.orderItem.subDiscount.required}")
+     @PositiveOrZero(message="{validation.orderItem.subDiscount.positiveOrZero}")
      BigDecimal subDiscount ,
        String barcode,
        String customName,
-       @DecimalMin(value = "0.00", message = "selling price cannot be negative")
+       @DecimalMin(value = "0.00", message = "{validation.orderItem.sellingPrice.negative}")
        BigDecimal customSellingPrice,
-       @DecimalMin(value = "0.00", message = "purchase price cannot be negative")
+       @DecimalMin(value = "0.00", message = "{validation.orderItem.purchasePrice.negative}")
        BigDecimal customPurchasePrice
 
 

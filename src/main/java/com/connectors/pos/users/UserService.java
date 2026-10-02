@@ -6,11 +6,10 @@ import com.connectors.pos.exceptions.UserEmailAlreadyExistsException;
 import com.connectors.pos.exceptions.UserManagementException;
 import com.connectors.pos.exceptions.UserNameAlreadyExistsException;
 import com.connectors.pos.exceptions.UserNotFoundException;
-import com.connectors.pos.users.userdtos.CreateUserDto;
-import com.connectors.pos.users.userdtos.UserListDto;
-import com.connectors.pos.users.userdtos.UserMapper;
-import com.connectors.pos.users.userdtos.UserResponseDto;
+import com.connectors.pos.i18n.Messages;
+import com.connectors.pos.users.userdtos.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
@@ -32,6 +31,8 @@ public class UserService {
     private final RoleRepository roleRepo;
     private final PasswordEncoder encoder;
     private final AuditLogService auditLogService;
+    private final ApplicationEventPublisher applicationEventPublisher;   // the injected instance
+
     /**
      * this service should contain 2 methods
      * 1 for create a new user
@@ -43,17 +44,17 @@ public class UserService {
     public UserResponseDto createUser(CreateUserDto create){
 
     if (roleRepo.lockInitialAdministratorRegistration() != 1) {
-        throw new RoleNotFoundException("role not found: ROLE_ADMIN");
+        throw new RoleNotFoundException(Messages.get("error.role.adminNotFound"));
     }
 
     if(userRepo.existsByEmail(create.email())){
 
-     throw new UserEmailAlreadyExistsException("email already exists");
+     throw new UserEmailAlreadyExistsException(Messages.get("error.user.emailExists"));
         }
 
         if(userRepo.existsByName(create.name())){
 
-            throw new UserNameAlreadyExistsException("name already exists");
+            throw new UserNameAlreadyExistsException(Messages.get("error.user.nameExists"));
         }
 
 Users user = userMapper.toEntity(create);
@@ -61,11 +62,11 @@ Users user = userMapper.toEntity(create);
 
     long existingUsers = userRepo.count();
     if (existingUsers > 0 && !currentUserIsAdmin()) {
-        throw new AccessDeniedException("Only an administrator may register additional users.");
+        throw new AccessDeniedException(Messages.get("error.auth.adminRequiredForRegistration"));
     }
     String roleName = existingUsers == 0 ? "ROLE_ADMIN" : "ROLE_USER";
     Roles role = roleRepo.findByName(roleName)
-            .orElseThrow(() -> new RoleNotFoundException("role not found: " + roleName));
+            .orElseThrow(() -> new RoleNotFoundException(Messages.get("error.role.notFoundNamed", roleName)));
     user.setRoles(new java.util.HashSet<>(Set.of(role)));
 user.setPassword(encoder.encode(create.password()));
 
@@ -86,10 +87,10 @@ user.setPassword(encoder.encode(create.password()));
     @Transactional
     public void assignRoleToUser(Long userId,Long roleId){
     Users user = userRepo.findById(userId).
-            orElseThrow(()->new UsernameNotFoundException("user wasn't found"));
+            orElseThrow(()->new UsernameNotFoundException(Messages.get("error.user.notFound")));
 
             Roles role = roleRepo.findById(roleId)
-                    .orElseThrow(()-> new RoleNotFoundException("role wasn't found"));
+                    .orElseThrow(()-> new RoleNotFoundException(Messages.get("error.role.notFound")));
 
 
   Set<Roles> roles =user.getRoles();
@@ -103,77 +104,90 @@ user.setPassword(encoder.encode(create.password()));
                 .toList();
     }
 
+
     @Transactional
     public void promoteToAdmin(Long userId) {
         Users user = userRepo.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("user wasn't found"));
+                .orElseThrow(() -> new UserNotFoundException(Messages.get("error.user.notFound")));
 
         if (isAdmin(user)) {
             return;
         }
 
         Roles adminRole = roleRepo.findByName("ROLE_ADMIN")
-                .orElseThrow(() -> new RoleNotFoundException("role not found: ROLE_ADMIN"));
+                .orElseThrow(() -> new RoleNotFoundException(Messages.get("error.role.adminNotFound")));
 
         user.getRoles().add(adminRole);
         userRepo.save(user);
-        auditLogService.log("USER_PROMOTE", "USER", userId,
-                "Promoted " + user.getEmail() + " to administrator.");
+
+        applicationEventPublisher.publishEvent(
+                new AuditEvent("USER_PROMOTE", "USER", userId,
+                        "Promoted " + user.getEmail() + " to administrator.",
+                        null, ""));
+
     }
+
 
     @Transactional
     public void demoteFromAdmin(Long userId, Long requesterId) {
         if (userId.equals(requesterId)) {
-            throw new UserManagementException("You cannot remove your own administrator access.");
+            throw new UserManagementException(Messages.get("error.user.cannotRemoveOwnAdmin"));
         }
 
         Users user = userRepo.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("user wasn't found"));
+                .orElseThrow(() -> new UserNotFoundException(Messages.get("error.user.notFound")));
 
         if (!isAdmin(user)) {
             return;
         }
 
         if (userRepo.countByRoleName("ROLE_ADMIN") <= 1) {
-            throw new UserManagementException("At least one administrator must remain.");
+            throw new UserManagementException(Messages.get("error.user.atLeastOneAdminRequired"));
         }
 
         user.getRoles().removeIf(role -> "ROLE_ADMIN".equals(role.getName()));
         userRepo.save(user);
-        auditLogService.log("USER_DEMOTE", "USER", userId,
-                "Demoted " + user.getEmail() + " to cashier.");
+        applicationEventPublisher.publishEvent(
+                new AuditEvent("USER_DEMOTE", "USER", userId,
+                        "Demoted " + user.getEmail() + " to cashier.",
+                        null, ""));
     }
 
     @Transactional
     public void resetPasswordByAdmin(Long userId, String newPassword) {
         Users user = userRepo.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("user wasn't found"));
+                .orElseThrow(() -> new UserNotFoundException(Messages.get("error.user.notFound")));
 
         user.setPassword(encoder.encode(newPassword));
         userRepo.save(user);
-        auditLogService.log("PASSWORD_RESET_ADMIN", "USER", userId,
-                "Administrator reset the password for " + user.getEmail() + ".");
+            //publish an audit event for the password reset action
+            applicationEventPublisher.publishEvent(
+                new AuditEvent("PASSWORD_RESET_ADMIN", "USER", userId,
+                        "Administrator reset the password for " + user.getEmail() + ".",
+                        null, ""));
     }
 
     @Transactional
     public void changeOwnPassword(Long userId, String currentPassword, String newPassword) {
         Users user = userRepo.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("user wasn't found"));
+                .orElseThrow(() -> new UserNotFoundException(Messages.get("error.user.notFound")));
 
         if (!encoder.matches(currentPassword, user.getPassword())) {
-            throw new UserManagementException("Current password is incorrect.");
+            throw new UserManagementException(Messages.get("error.user.currentPasswordIncorrect"));
         }
 
         user.setPassword(encoder.encode(newPassword));
         userRepo.save(user);
-        auditLogService.log("PASSWORD_CHANGE_SELF", "USER", userId,
-                user.getEmail() + " changed their own password.");
+        applicationEventPublisher.publishEvent(
+                new AuditEvent("PASSWORD_CHANGE_SELF", "USER", userId,
+                        user.getEmail() + " changed their own password.",
+                        null, ""));
     }
 
     @Transactional(readOnly = true)
     public UserListDto getUserSummary(Long userId) {
         Users user = userRepo.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("user wasn't found"));
+                .orElseThrow(() -> new UserNotFoundException(Messages.get("error.user.notFound")));
         return new UserListDto(user.getId(), user.getName(), user.getEmail(), isAdmin(user));
     }
 

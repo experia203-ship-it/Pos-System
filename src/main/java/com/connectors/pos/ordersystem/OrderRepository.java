@@ -1,4 +1,5 @@
 package com.connectors.pos.ordersystem;
+import com.connectors.pos.ordersystem.orderdtos.OrderTotals;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -44,12 +45,13 @@ Page<Order> findOrdersByCustomerNameContainingKeyword(@Param("keyword") String k
      " o.createdAt between :start and :end"   )
 Page<Order> findOrdersByCustomerNameBetweenDates(@Param("keyword") String keyword,@Param("start") LocalDateTime start , @Param("end") LocalDateTime end,Pageable pageable);
 
-@Query("select coalesce(sum(o.total - o.returnCredit),0),"
+@Query("select new com.connectors.pos.ordersystem.orderdtos.OrderTotals("
+        + "coalesce(sum(o.total - o.returnCredit),0),"
         + "coalesce(sum(o.paid - o.refundedTotal),0),"
         + "coalesce(sum(case when o.total > o.paid + o.returnCredit "
-        + "then o.total - o.paid - o.returnCredit else 0 end),0) "+
+        + "then o.total - o.paid - o.returnCredit else 0 end),0)) "+
 "from Order o where o.customer.id = :id and o.createdAt between :start and :end")
-Object[] sumAllOrdersSummaryBetweenDatesById(@Param("id") Long id,@Param("start") LocalDateTime start,@Param("end") LocalDateTime end);
+OrderTotals sumAllOrdersSummaryBetweenDatesById(@Param("id") Long id, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
 
 @Query("select o from Order o where o.customer.id =:id and o.createdAt between :start and :end")

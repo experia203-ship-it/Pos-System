@@ -6,10 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 public record UserLoginDto(
 
         @Email
-        @NotBlank(message ="email is required")
+        @NotBlank(message ="{validation.common.email.required}")
         String email,
 
-        @NotBlank(message = "password is required")
+        @NotBlank(message = "{validation.common.password.required}")
         String password
 
 

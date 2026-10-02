@@ -2,6 +2,7 @@ package com.connectors.pos.purchasesystem;
 
 import com.connectors.pos.exceptions.ProductNotFoundException;
 import com.connectors.pos.exceptions.PurchaseOrderException;
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.products.ProductRepository;
 import com.connectors.pos.products.Products;
 import com.connectors.pos.purchasesystem.purchasedtos.CreatePurchaseOrderDto;
@@ -46,17 +47,17 @@ public class PurchaseOrderService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            throw new AccessDeniedException("Unauthorized: No active cashier session found.");
+            throw new AccessDeniedException(Messages.get("error.auth.noActiveCashier"));
         }
         if (!(auth.getPrincipal() instanceof UserPrincipal)) {
-            throw new AccessDeniedException("Unauthorized: Invalid user token.");
+            throw new AccessDeniedException(Messages.get("error.auth.invalidUserToken"));
         }
 
         UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
         Users user = userRepo.getReferenceById(principal.getId());
         List<CreatePurchaseOrderItemDto> items = requireItems(create.itemsList());
-        BigDecimal discount = nonNegative(create.discount(), "Purchase discount cannot be negative.");
-        BigDecimal paid = nonNegative(create.paid(), "Paid amount cannot be negative.");
+        BigDecimal discount = nonNegative(create.discount(), Messages.get("error.purchase.discountNegative"));
+        BigDecimal paid = nonNegative(create.paid(), Messages.get("error.purchase.paidNegative"));
 
         List<Long> prodIds = items.stream()
                 .map(CreatePurchaseOrderItemDto::productId)
@@ -89,7 +90,7 @@ public class PurchaseOrderService {
             Products product = findProduct(item.productId(), allProdsWithIds);
             BigDecimal purchasePrice = purchasePrice(item, product,
                     product == null ? null : previousUnitCosts.get(product.getId()));
-            BigDecimal subDiscount = nonNegative(item.subDiscount(), "Line discount cannot be negative.");
+            BigDecimal subDiscount = nonNegative(item.subDiscount(), Messages.get("error.sale.lineDiscountNegative"));
             BigDecimal subTotal = calculateLineTotal(purchasePrice, item.quantity(), subDiscount);
             String itemName = product == null ? requireCustomName(item.customName())
                     : (item.customName() == null || item.customName().isBlank()
@@ -101,7 +102,7 @@ public class PurchaseOrderService {
                         purchasePrice.multiply(BigDecimal.valueOf(item.quantity())), BigDecimal::add);
                 if (item.customSellingPrice() != null) {
                     if (item.customSellingPrice().signum() <= 0) {
-                        throw new PurchaseOrderException("Product selling price must be greater than zero.");
+                        throw new PurchaseOrderException(Messages.get("error.purchase.sellingPriceMustBePositive"));
                     }
                     product.setSellingPrice(item.customSellingPrice());
                 }
@@ -131,48 +132,48 @@ public class PurchaseOrderService {
     @Transactional
     public void updatePurchaseOrder(Long ordId, CreatePurchaseOrderDto updateDto) {
         if (!orderRepo.existsById(ordId)) {
-            throw new PurchaseOrderException("Purchase order not found.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.notFound"));
         }
         throw new PurchaseOrderException(
-                "Posted purchase orders cannot be edited. Record a correcting transaction instead.");
+                Messages.get("error.purchase.cannotEditPosted"));
     }
 
     @Transactional
     public PurchaseReturn processVendorReturn(Long orderId, PurchaseReturnRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserPrincipal principal)) {
-            throw new AccessDeniedException("An administrator session is required to record a vendor return.");
+            throw new AccessDeniedException(Messages.get("error.auth.adminRequiredForVendorReturn"));
         }
 
         PurchaseOrder order = orderRepo.findById(orderId)
-                .orElseThrow(() -> new PurchaseOrderException("Purchase order not found."));
+                .orElseThrow(() -> new PurchaseOrderException(Messages.get("error.purchase.notFound")));
         if (order.getVendor() == null) {
-            throw new PurchaseOrderException("Vendor returns require a purchase order linked to a vendor.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.vendorReturnRequiresVendor"));
         }
         if (request == null || request.purchaseItemId() == null || request.quantity() == null
                 || request.quantity() <= 0 || request.reason() == null || request.reason().isBlank()) {
-            throw new PurchaseOrderException("A valid item, positive quantity, and return reason are required.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.returnRequestInvalid"));
         }
 
         PurchaseOrderItem purchaseItem = order.getItems().stream()
                 .filter(item -> item.getId().equals(request.purchaseItemId()))
                 .findFirst()
-                .orElseThrow(() -> new PurchaseOrderException("The selected item is not on this purchase order."));
+                .orElseThrow(() -> new PurchaseOrderException(Messages.get("error.purchase.itemNotOnOrder")));
         if (purchaseItem.getProduct() == null) {
-            throw new PurchaseOrderException("Custom purchase items cannot be returned to inventory.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.customItemsCannotReturn"));
         }
         Products product = productRepo.findAllByIds(List.of(purchaseItem.getProduct().getId())).stream()
                 .filter(candidate -> candidate.getId().equals(purchaseItem.getProduct().getId()))
                 .findFirst()
-                .orElseThrow(() -> new PurchaseOrderException("The returned product is no longer available."));
+                .orElseThrow(() -> new PurchaseOrderException(Messages.get("error.purchase.productNoLongerAvailable")));
 
         long alreadyReturned = returnRepo.sumReturnedQuantity(purchaseItem.getId());
         long returnableQuantity = purchaseItem.getQuantity() - alreadyReturned;
         if (request.quantity() > returnableQuantity) {
-            throw new PurchaseOrderException("Return quantity exceeds the quantity remaining from this purchase.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.returnExceedsRemaining"));
         }
         if (product.getStock() == null || request.quantity() > product.getStock()) {
-            throw new PurchaseOrderException("Returned products cannot exceed the current available stock.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.returnExceedsStock"));
         }
 
         BigDecimal originalLineCredit = returnCreditForLine(order, purchaseItem);
@@ -186,7 +187,7 @@ public class PurchaseOrderService {
             creditTotal = unitCredit.multiply(BigDecimal.valueOf(request.quantity()));
         }
         if (creditTotal.signum() <= 0) {
-            throw new PurchaseOrderException("The selected purchase line has no remaining supplier credit value.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.noRemainingCredit"));
         }
 
         PurchaseReturn vendorReturn = PurchaseReturn.builder()
@@ -217,9 +218,9 @@ public class PurchaseOrderService {
     @Transactional(readOnly = true)
     public List<PurchaseReturnLineOption> getReturnableItems(Long orderId) {
         PurchaseOrder order = orderRepo.findById(orderId)
-                .orElseThrow(() -> new PurchaseOrderException("Purchase order not found."));
+                .orElseThrow(() -> new PurchaseOrderException(Messages.get("error.purchase.notFound")));
         if (order.getVendor() == null) {
-            throw new PurchaseOrderException("Vendor returns require a purchase order linked to a vendor.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.vendorReturnRequiresVendor"));
         }
         return order.getItems().stream()
                 .filter(item -> item.getProduct() != null && item.getQuantity() > 0)
@@ -238,16 +239,16 @@ public class PurchaseOrderService {
 
     private Vendor findVendor(Long vendorId) {
         return vendorId == null ? null : vendorRepo.findById(vendorId)
-                .orElseThrow(() -> new PurchaseOrderException("Vendor not found."));
+                .orElseThrow(() -> new PurchaseOrderException(Messages.get("error.purchase.vendorNotFound")));
     }
 
     private static List<CreatePurchaseOrderItemDto> requireItems(List<CreatePurchaseOrderItemDto> items) {
         if (items == null || items.isEmpty()) {
-            throw new PurchaseOrderException("At least one purchase item is required.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.itemsRequired"));
         }
         for (CreatePurchaseOrderItemDto item : items) {
             if (item == null || item.quantity() <= 0) {
-                throw new PurchaseOrderException("Purchase item quantity must be at least one.");
+                throw new PurchaseOrderException(Messages.get("error.purchase.quantityAtLeastOne"));
             }
         }
         return items;
@@ -259,7 +260,7 @@ public class PurchaseOrderService {
         }
         Products product = products.get(productId);
         if (product == null) {
-            throw new ProductNotFoundException("Product ID " + productId + " not found.");
+            throw new ProductNotFoundException(Messages.get("error.purchase.productIdNotFound", productId));
         }
         return product;
     }
@@ -269,9 +270,9 @@ public class PurchaseOrderService {
         BigDecimal price = item.customPurchasePrice() != null
                 ? item.customPurchasePrice()
                 : (product == null ? null : previousUnitCost);
-        price = nonNegative(price, "Purchase price is required and cannot be negative.");
+        price = nonNegative(price, Messages.get("error.purchase.priceRequired"));
         if (product != null && price.signum() == 0) {
-            throw new PurchaseOrderException("Product purchase price must be greater than zero.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.purchasePriceMustBePositive"));
         }
         return price;
     }
@@ -279,14 +280,14 @@ public class PurchaseOrderService {
     private static BigDecimal calculateLineTotal(BigDecimal unitPrice, int quantity, BigDecimal discount) {
         BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
         if (discount.compareTo(lineTotal) > 0) {
-            throw new PurchaseOrderException("Line discount cannot exceed the line total.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.lineDiscountExceedsLineTotal"));
         }
         return lineTotal.subtract(discount);
     }
 
     private static String requireCustomName(String name) {
         if (name == null || name.isBlank()) {
-            throw new PurchaseOrderException("Custom purchase items require a name.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.customItemNameRequired"));
         }
         return name.trim();
     }
@@ -318,7 +319,7 @@ public class PurchaseOrderService {
 
     private static void validateOrderDiscount(BigDecimal discount, BigDecimal total) {
         if (discount.compareTo(total) > 0) {
-            throw new PurchaseOrderException("Order discount cannot exceed the purchase total.");
+            throw new PurchaseOrderException(Messages.get("error.purchase.orderDiscountExceedsTotal"));
         }
     }
 
@@ -329,18 +330,18 @@ public class PurchaseOrderService {
             Products product = products.get(received.getKey());
             Long currentStock = product.getStock();
             if (currentStock == null || currentStock < 0) {
-                throw new PurchaseOrderException("Product stock is invalid.");
+                throw new PurchaseOrderException(Messages.get("error.purchase.stockInvalid"));
             }
             long updatedStock;
             try {
                 updatedStock = Math.addExact(currentStock, received.getValue());
             } catch (ArithmeticException exception) {
-                throw new PurchaseOrderException("Received quantity exceeds the available stock range.");
+                throw new PurchaseOrderException(Messages.get("error.purchase.receivedExceedsStockRange"));
             }
 
             BigDecimal currentValue = currentStock == 0
                     ? BigDecimal.ZERO
-                    : nonNegative(product.getPurchasePrice(), "Current product cost is missing.")
+                    : nonNegative(product.getPurchasePrice(), Messages.get("error.purchase.currentCostMissing"))
                     .multiply(BigDecimal.valueOf(currentStock));
             BigDecimal updatedValue = currentValue.add(receivedValues.get(received.getKey()));
             BigDecimal averageCost = updatedValue.divide(

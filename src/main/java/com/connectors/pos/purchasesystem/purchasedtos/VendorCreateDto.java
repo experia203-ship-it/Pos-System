@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public record VendorCreateDto(
         Long id,
-        @NotBlank(message = "Vendor name is required")
+        @NotBlank(message = "{validation.vendor.name.required}")
         @Size(max = 255)
         String name,
         @Size(max = 500)

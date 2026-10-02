@@ -7,33 +7,55 @@
 <body>
 
 <div th:fragment="search-results-fragment">
-    <table th:if="${results.hasContent()}">
-        <thead>
-        <tr>
-            <th style="width: 12%;" th:text="#{product.search.partNumber}">partNumber</th>
-            <th style="width: 40%;" th:text="#{product.search.name}">name</th>
-            <th style="width: 16%;" th:text="#{product.search.sellingPrice}">sellingPrice</th>
-            <th style="width: 12%;" th:text="#{product.search.stock}">stock</th>
-            <th style="width: 20%;" th:text="#{product.search.purchasePrice}">purchasePrice</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="product : ${results.content}"
+    <ul class="product-results-list" th:if="${results.hasContent()}">
+        <li th:each="product : ${results.content}"
             th:hx-post="${mode == 'sales' ? '/pos/cart/add/' + product.id : '/purchase/add/' + product.id}"
             hx-include="#active-cart-form, #paid, #disc, #customerInfo, #paymentMethod, #paymentReference, #supplierInfo, #remaining"
             hx-target="#cart-zone"
             hx-swap="outerHTML"
-            class="clickable-row"
+            class="product-result-row clickable-row"
             tabindex="0">
 
-            <td class="truncate-text" th:text="${product.partNumber}" th:title="${product.partNumber}"></td>
-            <td class="wrap-text" th:text="${product.name}" th:title="${product.name}"></td>
-            <td th:text="${product.sellingPrice}"></td>
-            <td th:text="${product.stock}"></td>
-            <td th:text="${product.purchasePrice}"></td>
-        </tr>
-        </tbody>
-    </table>
+            <div class="product-result-info">
+                <span class="product-result-name" th:text="${product.name}" th:title="${product.name}"></span>
+                <span class="product-result-meta">
+                    <span class="product-result-part" th:text="${product.partNumber}" th:title="${product.partNumber}"></span>
+                    <span class="product-result-stock"
+                          th:classappend="${product.stock <= 0} ? 'product-result-stock--out' : (${product.stock <= 5} ? 'product-result-stock--low' : 'product-result-stock--ok')"
+                          th:text="|#{product.search.stock}: ${product.stock}|">Stock: 0</span>
+                </span>
+            </div>
+
+            <div class="product-result-prices">
+                <span class="product-result-price product-result-price--secondary" th:if="${mode == 'sales'}">
+                    <span class="product-result-price-value" th:text="${product.purchasePrice}"></span>
+                    <span class="product-result-price-label" th:text="#{product.search.purchasePrice}">purchasePrice</span>
+                </span>
+                <span class="product-result-price product-result-price--secondary" th:unless="${mode == 'sales'}">
+                    <span class="product-result-price-value" th:text="${product.sellingPrice}"></span>
+                    <span class="product-result-price-label" th:text="#{product.search.sellingPrice}">sellingPrice</span>
+                </span>
+
+                <span class="product-result-price product-result-price--primary" th:if="${mode == 'sales'}">
+                    <span class="product-result-price-value" th:text="${product.sellingPrice}"></span>
+                    <span class="product-result-price-label" th:text="#{product.search.sellingPrice}">sellingPrice</span>
+                </span>
+                <span class="product-result-price product-result-price--primary" th:unless="${mode == 'sales'}">
+                    <span class="product-result-price-value" th:text="${product.purchasePrice}"></span>
+                    <span class="product-result-price-label" th:text="#{product.search.purchasePrice}">purchasePrice</span>
+                </span>
+            </div>
+        </li>
+    </ul>
+
+    <div class="product-results-empty" th:if="${keyword != null and not #strings.isEmpty(#strings.trim(keyword)) and not results.hasContent()}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <strong th:text="#{product.search.empty.title}">No products found</strong>
+        <span th:text="#{product.search.empty.subtitle}">Try a different name or part number.</span>
+    </div>
 </div>
 
 </body>

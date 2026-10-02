@@ -3,6 +3,7 @@ package com.connectors.pos.ordersystem;
 import com.connectors.pos.customersystem.Customer;
 import com.connectors.pos.customersystem.CustomerRepository;
 import com.connectors.pos.exceptions.InsuffecientStockException;
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.ordersystem.orderdtos.OrderCreateDto;
 import com.connectors.pos.ordersystem.orderdtos.OrderItemCreateDto;
 import com.connectors.pos.ordersystem.orderdtos.OrderMapper;
@@ -168,7 +169,7 @@ verify(orderRepo).save(any(Order.class));
 
         });
 
-assertThat(ex.getMessage()).isEqualTo("insuffesient stock the availabele quantity is :"+prod.getName()+"  " +prod.getStock());
+assertThat(ex.getMessage()).isEqualTo(Messages.get("error.sale.insufficientStockDetailed", prod.getName(), prod.getStock()));
     }
 
 

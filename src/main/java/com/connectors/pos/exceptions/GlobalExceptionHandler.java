@@ -1,5 +1,6 @@
 package com.connectors.pos.exceptions;
 
+import com.connectors.pos.i18n.Messages;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.persistence.EntityNotFoundException;
@@ -34,7 +35,7 @@ public class GlobalExceptionHandler {
 
         ModelAndView mov =new ModelAndView("fragments/auth-messages :: exceptions-response");
 
-        mov.addObject("errorMessage","duplicate name or partNumber");
+        mov.addObject("errorMessage", Messages.get("error.duplicateEntry"));
 
         mov.setStatus(HttpStatus.BAD_REQUEST);
 

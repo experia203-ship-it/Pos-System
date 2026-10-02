@@ -34,7 +34,7 @@ private String taxRegistrationNumber;
 private BigDecimal taxRate = BigDecimal.ZERO;
 
 @Column(name="default_theme",length=50,columnDefinition = "varchar(50) default 'SYSTEM_DEFAULT'")
-@NotNull(message="theme is required")
+@NotNull(message="{validation.settings.theme.required}")
 @Enumerated(EnumType.STRING)
 private Theme theme=Theme.SYSTEM_DEFAULT;
 @Column(name="print_size",length=50,columnDefinition = "varchar(50) default 'A5'")

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public record CustomerUpdateDto(
 
-        @NotBlank(message="customer name is required")
+        @NotBlank(message="{validation.customer.name.required}")
         @Size(max = 50)
         String name,
         @Size(max = 1000)

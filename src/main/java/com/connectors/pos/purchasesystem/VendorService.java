@@ -1,5 +1,7 @@
 package com.connectors.pos.purchasesystem;
 
+import com.connectors.pos.exceptions.BusinessRuleException;
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.purchasesystem.purchasedtos.VendorCreateDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -37,10 +39,10 @@ public class VendorService {
 
         if(id==null){
 
-            throw new RuntimeException("vendor id must be provided");
+            throw new BusinessRuleException(Messages.get("error.vendor.idRequired"));
         }
         Vendor vendor = vendorRepo.findById(id)
-                .orElseThrow(()->new EntityNotFoundException("vendor doesn't exist with that id"));
+                .orElseThrow(()->new EntityNotFoundException(Messages.get("error.vendor.notFound")));
 
 
         vendor.setActive(false);
@@ -58,11 +60,11 @@ public class VendorService {
 
     public Vendor updateById(Long id ,VendorCreateDto update){
         if(id==null){
-            throw new RuntimeException("vendor id must be provided");
+            throw new BusinessRuleException(Messages.get("error.vendor.idRequired"));
         }
 
         Vendor vendor = vendorRepo.findById(id)
-                .orElseThrow(()-> new EntityNotFoundException("no vendor was found with that id"));
+                .orElseThrow(()-> new EntityNotFoundException(Messages.get("error.vendor.notFoundUpdate")));
 
         if(update.name()!=null&&!update.name().equals(vendor.getName())){vendor.setName(update.name());}
         if(update.location()!=null&& !update.location().equals(vendor.getLocation())){vendor.setLocation(update.location());}

@@ -4,6 +4,7 @@ import com.connectors.pos.exceptions.BusinessRuleException;
 import com.connectors.pos.exceptions.CategoryNotFoundException;
 import com.connectors.pos.exceptions.NullCategoryIdException;
 import com.connectors.pos.exceptions.ProductNotFoundException;
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.products.categorydtos.CategoryResponseDto;
 import com.connectors.pos.products.productdtos.*;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +56,7 @@ public ProductResponseDto createProduct (CreateProductDto create){
 
 
     if(productRepo.existsByName(create.name())){
-        throw new BusinessRuleException("an product already exists with that name , please choose another");
+        throw new BusinessRuleException(Messages.get("error.product.alreadyExists"));
     }
 
     Products product = productMapper.toEntity(create);
@@ -82,16 +83,16 @@ public void deleteProductById(Long id){
     Boolean isActive = productRepo.checkIsActiveStatusById(id);
 
     if(isActive == null){
-throw new ProductNotFoundException("product not found with this id: "+id);
+throw new ProductNotFoundException(Messages.get("error.product.notFoundWithId", id));
     }
 
 if(!isActive){
 
-throw new BusinessRuleException("this product was already deleted");
+throw new BusinessRuleException(Messages.get("error.product.alreadyDeleted"));
 }
 
 Products product = productRepo.findById(id)
-        .orElseThrow(()->new ProductNotFoundException("product not found with this id: "+id));
+        .orElseThrow(()->new ProductNotFoundException(Messages.get("error.product.notFoundWithId", id)));
 productRepo.delete(product);
 }
 
@@ -100,12 +101,12 @@ productRepo.delete(product);
     public ProductResponseDto updateProduct(Long productId,ProductUpdateDto dto){
 
 Products product = productRepo.findById(productId)
-        .orElseThrow(()->new ProductNotFoundException("product not found"));
+        .orElseThrow(()->new ProductNotFoundException(Messages.get("error.product.notFound")));
 
       Long catId= dto.categoryId();
 
       Categories cat = catRepo.findById(catId)
-                      .orElseThrow(()->new CategoryNotFoundException("this category doesn't exist with that id "+ catId));
+                      .orElseThrow(()->new CategoryNotFoundException(Messages.get("error.category.notFoundWithIdAlt", catId)));
 
  productMapper.updateEntityFromDto(dto,product);
 
@@ -150,7 +151,7 @@ public Page<ProductResponseDto> viewAllProducts(Pageable pageable){
     public ProductResponseDto getProductById(Long id){
 
     Products product = productRepo.findById(id)
-            .orElseThrow(()->new ProductNotFoundException("product doesn't exist"));
+            .orElseThrow(()->new ProductNotFoundException(Messages.get("error.product.notFoundSimple")));
 
     return productMapper.toResponse(product);
 
@@ -346,7 +347,7 @@ public record ImportResult(int imported, int skipped) {
     public ProductResponseDto findById(Long id){
 
     Products product = productRepo.findById(id)
-            .orElseThrow(()->new ProductNotFoundException("product not found with that id "+ id));
+            .orElseThrow(()->new ProductNotFoundException(Messages.get("error.product.notFoundWithIdAlt", id)));
 
     return productMapper.toResponse(product);
 }

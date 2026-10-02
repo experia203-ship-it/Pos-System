@@ -3,6 +3,7 @@ package com.connectors.pos.shift;
 import com.connectors.pos.ordersystem.OrderRepository;
 import com.connectors.pos.ordersystem.SaleReturnRepository;
 import com.connectors.pos.exceptions.ShiftOperationException;
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.users.Users;
 import com.connectors.pos.users.UserRepository; // Add your user repository
 import lombok.RequiredArgsConstructor;
@@ -25,9 +26,9 @@ public class ShiftService {
 
     @Transactional
     public ShiftSession openShift(Long userId, BigDecimal startingFloat) {
-        requireNonNegative(startingFloat, "Starting cash cannot be negative.");
+        requireNonNegative(startingFloat, Messages.get("error.shift.startingCashNegative"));
         if (userRepo.lockUserForShiftOpening(userId) != 1) {
-            throw new ShiftOperationException("User not found.");
+            throw new ShiftOperationException(Messages.get("error.shift.userNotFound"));
         }
         Optional<ShiftSession> openShift = shiftRepo.findOpenShift(userId);
         if (openShift.isPresent()) {
@@ -35,7 +36,7 @@ public class ShiftService {
         }
             // Fetch the user using the ID provided by the controller
             Users user = userRepo.findById(userId)
-                    .orElseThrow(() -> new ShiftOperationException("User not found."));
+                    .orElseThrow(() -> new ShiftOperationException(Messages.get("error.shift.userNotFound")));
 
             ShiftSession newShift = ShiftSession.builder()
                     .user(user)
@@ -49,16 +50,16 @@ public class ShiftService {
     @Transactional(readOnly = true)
     public ShiftSession getActiveShift(Long userId) {
         return shiftRepo.findOpenShift(userId)
-                .orElseThrow(() -> new ShiftOperationException("No active shift for that user."));
+                .orElseThrow(() -> new ShiftOperationException(Messages.get("error.shift.noActiveShift")));
     }
 
     @Transactional
     public ShiftSession getOpenShiftForSale(Long userId) {
         ShiftSession shift = shiftRepo.findOpenShift(userId)
-                .orElseThrow(() -> new ShiftOperationException("No active shift for that user."));
+                .orElseThrow(() -> new ShiftOperationException(Messages.get("error.shift.noActiveShift")));
         lockAndReloadShift(shift.getId());
         return shiftRepo.findOpenShift(userId)
-                .orElseThrow(() -> new ShiftOperationException("No active shift for that user."));
+                .orElseThrow(() -> new ShiftOperationException(Messages.get("error.shift.noActiveShift")));
     }
 
     @Transactional(readOnly = true)
@@ -71,13 +72,13 @@ public class ShiftService {
         ShiftSession shift = lockAndReloadShift(shiftId);
         requireOpen(shift);
         if (type == null) {
-            throw new ShiftOperationException("Cash event type is required.");
+            throw new ShiftOperationException(Messages.get("error.shift.eventTypeRequired"));
         }
         if (amount == null || amount.signum() <= 0) {
-            throw new ShiftOperationException("Cash event amount must be greater than zero.");
+            throw new ShiftOperationException(Messages.get("error.shift.eventAmountPositive"));
         }
         if (reason == null || reason.isBlank()) {
-            throw new ShiftOperationException("Cash event reason is required.");
+            throw new ShiftOperationException(Messages.get("error.shift.eventReasonRequired"));
         }
 
         CashDrawerEvent event = CashDrawerEvent.builder()
@@ -93,7 +94,7 @@ public class ShiftService {
     @Transactional(readOnly = true)
     public BigDecimal calculateExpectedCash(Long shiftId) {
         ShiftSession session = shiftRepo.findById(shiftId)
-                .orElseThrow(() -> new RuntimeException("Shift not found"));
+                .orElseThrow(() -> new ShiftOperationException(Messages.get("error.shift.notFoundSimple")));
 
         BigDecimal cashSales = zeroIfNull(orderRepo.sumShiftCashPayments(shiftId));
         BigDecimal cashRefunds = zeroIfNull(saleReturnRepo.sumCashRefundsForShift(shiftId));
@@ -120,7 +121,7 @@ public class ShiftService {
     public ShiftSession closeShift(Long shiftId, BigDecimal actualCount) {
         ShiftSession shift = lockAndReloadShift(shiftId);
         requireOpen(shift);
-        requireNonNegative(actualCount, "Counted cash cannot be negative.");
+        requireNonNegative(actualCount, Messages.get("error.shift.countedCashNegative"));
 
         // Calculate expected cash using the ID
         BigDecimal expected = calculateExpectedCash(shiftId);
@@ -138,7 +139,7 @@ public class ShiftService {
 
     private static void requireOpen(ShiftSession shift) {
         if (shift.getStatus() != ShiftStatus.OPEN) {
-            throw new ShiftOperationException("This shift is already closed.");
+            throw new ShiftOperationException(Messages.get("error.shift.alreadyClosed"));
         }
     }
 
@@ -150,9 +151,9 @@ public class ShiftService {
 
     private ShiftSession lockAndReloadShift(Long shiftId) {
         if (shiftRepo.lockShiftForMutation(shiftId) != 1) {
-            throw new ShiftOperationException("Shift not found.");
+            throw new ShiftOperationException(Messages.get("error.shift.notFound"));
         }
         return shiftRepo.findById(shiftId)
-                .orElseThrow(() -> new ShiftOperationException("Shift not found."));
+                .orElseThrow(() -> new ShiftOperationException(Messages.get("error.shift.notFound")));
     }
 }

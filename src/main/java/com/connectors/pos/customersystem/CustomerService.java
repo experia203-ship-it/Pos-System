@@ -5,6 +5,7 @@ import com.connectors.pos.customersystem.customerdtos.CustomerMapper;
 import com.connectors.pos.customersystem.customerdtos.CustomerUpdateDto;
 import com.connectors.pos.customersystem.customerdtos.CustomerViewDto;
 import com.connectors.pos.exceptions.CustomerNotFoundException;
+import com.connectors.pos.i18n.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -58,7 +59,7 @@ public class CustomerService {
     public CustomerViewDto findByCustomerId(Long id) {
 
         Customer customer = customerRepo.findById(id).
-                orElseThrow(() -> new CustomerNotFoundException("Customer was not found."));
+                orElseThrow(() -> new CustomerNotFoundException(Messages.get("error.customer.notFound")));
 
         return customerMapper.toResponse(customer);
     }
@@ -79,7 +80,7 @@ public class CustomerService {
     @Transactional(readOnly = true)
     public Page<CustomerViewDto> findCustomerByName(String name, Pageable pageable) {
 
-        Page<Customer> result = customerRepo.findCustomerByName(name, pageable);
+        Page<Customer> result = customerRepo.findByPartialNameMatch(name, pageable);
 
         return result.map(customerMapper::toResponse);
     }
@@ -97,7 +98,7 @@ public class CustomerService {
     public CustomerViewDto updateCustomerInformation(Long customerId, CustomerUpdateDto update) {
 
         Customer customer = customerRepo.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException("No customer was found with this id " + customerId));
+                .orElseThrow(() -> new CustomerNotFoundException(Messages.get("error.customer.notFoundWithId", customerId)));
 
         customerMapper.updateCustomerFromDto(update, customer);
 
@@ -133,11 +134,11 @@ public class CustomerService {
     @Transactional
     public void deleteCustomerById(Long id) {
         if (id == null) {
-            throw new CustomerNotFoundException("A valid customer id must be provided.");
+            throw new CustomerNotFoundException(Messages.get("error.customer.idRequired"));
         }
 
         Customer customer = customerRepo.findById(id)
-                .orElseThrow(() -> new CustomerNotFoundException("no customer exists with this id "));
+                .orElseThrow(() -> new CustomerNotFoundException(Messages.get("error.customer.notExistWithId")));
 
         customer.setActive(false);
     }

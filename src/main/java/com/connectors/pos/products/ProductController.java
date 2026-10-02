@@ -226,6 +226,7 @@ else {
         model.addAttribute("results",results);
 
        model.addAttribute("mode",mode);
+        model.addAttribute("keyword",keyword);
 
         return "fragments/search-results :: search-results-fragment";
 

@@ -6,13 +6,13 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record PurchaseReturnRequest(
-        @NotNull(message = "Select a received product.")
+        @NotNull(message = "{validation.purchaseReturn.item.required}")
         Long purchaseItemId,
-        @NotNull(message = "Return quantity is required.")
-        @Positive(message = "Return quantity must be at least one.")
+        @NotNull(message = "{validation.common.quantity.required}")
+        @Positive(message = "{validation.common.quantity.positive}")
         Integer quantity,
-        @NotBlank(message = "A return reason is required.")
-        @Size(max = 255, message = "Return reason must be 255 characters or fewer.")
+        @NotBlank(message = "{validation.common.reason.required}")
+        @Size(max = 255, message = "{validation.common.reason.size}")
         String reason
 ) {
 }

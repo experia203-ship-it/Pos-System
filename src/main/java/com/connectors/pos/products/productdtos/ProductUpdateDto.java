@@ -10,22 +10,22 @@ import java.util.Map;
 
 public record ProductUpdateDto(
 
-        @Size(max=255 , message="you exceeded the max length allowed")
+        @Size(max=255 , message="{validation.common.maxLength.exceeded}")
         String name,
-        @Size(max=50,message="you exceeded the max length allowed")
+        @Size(max=50,message="{validation.common.maxLength.exceeded}")
         String partNumber,
-        @Size(max=255,message="you exceeded the max length allowed")
+        @Size(max=255,message="{validation.common.maxLength.exceeded}")
         String description,
-        @Positive(message = "selling price can't equal 0 or less than 0")
+        @Positive(message = "{validation.common.positive.sellingPrice}")
         BigDecimal sellingPrice,
-        @Positive(message = "purchasing price can't equal 0 or less than 0")
+        @Positive(message = "{validation.common.positive.purchasePrice}")
         BigDecimal purchasePrice,
-        @PositiveOrZero(message ="stock can't be below zero ")
+        @PositiveOrZero(message ="{validation.common.positiveOrZero.stock}")
         Long stock,
         Long categoryId,
-        @Size(max=50,message="you exceeded the max length allowed")
+        @Size(max=50,message="{validation.common.maxLength.exceeded}")
         String barcode,
-        @PositiveOrZero(message="orderPoint can't be below zero")
+        @PositiveOrZero(message="{validation.common.positiveOrZero.reorderPoint}")
         Long reorderPoint,
         Map<String,String> customFields
 

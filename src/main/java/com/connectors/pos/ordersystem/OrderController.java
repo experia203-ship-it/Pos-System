@@ -964,6 +964,7 @@ public String findOrdersByCustomerName(@RequestParam(name ="custName") String na
                                           @RequestParam(name = "customerId", required = false) Long customerId,
                                           @RequestParam(name="dateRange", required =false ) String dateRange,
                                           Model model){
+
         Long id = pathId != null ? pathId : customerId;
         if (id == null) {
             return "fragments/order-sum-res-fragment :: select-customer";

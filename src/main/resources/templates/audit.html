@@ -1,0 +1,62 @@
+
+<div id="audit-page">
+    <header class="audit-header">
+        <div>
+            <div class="audit-eyebrow">SYSTEM ACTIVITY</div>
+            <h1 class="audit-title">
+                <span class="audit-title-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3 4.5 6.5v5.3c0 4.6 3.2 7.8 7.5 9.2 4.3-1.4 7.5-4.6 7.5-9.2V6.5L12 3Z"></path>
+                        <path d="m9 12 2 2 4-4"></path>
+                    </svg>
+                </span>
+                <span>Audit records</span>
+            </h1>
+            <p class="audit-subtitle">Review recent activity and changes made in the system.</p>
+        </div>
+        <div class="audit-count" th:text="|${auditLogs.numberOfElements} recent events|">0 recent events</div>
+    </header>
+
+    <section class="audit-card" aria-label="Audit records">
+        <div class="audit-table-scroll">
+            <table class="audit-table">
+                <thead>
+                <tr>
+                    <th scope="col">Audit ID</th>
+                    <th scope="col">Action</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Timestamp</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="audit : ${auditLogs}">
+                    <td class="audit-id" th:text="${audit.id}"></td>
+                    <td><span class="audit-action" th:text="${audit.action}"></span></td>
+                    <td>
+                        <span class="audit-user">
+                            <span class="audit-user-avatar" aria-hidden="true"
+                                  th:text="${#strings.substring(audit.performedByName, 0, 1).toUpperCase()}">U</span>
+                            <span th:text="${audit.performedByName}"></span>
+                        </span>
+                    </td>
+                    <td class="audit-timestamp" th:text="${audit.createdAt}"></td>
+                </tr>
+                <tr th:if="${auditLogs.isEmpty()}">
+                    <td colspan="4">
+                        <div class="audit-empty">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 4h16v16H4z"></path>
+                                <path d="M8 9h8M8 13h5"></path>
+                            </svg>
+                            <strong>No audit records yet</strong>
+                            <span>System activity will appear here as it happens.</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

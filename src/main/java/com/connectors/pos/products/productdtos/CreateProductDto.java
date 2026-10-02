@@ -8,29 +8,29 @@ import java.util.Map;
 
 public record CreateProductDto(
 
-        @NotBlank(message = "name is required")
-        @Size(max=255 , message="you exceeded the max length allowed")
+        @NotBlank(message = "{validation.common.name.required}")
+        @Size(max=255 , message="{validation.common.maxLength.exceeded}")
        String name,
-       @NotBlank(message = "partNumber is required")
-       @Size(max=50,message="you exceeded the max length allowed")
+       @NotBlank(message = "{validation.product.partNumber.required}")
+       @Size(max=50,message="{validation.common.maxLength.exceeded}")
        String partNumber,
-        @NotBlank(message = "description is required")
-        @Size(max=255,message="you exceeded the max length allowed")
+        @NotBlank(message = "{validation.product.description.required}")
+        @Size(max=255,message="{validation.common.maxLength.exceeded}")
        String description,
-      @NotNull(message = "selling price is required")
-      @Positive(message = "selling price can't equal 0 or less than 0")
+      @NotNull(message = "{validation.product.sellingPrice.required}")
+      @Positive(message = "{validation.common.positive.sellingPrice}")
        BigDecimal sellingPrice,
-        @NotNull(message = "purchase price is required")
-        @Positive(message = "purchasing price can't equal 0 or less than 0")
+        @NotNull(message = "{validation.product.purchasePrice.required}")
+        @Positive(message = "{validation.common.positive.purchasePrice}")
        BigDecimal purchasePrice,
-        @NotNull(message = "stock price is required")
-        @PositiveOrZero(message ="stock can't be below zero ")
+        @NotNull(message = "{validation.product.stock.required}")
+        @PositiveOrZero(message ="{validation.common.positiveOrZero.stock}")
        Long stock,
-        @NotNull(message = "choose an existing category or create a new one")
+        @NotNull(message = "{validation.product.category.required}")
        Long categoryId,
         @Size(max=50)
         String barcode,
-        @PositiveOrZero(message="orderPoint can't be below zero")
+        @PositiveOrZero(message="{validation.common.positiveOrZero.reorderPoint}")
         Long reorderPoint,
 
         Map<String,String> customFields

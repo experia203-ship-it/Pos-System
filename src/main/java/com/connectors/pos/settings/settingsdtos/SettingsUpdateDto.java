@@ -14,15 +14,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 
 public record SettingsUpdateDto(
-        @NotBlank(message="please provide your company name")
-        @Size(max=255,message="this name exceeds the allowed size")
+        @NotBlank(message="{validation.settings.companyName.required}")
+        @Size(max=255,message="{validation.settings.companyName.size}")
         String companyName,
-        @Size(max=13 , message="please provide a valid Egyptian phone number")
-        @Pattern(regexp = "^01[0125]\\d{8}$",message="please provide a valid Egyptian phone number")
+        @Size(max=13 , message="{validation.settings.phoneNumber.invalid}")
+        @Pattern(regexp = "^01[0125]\\d{8}$",message="{validation.settings.phoneNumber.invalid}")
         String phoneNumber,
         String address,
         String taxRegistrationNumber,
-        @NotNull(message="theme is required")
+        @NotNull(message="{validation.settings.theme.required}")
         Theme theme,
 
         PrintSize printSize,
@@ -31,8 +31,8 @@ public record SettingsUpdateDto(
         PosStyle posStyle,
         MultipartFile logoFile,
         boolean shiftManagement,
-        @DecimalMin(value = "0.00", message = "Tax rate cannot be negative.")
-        @DecimalMax(value = "100.00", message = "Tax rate cannot exceed 100%.")
+        @DecimalMin(value = "0.00", message = "{validation.settings.taxRate.negative}")
+        @DecimalMax(value = "100.00", message = "{validation.settings.taxRate.exceeds100}")
         BigDecimal taxRate
 
 ) {

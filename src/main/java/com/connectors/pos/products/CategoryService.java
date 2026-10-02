@@ -3,6 +3,7 @@ package com.connectors.pos.products;
 
 import com.connectors.pos.exceptions.BusinessRuleException;
 import com.connectors.pos.exceptions.CategoryNotFoundException;
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.products.categorydtos.CategoryCreateDto;
 import com.connectors.pos.products.categorydtos.CategoryMapper;
 import com.connectors.pos.products.categorydtos.CategoryResponseDto;
@@ -36,7 +37,7 @@ public class CategoryService {
     public CategoryResponseDto findCategoryById(Long id){
 
         Categories category = categoryRepo.findById(id)
-                .orElseThrow(()->new CategoryNotFoundException("category wasn't found with this id: "+id));
+                .orElseThrow(()->new CategoryNotFoundException(Messages.get("error.category.notFoundWithId", id)));
 
         return categoryMapper.toResponse(category);
     }
@@ -55,11 +56,11 @@ public class CategoryService {
     public void deleteCategory(Long id){
 
         Categories category = categoryRepo.findById(id)
-                .orElseThrow(()->new CategoryNotFoundException("category is either deleted or doesn't exist"));
+                .orElseThrow(()->new CategoryNotFoundException(Messages.get("error.category.deletedOrMissing")));
 
      if(productRepo.existsByCategoryId(id)){
 
-         throw new BusinessRuleException("can't delete a category that still contain products");
+         throw new BusinessRuleException(Messages.get("error.category.cannotDeleteHasProducts"));
      }
 
      categoryRepo.delete(category);

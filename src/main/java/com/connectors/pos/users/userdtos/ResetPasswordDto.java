@@ -5,12 +5,12 @@ import jakarta.validation.constraints.Pattern;
 
 public record ResetPasswordDto(
 
-        @NotBlank(message = "new password is required")
+        @NotBlank(message = "{validation.common.password.required}")
         @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$",
-                message = "Password must be at least 8 characters long, contain one uppercase letter, one lowercase letter, one digit, and one special character with no spaces.")
+                message = "{validation.common.password.complexity}")
         String newPassword,
 
-        @NotBlank(message = "please confirm the new password")
+        @NotBlank(message = "{validation.common.password.confirmRequired}")
         String confirmPassword
 
 ) {

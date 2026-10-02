@@ -8,14 +8,14 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record CreatePurchaseOrderDto(
-        @NotNull(message = "discount is required")
+        @NotNull(message = "{validation.purchase.discount.required}")
         BigDecimal discount,
         Long supplierId,
-        @NotEmpty(message = "At least one purchase item is required")
+        @NotEmpty(message = "{validation.purchase.items.required}")
         @Valid
         List<CreatePurchaseOrderItemDto> itemsList,
-        @NotNull(message = "paid is required")
-        @PositiveOrZero(message = "payment must be equal to or more than 0")
+        @NotNull(message = "{validation.purchase.paid.required}")
+        @PositiveOrZero(message = "{validation.order.paid.positiveOrZero}")
         BigDecimal paid,
         BigDecimal remaining,
         String orderNumber

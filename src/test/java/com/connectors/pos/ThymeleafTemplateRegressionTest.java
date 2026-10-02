@@ -320,6 +320,7 @@ class ThymeleafTemplateRegressionTest {
         model.put("allProducts", productPage);
         model.put("products", productPage);
         model.put("results", productPage);
+        model.put("keyword", "brake");
         model.put("product", product);
         model.put("catMap", Map.of(3L, "Brakes"));
         model.put("categories", List.of(new CategoryResponseDto(3L, "Brakes", "Brake parts")));

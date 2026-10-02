@@ -11,17 +11,17 @@ import java.util.Set;
 public record OrderCreateDto(
 
 
-        @NotNull(message="discount is required ; for no disc set to 0%")
+        @NotNull(message="{validation.order.discount.required}")
         BigDecimal discount,
 
 
         Long customerId,
 
-@NotEmpty(message="at least on item is required")
+@NotEmpty(message="{validation.order.items.required}")
 @Valid
    List<OrderItemCreateDto> itemsList,
-        @NotNull(message="please provide a payment , set to 0 for no payment")
-        @PositiveOrZero(message="payment must be equal to or more than 0")
+        @NotNull(message="{validation.order.paid.required}")
+        @PositiveOrZero(message="{validation.order.paid.positiveOrZero}")
         BigDecimal paid,
 
         BigDecimal remaining ,
@@ -30,7 +30,7 @@ public record OrderCreateDto(
 
         PaymentMethod paymentMethod,
 
-        @Size(max = 100, message = "Payment reference must be 100 characters or fewer.")
+        @Size(max = 100, message = "{validation.order.paymentReference.size}")
         String paymentReference
 
 ) {
