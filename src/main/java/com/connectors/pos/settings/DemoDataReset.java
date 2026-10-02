@@ -4,8 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,35 @@ public class DemoDataReset {
     @Value("${RENDER:false}")
     private boolean isRenderEnvironment;
 
+    /**
+     * Seeds the demo data right after the app finishes starting, but only if the
+     * database looks empty (e.g. a brand-new deploy/disk). Without this, a fresh
+     * deployment would boot with no products/customers/orders and sit empty until
+     * the next scheduled 4 AM reset below.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    public void seedOnStartupIfEmpty() {
+        if (!isAutoResetEnabled || !isRenderEnvironment) {
+            log.info("Demo DB startup seed skipped: the Render demo reset is not enabled here.");
+            return;
+        }
+
+        try {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+            Integer settingsCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM settings", Integer.class);
+            if (settingsCount != null && settingsCount > 0) {
+                log.info("Demo database already contains data; skipping startup seed.");
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("Could not inspect demo database state before deciding whether to seed on startup", e);
+            return;
+        }
+
+        log.info("Demo database is empty on startup; seeding immediately instead of waiting for the next scheduled reset.");
+        runReset();
+    }
+
     // Cron expression: Seconds Minutes Hours Day-of-month Month Day-of-week
     // "0 0 4 * * ?" = Every day at 04:00:00 AM
     @Scheduled(cron = "0 0 4 * * ?",zone = "Africa/Cairo")
@@ -35,7 +67,10 @@ public class DemoDataReset {
         }
 
         log.info("Starting scheduled demo database reset...");
+        runReset();
+    }
 
+    private void runReset() {
         try {
             ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
             populator.addScript(new ClassPathResource("db/demo/sqlite_demo_reset.sql"));
