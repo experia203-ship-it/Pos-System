@@ -1,5 +1,7 @@
 package com.connectors.pos;
 
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -19,7 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-
+import org.slf4j.LoggerFactory;
 @SpringBootApplication
 @EnableCaching
 @EnableScheduling
@@ -29,7 +31,9 @@ public class PosApplication {
 	private static final String URL = "http://localhost:" + PORT + "/auth/login";
 	private static FileLock instanceLock;   // static so it isn't garbage collected
 	private static ConfigurableApplicationContext ctx;
-
+	private static final Logger log = LoggerFactory.getLogger(PosApplication.class);
+	@Value("${app.desktop.enable:true}")
+	private boolean isDesktopEnabled;
 	public static void main(String[] args) throws IOException {
 		String appData = System.getenv("APPDATA");
 		Path base = appData != null ? Paths.get(appData) : Paths.get(System.getProperty("user.home"));
@@ -58,8 +62,13 @@ public class PosApplication {
 
 	@EventListener(ApplicationReadyEvent.class)
 	public void onReady() {
-		openBrowser();
-		addTrayIcon();
+		if(!isDesktopEnabled) return;
+		try {
+			openBrowser();
+			addTrayIcon();
+		} catch (Throwable e) {
+			log.error("Error opening browser or adding tray icon:", e);
+		}
 	}
 
 	private static void openBrowser() {
@@ -70,7 +79,7 @@ public class PosApplication {
 				Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + URL);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Error opening browser:", e);
 		}
 	}
 
