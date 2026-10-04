@@ -1,6 +1,7 @@
 package com.connectors.pos.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
@@ -14,10 +15,13 @@ import java.util.Locale;
 @Configuration
 public class webConfig implements WebMvcConfigurer {
 
+    @Value("${app.default-lang:en}")
+    private String defaultLang;
+
     @Bean
     public LocaleResolver localeResolver() {
         CookieLocaleResolver resolver = new CookieLocaleResolver("POS_LANG_COOKIE");
-        resolver.setDefaultLocale(Locale.ENGLISH);
+        resolver.setDefaultLocale(Locale.forLanguageTag(defaultLang));
         return resolver;
     }
 
