@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title th:text="#{label.print.title}">Print Label</title>
     <!-- Pulls in the library to generate the barcode lines -->
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script th:src="@{/js/JsBarcode.all.min.js}"></script>
 
     <style>
         /* --- 1. Screen Preview Styling (What you see on the monitor) --- */

@@ -34,6 +34,13 @@ public interface ProductRepository  extends JpaRepository<Products,Long> {
 
     boolean existsByPartNumber(String partNumber);
 
+    Optional<Products> findByPartNumber(String partNumber);
+
+    /** Brings back a product that was deleted earlier (soft delete) when the same part number is imported again. */
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(value = "update products set is_active = true where part_number = :pn and is_active = false", nativeQuery = true)
+    int reactivateByPartNumber(@Param("pn") String partNumber);
+
 
 @EntityGraph(attributePaths = {"category"})
 Page<Products> findByCategoryId(Long id,Pageable pageable);
@@ -45,7 +52,9 @@ Page<Products> findByCategoryId(Long id,Pageable pageable);
 
 
    @Query(value="select p from Products p where lower(p.name)  like lower(concat('%',:name,'%')) "+
-   "or lower(p.description)  like lower(concat('%',:name,'%'))")
+   "or lower(p.description)  like lower(concat('%',:name,'%')) "+
+   "or lower(p.partNumber)  like lower(concat('%',:name,'%')) "+
+   "or p.barcode = :name")
 
     Page<Products> searchByKeywordPartialMatch(@Param("name") String name , Pageable pageable);
 

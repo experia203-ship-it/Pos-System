@@ -8,6 +8,8 @@
 
 <div th:fragment="empty"></div>
 
+<div th:fragment="login-error" class="form-error" style="color: #c0392b; margin-top: 1rem;" th:text="${errorMessage}"></div>
+
 
 <dialog open th:fragment="pop-up">
     <article>
@@ -50,15 +52,21 @@
                    th:attr="aria-invalid=${#fields.hasErrors('reorderPoint') ? 'true' :'false'}"/>
             <p class="form-error" th:if="${#fields.hasErrors('reorderPoint')}" th:errors="*{reorderPoint}"></p>
 
-            <div id="category-wrapper">
-                <label for="category-list" th:text="#{products.modal.label.category}"></label>
-                <select id="category-list" name="categoryId">
-                    <option value="" disabled selected th:text="#{products.modal.option.selectcategory}"></option>
-                    <option th:each="cat :${categories}"
-                            th:value="${cat.id}"
-                            th:text="${cat.name}">
-                    </option>
-                </select>
+            <div id="category-wrapper" th:fragment="category-wrapper">
+                <div id="category-select-wrapper">
+                    <label for="category-list" th:text="#{products.modal.label.category}"></label>
+                    <select id="category-list" name="categoryId">
+                        <option value="" disabled selected th:text="#{products.modal.option.selectcategory}"></option>
+                        <option th:each="cat :${categories}"
+                                th:value="${cat.id}"
+                                th:text="${cat.name}">
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <button class="secondary" hx-get="/categories/new" hx-target="#modal-container2" hx-swap="innerHTML" th:text="#{products.modal.btn.createcategory}"></button>
+                </div>
                 <div>
                     <label for="barcode" th:text="#{products.modal.label.barcode}"></label>
                     <input id="barcode" type="text" name="barcode" th:field="*{barcode}" th:placeholder="#{products.modal.placeholder.barcode}" class="form-control barcode-input"
@@ -87,9 +95,7 @@
             <button type="submit" th:text="#{products.modal.btn.save}"></button>
 
         </form>
-        <div>
-            <button class="secondary" hx-get="/categories/new" hx-target="#modal-container2" hx-swap="innerHTML" th:text="#{products.modal.btn.createcategory}"></button>
-        </div>
+
         <div>
             <form method="dialog">
                 <button class="secondary" th:text="#{btn.close}"></button>
@@ -117,13 +123,15 @@
 <dialog open th:fragment="pop-up2">
     <article>
         <h2 th:text="#{category.modal.title.add}"></h2>
-        <form id="form2" th:object="${categoryDto}" hx-post="/categories" hx-target="#modal-container2" hx-swap="innerHTML">
+        <form id="form2" th:object="${categoryDto}" hx-post="/categories" hx-target="#modal-container2" hx-swap="innerHTML"
+              hx-target-400="#category-error" hx-swap-400="innerHTML">
             <label for="categoryName"></label>
             <input id="categoryName" th:placeholder="#{category.modal.placeholder.name}" type="text" th:field="*{name}" required/>
 
             <label for="categoryDiscription"></label>
             <input id="categoryDiscription" th:placeholder="#{category.modal.placeholder.description}"
                    type="text" th:field="*{description}"/>
+            <div id="category-error"></div>
             <button type="submit" th:text="#{category.modal.btn.save}"></button>
         </form>
 
@@ -135,11 +143,12 @@
 
 
 <div th:fragment="category-success">
-    <div id="category-wrapper2" hx-swap-oob="true">
+    <div id="category-select-wrapper" hx-swap-oob="true">
         <label for="category-list" th:text="#{products.modal.label.category}"></label>
-        <select id="category-list2" name="categoryId" required>
-            <option value="" disabled selected th:text="#{products.modal.option.selectcategory}"></option>
-            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+        <select id="category-list" name="categoryId">
+            <option value="" disabled th:selected="${newCategoryName == null}" th:text="#{products.modal.option.selectcategory}"></option>
+            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"
+                    th:selected="${newCategoryName != null and cat.name == newCategoryName}"></option>
         </select>
     </div>
 

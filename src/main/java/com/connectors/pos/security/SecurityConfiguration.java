@@ -1,9 +1,12 @@
 package com.connectors.pos.security;
 
+import com.connectors.pos.license.LicenseFilter;
+import com.connectors.pos.license.LicenseService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,6 +36,7 @@ public class SecurityConfiguration {
 
     private final JwtFilter jwtFilter;
     private final UserDetailsService userDetails;
+    private final ObjectProvider<LicenseService> licenseServiceProvider;
 
     @Value("${app.security.cookie-secure:false}")
     private boolean secureCookies;
@@ -43,7 +47,7 @@ public class SecurityConfiguration {
         csrfTokens.setCookiePath("/");
         csrfTokens.setCookieCustomizer(cookie -> cookie.sameSite("Lax").secure(secureCookies));
 
-        return http
+        HttpSecurity configured = http
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
@@ -53,11 +57,17 @@ public class SecurityConfiguration {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/auth/login", "/auth/register", "/error",
-                                "/css/**", "/js/**", "/images/**").permitAll()
+                                "/css/**", "/js/**", "/images/**", "/license/**").permitAll()
                         .requestMatchers("/auth/logout").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+                .addFilterAfter(new MustChangePasswordFilter(), JwtFilter.class);
+
+        // Only present in the installed app (app.license.enabled=true): block everything until activated.
+        licenseServiceProvider.ifAvailable(service ->
+                configured.addFilterBefore(new LicenseFilter(service), JwtFilter.class));
+
+        return configured.build();
     }
 
 @Bean

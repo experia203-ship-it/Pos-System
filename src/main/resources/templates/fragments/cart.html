@@ -3,7 +3,7 @@
       xmlns:th="http://www.thymeleaf.org" >
 <head>
     <meta charset="UTF-8">
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script th:src="@{/js/htmx.min.js}"></script>
 
     <title>Title</title>
 </head>
@@ -43,7 +43,15 @@
 <form id="active-cart-form">
 
 <input  type="hidden"  th:name="ordId" th:value="${ordId}">
-    <table role="grid" id="cart-table">
+    <table role="grid" id="cart-table" style="table-layout: fixed; width: 100%;">
+        <colgroup>
+            <col style="width: 300px;">                          <!-- item name: takes all the remaining width -->
+            <col style="width: 100px;">     <!-- quantity -->
+            <col style="width: 100px;">    <!-- discount -->
+            <col style="width: 100px;">    <!-- price -->
+            <col style="width: 100px;">    <!-- subtotal -->
+            <col style="width: 100px;">     <!-- remove -->
+        </colgroup>
         <thead>
         <tr>
             <th th:text="#{cart.table.name}" ></th>
@@ -64,7 +72,7 @@
             <input type="hidden" th:name="|itemsList[${stat.index}].barcode|" th:value="${item.barcode}"/>
 
             <input type="text" th:name="|itemsList[${stat.index}].customName|"
-            th:value="${item.productName}"
+            th:value="${item.productName}" th:title="${item.productName}"
                    style="margin-bottom: 0;"
                    hx-post="/pos/cart/update"
                    hx-trigger="change delay:500ms"
@@ -176,11 +184,11 @@
         <span th:text="#{cart.order.amountApplied}">Applied to sale:</span>
         <strong th:text="|${amountApplied ?: '0.00'} ${globalSettings.currencySymbol}|"></strong>
     </p>
-    <h3 style="color: var(--brand-navy);">
+    <h3 th:unless="${taxRate == 0}" style="color: var(--brand-navy);">
         <span th:text="#{cart.order.taxableSubtotal}"></span>:
         <span id="taxable-subtotal" th:text="|${taxableSubtotal ?: '0.00'} ${globalSettings.currencySymbol}|"></span>
     </h3>
-    <h4>
+    <h4 th:unless="${taxRate == 0}">
         <span th:text="|#{cart.order.tax} (${taxRate ?: 0}%)|"></span>:
         <span id="tax-amount" th:text="|${taxAmount ?: '0.00'} ${globalSettings.currencySymbol}|"></span>
     </h4>

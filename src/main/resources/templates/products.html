@@ -4,11 +4,13 @@
         <span th:text="#{products.title}"></span>
     </h2>
 
-    <form action="/products/import" method="post" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+    <form hx-post="/products/import" hx-encoding="multipart/form-data" hx-target="#main-window" hx-swap="innerHTML" style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
         <label for="file" th:text="#{products.import.label}" style="margin-bottom: 0;"></label>
         <input type="file" id="file" name="file" accept=".csv" required style="margin-bottom: 0;">
         <button type="submit" class="secondary" th:text="#{products.import.btn}"></button>
     </form>
+    <p th:if="${success}" th:text="${success}" style="color: #1e8449; font-weight: 600;"></p>
+    <p th:if="${error}" th:text="${error}" style="color: #c0392b; font-weight: 600;"></p>
 
     <h4 th:text="#{products.search.title}"></h4>
 
@@ -19,7 +21,6 @@
                    hx-target="#table-container"
                    hx-trigger="keyup changed delay:500ms"
                    hx-swap="outerHTML"
-                   hx-replace-url="true"
                    th:placeholder="#{products.search.placeholder}">
         </label>
     </div>

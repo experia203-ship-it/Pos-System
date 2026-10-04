@@ -41,7 +41,7 @@ public class BackupService {
 
     public BackupService(DataSource dataSource,
                           @Value("${spring.datasource.url}") String datasourceUrl,
-                          @Value("${app.backup.dir:backups}") String backupDirName,
+                          @Value("${app.backup.dir:${app.data.dir:.}/backups}") String backupDirName,
                           @Value("${app.backup.retention:7}") int retentionCount) {
         this.dataSource = dataSource;
         this.datasourceUrl = datasourceUrl;

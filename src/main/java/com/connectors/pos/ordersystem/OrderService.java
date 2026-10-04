@@ -705,7 +705,6 @@ return orderMapper.toResponse(savedOrder);
     public List<OrderResponseDto> findByOrderNumber(String OrderNumber){
 
         List<Order> results = orderRepo.findByOrderNumber(OrderNumber);
-System.out.println(results);
         return orderMapper.toListResponse(results);
 
    }

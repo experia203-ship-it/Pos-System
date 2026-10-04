@@ -5,8 +5,8 @@
     <title th:text="#{login.title}">pos system -login</title>
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <script th:src="@{/js/htmx.min.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/water.css}">
 </head>
 
 <body>
@@ -18,7 +18,7 @@
         <label>
             <span th:text="#{login.label.email}">email:</span>
             <input id="email" name="email" type="email"
-                   th:value="${demoCredentialsEnabled ? 'user123@Gmail.com' : loginForm.email}"
+                   th:value="${prefillEmail}"
                    autocomplete="username" required>
         </label>
     </div>
@@ -26,7 +26,7 @@
         <label>
             <span th:text="#{login.label.password}">password:</span>
             <input id="password" name="password" type="password"
-                   th:value="${demoCredentialsEnabled ? 'A@123456' : loginForm.password}"
+                   th:value="${prefillPassword}"
                    autocomplete="current-password" required>
         </label>
     </div>
@@ -34,7 +34,7 @@
     <button type="submit" th:text="#{login.btn.submit}">login</button>
 
 </form>
-<div id="form-message"></div>
+<div id="form-message" th:attr="data-error=#{error.login.invalidCredentials}"></div>
 
 <script>
     document.body.addEventListener('htmx:configRequest', function(evt) {
@@ -43,6 +43,17 @@
         if (token && header) {
             evt.detail.headers[header.content] = token.content;
         }
+    });
+
+    // htmx ignores non-2xx responses; show a message anyway.
+    document.body.addEventListener('htmx:responseError', function() {
+        var box = document.getElementById('form-message');
+        box.innerHTML = '';
+        var d = document.createElement('div');
+        d.style.color = '#c0392b';
+        d.style.marginTop = '1rem';
+        d.textContent = box.getAttribute('data-error');
+        box.appendChild(d);
     });
 </script>
 

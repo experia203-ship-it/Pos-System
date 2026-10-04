@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="utf-8">
+    <title th:text="#{license.title}">Activate MyPOS</title>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <script th:src="@{/js/htmx.min.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/pico.min.css}" />
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="auth-page">
+    <div class="auth-card">
+        <h2 th:text="#{license.heading}">Activate MyPOS</h2>
+        <p th:text="#{license.intro}">This program needs to be activated before you can use it.</p>
+
+        <h4 th:text="#{license.step1}">Step 1: Send us this code</h4>
+        <article style="text-align: center;">
+            <strong id="device-code" style="font-size: 1.5rem; letter-spacing: 0.08em; direction: ltr; display: block;"
+                    th:text="${deviceCode}">XXXX-XXXX-XXXX-XXXX</strong>
+        </article>
+        <div class="grid">
+            <button type="button" class="secondary" id="copy-btn" onclick="copyDeviceCode()"
+                    th:attr="data-copied=#{license.copied}" th:text="#{license.btn.copy}">Copy code</button>
+            <a th:if="${whatsappUrl != null}" th:href="${whatsappUrl}" target="_blank" rel="noopener"
+               role="button" th:text="#{license.btn.whatsapp}">Send on WhatsApp</a>
+        </div>
+
+        <h4 th:text="#{license.step2}">Step 2: Paste the activation key we send you</h4>
+        <form hx-post="/license/activate" hx-target="#license-message" hx-swap="innerHTML">
+            <textarea name="key" rows="4" required style="direction: ltr;"
+                      th:placeholder="#{license.key.placeholder}"></textarea>
+            <button type="submit" style="width: 100%;" th:text="#{license.btn.activate}">Activate</button>
+        </form>
+        <div id="license-message"></div>
+    </div>
+</div>
+<script>
+document.body.addEventListener('htmx:configRequest', function(evt) {
+    const token = document.querySelector('meta[name="_csrf"]');
+    const header = document.querySelector('meta[name="_csrf_header"]');
+    if (token && header) {
+        evt.detail.headers[header.content] = token.content;
+    }
+});
+function copyDeviceCode() {
+    var codeEl = document.getElementById('device-code');
+    var btn = document.getElementById('copy-btn');
+    var original = btn.textContent;
+    function done() {
+        btn.textContent = btn.getAttribute('data-copied');
+        setTimeout(function () { btn.textContent = original; }, 2000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(codeEl.textContent.trim()).then(done);
+    } else {
+        var range = document.createRange();
+        range.selectNodeContents(codeEl);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand('copy');
+        done();
+    }
+}
+</script>
+</body>
+</html>

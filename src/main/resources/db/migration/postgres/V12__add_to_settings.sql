@@ -7,8 +7,8 @@ insert into settings(id
                     ,currency_symbol)
 values(
        1,
-       'company name',
-       '01234567890',
+       'Swift Systems',
+       '01091880840',
        '13 ct st ',
        '6879781',
        'SYSTEM_DEFAULT',

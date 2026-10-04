@@ -106,7 +106,7 @@ class ThymeleafTemplateRegressionTest {
                     .collect(Collectors.toSet());
         }
 
-        assertEquals(39, safelyRenderedTemplates.size(), "The regression inventory must cover all templates.");
+        assertEquals(43, safelyRenderedTemplates.size(), "The regression inventory must cover all templates.");
         assertTrue(safelyRenderedTemplates.containsAll(expectedTemplates()));
 
         for (String template : safelyRenderedTemplates) {

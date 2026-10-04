@@ -34,7 +34,7 @@ public class CategoryController {
 
         model.addAttribute("categoryDto",dto);
 
-        return "fragments/auth-messages :: pop-up2";
+        return "fragments/auth-messages ::pop-up2";
     }
 
 
@@ -51,7 +51,8 @@ public class CategoryController {
         catServo.createCategory(createDto);
         List<CategoryResponseDto> allCats=catServo.viewAllCategories();
         model.addAttribute("categories",allCats);
-       return "fragments/auth-messages :: category-success" ;
+        model.addAttribute("newCategoryName", createDto.name());
+       return "fragments/auth-messages ::category-success" ;
     }
 
 }

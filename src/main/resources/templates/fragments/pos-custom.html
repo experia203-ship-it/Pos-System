@@ -85,6 +85,13 @@
                     hx-include="#active-cart-form, #disc, #paid, #customerInfo, #paymentMethod, #paymentReference, #remaining ,#supplierInfo"
                     hx-target="#cart-zone" th:text="#{pos.bttn.custom}"></button>
 
+            <input id="scan-input" name="barcode" type="text" autocomplete="off" autofocus style="width: 200px; flex: none;"
+                   th:hx-post="${mode == 'sales' ? '/pos/scan' : '/purchase/scan'}"
+                   hx-include="#active-cart-form, #paid, #disc, #customerInfo, #paymentMethod, #paymentReference, #supplierInfo, #remaining"
+                   hx-target="#cart-zone" hx-swap="outerHTML" hx-trigger="keydown[key=='Enter']"
+                   hx-on::after-request="this.value=''; this.focus()"
+                   th:placeholder="#{pos.scan.placeholder}">
+
             <div class="dropdown-anchor" style="flex: 1;">
                 <input id="search-bar" th:value="${param.keyword}" name="keyword" type="text"
                        th:hx-get="@{/products/search-pos(mode=${mode})}" hx-target="#search-results-area"
@@ -92,6 +99,7 @@
                 <div id="search-results-area" class="dropdown-results"></div>
             </div>
         </div>
+        <div id="scan-error"></div>
     </div>
 
     <!-- 4. The Cart Area (Takes up the rest of the screen) -->

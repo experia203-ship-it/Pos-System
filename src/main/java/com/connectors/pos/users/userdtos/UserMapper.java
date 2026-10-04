@@ -9,6 +9,7 @@ import org.mapstruct.ReportingPolicy;
 unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface UserMapper {
 
+  @Mapping(target = "mustChangePassword", ignore = true)
   @Mapping(target = "roles", ignore = true)
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "createdAt", ignore = true)

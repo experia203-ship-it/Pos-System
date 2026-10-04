@@ -1,5 +1,6 @@
 package com.connectors.pos.purchasesystem;
 
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.exceptions.BusinessRuleException;
 import com.connectors.pos.exceptions.ProductNotFoundException;
 import com.connectors.pos.ordersystem.orderdtos.CartItemView;
@@ -217,15 +218,25 @@ public class PurchaseOrderController {
             @RequestParam(required = false) Long supplierId,
             @RequestParam(required = false) Long ordId,
             @RequestParam(required = false) String orderNumber,
-            Model model) {
+            Model model,
+            HttpServletResponse response) {
 
         List<CreatePurchaseOrderItemDto> listItems = new ArrayList<>();
         if (createDto.itemsList() != null) {
             listItems.addAll(createDto.itemsList());
         }
 
-        Products product = prodRepo.findByBarcode(barcode)
-                .orElseThrow(() -> new ProductNotFoundException("Product doesn't exist with that barcode: " + barcode));
+        String code = barcode == null ? "" : barcode.trim();
+        Optional<Products> found = prodRepo.findByBarcode(code);
+        if (found.isEmpty()) {
+            // unknown barcode: show a message next to the scan box (htmx only swaps 2xx answers)
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("HX-Retarget", "#scan-error");
+            response.setHeader("HX-Reswap", "innerHTML");
+            model.addAttribute("errorMessage", Messages.get("pos.scan.notFound", code));
+            return "fragments/auth-messages :: exceptions-response";
+        }
+        Products product = found.get();
 
         Optional<CreatePurchaseOrderItemDto> opt = listItems.stream()
                 .filter(it -> Objects.equals(it.productId(), product.getId()))
@@ -249,7 +260,7 @@ public class PurchaseOrderController {
                     product.getId(),
                     1,
                     BigDecimal.ZERO,
-                    barcode,
+                    code,
                     null,
                     null,
                     null

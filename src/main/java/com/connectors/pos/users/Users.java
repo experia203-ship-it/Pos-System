@@ -36,6 +36,9 @@ public class Users {
     @NotNull
     @Column(name = "password",nullable = false)
     private String password;
+    @Column(name = "must_change_password", nullable = false)
+    @Builder.Default
+    private boolean mustChangePassword = false;
     @Column(name = "created_at",columnDefinition = "timestamp default current_timestamp",
     insertable = false,updatable = false)
     @Generated(event = EventType.INSERT)

@@ -10,11 +10,11 @@
     <meta charset="UTF-8">
 
     <title th:text="${globalSettings.companyName}"></title>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/response-targets.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script th:src="@{/js/htmx.min.js}"></script>
+    <script th:src="@{/js/htmx-response-targets.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/pico.min.css}" />
+    <link rel="stylesheet" th:href="@{/css/flatpickr.min.css}">
+    <script th:src="@{/js/flatpickr.min.js}"></script>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 
     <style>

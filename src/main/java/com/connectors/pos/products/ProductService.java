@@ -166,6 +166,7 @@ public ImportResult processFile(MultipartFile file) throws IOException {
     Set<String> partNumbers = new HashSet<>();
     Set<String> barcodes = new HashSet<>();
     int skipped = 0;
+    int updated = 0;
 
     for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
         List<String> columns = rows.get(rowIndex);
@@ -186,8 +187,37 @@ public ImportResult processFile(MultipartFile file) throws IOException {
         if (partNumber.isEmpty() || name.isEmpty()
                 || description.isEmpty()
                 || partNumber.length() > 50 || name.length() > 255 || description.length() > 255
-                || productRepo.existsByName(name) || productRepo.existsByPartNumber(partNumber)
-                || !names.add(name) || !partNumbers.add(partNumber)) {
+                || !partNumbers.add(partNumber)) {
+            skipped++;
+            continue;
+        }
+
+        // Same part number already in the system: update its prices/stock instead of skipping it,
+        // so a corrected file can be uploaded again.
+        productRepo.reactivateByPartNumber(partNumber);
+        Optional<Products> existing = productRepo.findByPartNumber(partNumber);
+        if (existing.isPresent()) {
+            try {
+                BigDecimal sp = parseDecimal(columns.get(2));
+                BigDecimal pp = parseDecimal(columns.get(4));
+                if (sp == null || pp == null || sp.signum() <= 0 || pp.signum() <= 0) {
+                    skipped++;
+                    continue;
+                }
+                Products p = existing.get();
+                p.setSellingPrice(sp);
+                p.setPurchasePrice(pp);
+                p.setDescription(description);
+                p.setStock(parseLong(columns.get(5), 0L));
+                productRepo.save(p);
+                updated++;
+            } catch (NumberFormatException | ArithmeticException exception) {
+                skipped++;
+            }
+            continue;
+        }
+
+        if (productRepo.existsByName(name) || !names.add(name)) {
             skipped++;
             continue;
         }
@@ -222,7 +252,7 @@ public ImportResult processFile(MultipartFile file) throws IOException {
     }
 
     productRepo.saveAll(productsToSave);
-    return new ImportResult(productsToSave.size(), skipped);
+    return new ImportResult(productsToSave.size(), skipped, updated);
 }
 
 private static String clean(String value) {
@@ -338,7 +368,7 @@ private static char detectDelimiter(String content) {
     return ',';
 }
 
-public record ImportResult(int imported, int skipped) {
+public record ImportResult(int imported, int skipped, int updated) {
 }
 
 

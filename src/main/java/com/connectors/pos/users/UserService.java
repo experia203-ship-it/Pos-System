@@ -199,12 +199,22 @@ user.setPassword(encoder.encode(create.password()));
             throw new UserManagementException(Messages.get("error.user.currentPasswordIncorrect"));
         }
 
+        if (user.isMustChangePassword() && encoder.matches(newPassword, user.getPassword())) {
+            throw new UserManagementException(Messages.get("error.user.passwordSameAsDefault"));
+        }
+
         user.setPassword(encoder.encode(newPassword));
+        user.setMustChangePassword(false);
         userRepo.save(user);
         applicationEventPublisher.publishEvent(
                 new AuditEvent("PASSWORD_CHANGE_SELF", "USER", userId,
                         user.getEmail() + " changed their own password.",
                         null, ""));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isDefaultAdminPending() {
+        return userRepo.existsByEmailAndMustChangePasswordTrue(DefaultAdmin.EMAIL);
     }
 
     @Transactional(readOnly = true)

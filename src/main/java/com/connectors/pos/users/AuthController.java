@@ -2,6 +2,7 @@ package com.connectors.pos.users;
 
 
 import com.connectors.pos.exceptions.UserManagementException;
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.security.JwtService;
 import com.connectors.pos.security.UserPrincipal;
 import com.connectors.pos.users.userdtos.ChangePasswordDto;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -81,9 +83,33 @@ response.setHeader("HX-Redirect", authentication != null
     @GetMapping("/login")
 
     public String showLoginPage(Model model){
-model.addAttribute("loginForm",new UserLoginDto("",""));
-model.addAttribute("demoCredentialsEnabled",demoCredentialsEnabled);
+        String email = "";
+        String password = "";
+        if (demoCredentialsEnabled) {
+            email = "user123@Gmail.com";
+            password = "A@123456";
+        } else if (userServo.isDefaultAdminPending()) {
+            // Fresh local install: the default admin still has its default password.
+            email = DefaultAdmin.EMAIL;
+            password = DefaultAdmin.PASSWORD;
+        }
+        model.addAttribute("loginForm",new UserLoginDto("",""));
+        model.addAttribute("demoCredentialsEnabled",demoCredentialsEnabled);
+        model.addAttribute("prefillEmail", email);
+        model.addAttribute("prefillPassword", password);
         return "login";
+    }
+
+    @GetMapping("/force-password-change")
+    @PreAuthorize("isAuthenticated()")
+    public String showForcePasswordChange(@AuthenticationPrincipal UserPrincipal principal, Model model) {
+        if (principal == null || !principal.isMustChangePassword()) {
+            return "redirect:/layout";
+        }
+        boolean defaultAdmin = DefaultAdmin.EMAIL.equalsIgnoreCase(principal.getUsername());
+        model.addAttribute("defaultAdmin", defaultAdmin);
+        model.addAttribute("currentPassword", defaultAdmin ? DefaultAdmin.PASSWORD : "");
+        return "force-password-change";
     }
 
     @PostMapping("/login")
@@ -95,7 +121,15 @@ model.addAttribute("demoCredentialsEnabled",demoCredentialsEnabled);
        return "fragments/auth-messages :: auth-error";
    }
 
-   Authentication authenticated = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(dto.email(),dto.password()));
+   Authentication authenticated;
+   try {
+       authenticated = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(dto.email(),dto.password()));
+   } catch (AuthenticationException ex) {
+       // htmx only swaps 2xx responses, so answer 200 with the message to show under the form.
+       response.setStatus(HttpServletResponse.SC_OK);
+       model.addAttribute("errorMessage", Messages.get("error.login.invalidCredentials"));
+       return "fragments/auth-messages :: login-error";
+   }
 
 
    UserDetails user = (UserDetails) authenticated.getPrincipal();
@@ -161,6 +195,10 @@ model.addAttribute("demoCredentialsEnabled",demoCredentialsEnabled);
             response.setHeader("HX-Reswap", "innerHTML");
             model.addAttribute("errorMessage", ex.getMessage());
             return "fragments/auth-messages :: exceptions-response";
+        }
+        if (principal.isMustChangePassword()) {
+            // First-time password change: continue into the app.
+            response.setHeader("HX-Redirect", "/layout");
         }
         model.addAttribute("successMessage", "Your password was changed successfully.");
         return "fragments/auth-messages :: inline-success";

@@ -1,5 +1,6 @@
 package com.connectors.pos.products;
 
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.exceptions.ProductNotFoundException;
 import com.connectors.pos.products.categorydtos.CategoryResponseDto;
 import com.connectors.pos.products.productdtos.CreateProductDto;
@@ -45,7 +46,6 @@ public class ProductController {
                                    @RequestHeader(value = "Hx-Request",required = false) String hxRequest){
 
 
-        System.out.println("prods");
         Page<ProductResponseDto> result= productServo.viewAllProducts(pageable);
 
         List<Long> allCatIds = result.stream().map(ProductResponseDto::categoryId)
@@ -236,30 +236,38 @@ else {
 
   @PostMapping("/import")
   @PreAuthorize("hasRole('ADMIN')")
-  public String importCsvFiles(@RequestParam(name="file") MultipartFile file, RedirectAttributes redirect){
+  public String importCsvFiles(@RequestParam(name="file") MultipartFile file, Model model){
 
-
+        // The form posts with htmx into #main-window, so we answer with the products page itself
+        // (no redirect, which would load the page without the layout/styling).
         if(file.isEmpty()){
+            model.addAttribute("error", Messages.get("products.import.noFile"));
+        } else {
+            try{
+                ProductService.ImportResult result = productServo.processFile(file);
 
-            redirect.addFlashAttribute("error","please select a file for the import");
-
-            return "redirect:/products";
+                StringBuilder msg = new StringBuilder(Messages.get("products.import.imported", result.imported()));
+                if (result.updated() != 0) {
+                    msg.append("; ").append(Messages.get("products.import.updated", result.updated()));
+                }
+                if (result.skipped() != 0) {
+                    msg.append("; ").append(Messages.get("products.import.skipped", result.skipped()));
+                }
+                model.addAttribute("success", msg.toString());
+            } catch (Exception e) {
+                model.addAttribute("error", Messages.get("products.import.error", e.getMessage()));
+            }
         }
 
-        try{
-     ProductService.ImportResult result = productServo.processFile(file);
-
-redirect.addFlashAttribute("success",result.imported() + " products imported successfully"
-        + (result.skipped() == 0 ? "" : "; " + result.skipped() + " rows skipped"));
-
-
-        } catch (Exception e) {
-            redirect.addFlashAttribute("error","error happened while executing  " +e.getMessage());
-            System.out.println("reached exception" + e.getMessage());
-
-        }
-      return "redirect:/products";
-
+        Page<ProductResponseDto> result = productServo.viewAllProducts(
+                org.springframework.data.domain.PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id")));
+        List<Long> catIds = result.stream().map(ProductResponseDto::categoryId)
+                .filter(Objects::nonNull).distinct().toList();
+        Map<Long,String> catsWithIds = catRepo.findAllById(catIds).stream()
+                .collect(Collectors.toMap(Categories::getId, Categories::getName));
+        model.addAttribute("catMap", catsWithIds);
+        model.addAttribute("allProducts", result);
+        return "products";
   }
 
 @GetMapping("/generate-barcode")

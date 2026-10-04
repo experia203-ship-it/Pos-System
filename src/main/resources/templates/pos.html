@@ -57,6 +57,15 @@
 
             <h2 th:text="#{pos.order.create}"></h2>
             <button type="button" id="custom-item" class="secondary" th:hx-post="${mode == 'sales' ? '/pos/custom' : '/purchase/custom'}" hx-include="#active-cart-form, #disc, #paid, #customerInfo, #paymentMethod, #paymentReference, #remaining ,#supplierInfo" hx-target="#cart-zone" hx-swap="outerHTML" th:text="#{pos.bttn.custom}"></button>
+            <label for="scan-input" th:text="#{pos.scan.label}"></label>
+            <input id="scan-input" name="barcode" type="text" autocomplete="off" autofocus
+                   th:hx-post="${mode == 'sales' ? '/pos/scan' : '/purchase/scan'}"
+                   hx-include="#active-cart-form, #paid, #disc, #customerInfo, #paymentMethod, #paymentReference, #supplierInfo, #remaining"
+                   hx-target="#cart-zone" hx-swap="outerHTML" hx-trigger="keydown[key=='Enter']"
+                   hx-on::after-request="this.value=''; this.focus()"
+                   th:placeholder="#{pos.scan.placeholder}">
+            <div id="scan-error"></div>
+            
             <label for="search-bar" th:text="#{pos.search.items}"></label>
 
             <div class="search-wrapper">

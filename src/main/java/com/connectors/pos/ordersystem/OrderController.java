@@ -1,5 +1,6 @@
 package com.connectors.pos.ordersystem;
 
+import com.connectors.pos.i18n.Messages;
 import com.connectors.pos.customersystem.Customer;
 import com.connectors.pos.customersystem.CustomerRepository;
 import com.connectors.pos.customersystem.CustomerService;
@@ -144,7 +145,6 @@ public boolean isReturnsDisabled(@AuthenticationPrincipal UserPrincipal principa
 
 
     public String addNewItemToCart(@PathVariable Long prodId  , @RequestParam(required = false) Long ordId,@ModelAttribute OrderCreateDto currentCart,Model model,HttpServletResponse response){
-System.out.println("adding new item to cart with prodId: " + prodId);
 
     if(ordId!=null){
         model.addAttribute("ordId",ordId);
@@ -248,7 +248,7 @@ return "fragments/cart :: cart";
 
 
 @PostMapping("/scan")
-public String addNewItemUsingBarcodeSystem(@RequestParam(required = false) Long ordId,@RequestParam("barcode") String barcode,@ModelAttribute OrderCreateDto currentCart ,Model model){
+public String addNewItemUsingBarcodeSystem(@RequestParam(required = false) Long ordId,@RequestParam("barcode") String barcode,@ModelAttribute OrderCreateDto currentCart ,Model model,HttpServletResponse response){
 
     if(ordId!=null){
         model.addAttribute("ordId",ordId);
@@ -261,9 +261,21 @@ public String addNewItemUsingBarcodeSystem(@RequestParam(required = false) Long 
     }
 
 
-    Optional<OrderItemCreateDto> opt = listItems.stream().filter(it->Objects.equals(it.barcode(),barcode))
-            .findFirst();
+    String code = barcode == null ? "" : barcode.trim();
+    Optional<Products> found = productRepo.findByBarcode(code);
+    if(found.isEmpty()){
+        // unknown barcode: show a message next to the scan box (htmx only swaps 2xx answers)
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("HX-Retarget","#scan-error");
+        response.setHeader("HX-Reswap","innerHTML");
+        model.addAttribute("errorMessage", Messages.get("pos.scan.notFound", code));
+        return "fragments/auth-messages :: exceptions-response";
+    }
+    Products scanned = found.get();
 
+    // match by product id, so a product already added by clicking in the search list is not duplicated
+    Optional<OrderItemCreateDto> opt = listItems.stream().filter(it->Objects.equals(it.productId(),scanned.getId()))
+            .findFirst();
 
     if(opt.isPresent()){
 
@@ -278,12 +290,8 @@ public String addNewItemUsingBarcodeSystem(@RequestParam(required = false) Long 
     }
 
     else {
-        Products newProd = productRepo.findByBarcode(barcode)
-                .orElseThrow(() -> new ProductNotFoundException("product doesn't exist with that barcode: " + barcode));
-
-        OrderItemCreateDto newItem = new OrderItemCreateDto(newProd.getId(), 1, BigDecimal.ZERO, barcode,null, null, null);
-
-        listItems.add(newItem);
+        listItems.add(new OrderItemCreateDto(scanned.getId(), 1, BigDecimal.ZERO, code, null, null, null));
+        response.setHeader("HX-Trigger-After-Settle","newItemAdded");
     }
 
     List<Long> allProdIds = listItems.stream().map(OrderItemCreateDto ::productId).filter(Objects::nonNull)
@@ -864,7 +872,6 @@ List<CartItemView> emptyList = new ArrayList<>();
 
     public String addCustomRowToCart(@ModelAttribute OrderCreateDto createDto, Model model,@RequestParam(required = false) Long ordId){
 
-    System.out.println("adding custom row to cart");
 
         if(ordId!=null){
             model.addAttribute("ordId",ordId);
