@@ -130,6 +130,11 @@ response.setHeader("HX-Trigger","close-modal");
 public String findByCustomerNameForStats(@RequestParam(name = "name") String name,Model model,
                                          @PageableDefault(page = 0,size = 10,sort = "id" , direction= Sort.Direction.ASC) Pageable pageable
                                          ){
+        if(name==null||name.isEmpty()){
+            model.addAttribute("custs",Page.empty());
+            return "customers2 :: customers2";
+
+        }
         Page<CustomerViewDto> res = customerServo.findCustomerByName(name,pageable);
 
         model.addAttribute("custs",res);
