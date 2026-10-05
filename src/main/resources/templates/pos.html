@@ -1,48 +1,6 @@
 <div th:fragment="main-window" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <div class="pos-layout">
 
-        <!-- 1. Shift Management Widget -->
-        <th:block  th:if="${allow_shift}">
-        <div  class="zone" id="shift-widget" th:fragment="shift-widget">
-            <div id="shift-error" class="form-error"></div>
-            <th:block th:if="${activeShift == null}">
-                <form hx-post="/shift/open" hx-target="#shift-widget" hx-swap="outerHTML" style="margin-bottom: 0;">
-                    <h4 style="margin-bottom: 0.5rem;" th:text="#{pos.shift.open}"></h4>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="number" inputmode="decimal" name="startingFloat" min="0" step="0.01" required>
-                        <button type="submit" style="margin-bottom: 5%; height: 50px; white-space: nowrap;" th:text="#{pos.shift.btn.open}"></button>
-                    </div>
-                </form>
-            </th:block>
-
-            <th:block th:if="${activeShift != null}">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <h4 style="margin: 0;" th:text="#{pos.shift.active}"></h4>
-                    <span class="badge badge--success"><span th:text="#{pos.shift.id}"></span> <span th:text="${activeShift.id}"></span></span>
-                </div>
-                <form hx-post="/shift/event" hx-target="#shift-widget" hx-swap="outerHTML">
-                    <div style="display: flex; gap: 5px; margin-bottom: 5px; align-items: center;">
-                        <select name="eventType" required style="margin-bottom: 0; flex: 1; height: 80px;">
-                            <option value="PAY_OUT" th:text="#{pos.shift.payout}"></option>
-                            <option value="PAY_IN" th:text="#{pos.shift.payin}"></option>
-                        </select>
-                        <input type="number" inputmode="decimal" name="amount" min="0.01" step="0.01" required th:placeholder="#{pos.shift.amount.placeholder}" autocomplete="off"
-                               style="margin-bottom: 0; flex: 1; height: 42px;" oninput="this.value = this.value.replace(/,/g, '.');">
-                    </div>
-                    <div style="display: flex; gap: 5px; align-items: center;">
-                        <input type="text" name="reason" required style="margin-bottom: 0; flex: 2; height: 42px;">
-                        <button type="submit" class="secondary" style="margin-bottom: 0; flex: 1; height: 42px;" th:text="#{pos.shift.btn.save}"></button>
-                    </div>
-                </form>
-                <form hx-post="/shift/close" hx-target="#shift-widget" hx-swap="outerHTML" style="margin-bottom: 0; margin-top: 5px;">
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="number" name="actualCount" min="0" step="0.01" required/>
-                        <button type="submit" class="contrast" style="margin-bottom: 0; height: 42px; white-space: nowrap;" th:text="#{pos.shift.btn.close}"></button>
-                    </div>
-                </form>
-            </th:block>
-        </div>
-        </th:block>
 
         <!-- 2. Product Search Input -->
         <div class="zone" id="searchbar">
@@ -57,14 +15,7 @@
 
             <h2 th:text="#{pos.order.create}"></h2>
             <button type="button" id="custom-item" class="secondary" th:hx-post="${mode == 'sales' ? '/pos/custom' : '/purchase/custom'}" hx-include="#active-cart-form, #disc, #paid, #customerInfo, #paymentMethod, #paymentReference, #remaining ,#supplierInfo" hx-target="#cart-zone" hx-swap="outerHTML" th:text="#{pos.bttn.custom}"></button>
-            <label for="scan-input" th:text="#{pos.scan.label}"></label>
-            <input id="scan-input" name="barcode" type="text" autocomplete="off" autofocus
-                   th:hx-post="${mode == 'sales' ? '/pos/scan' : '/purchase/scan'}"
-                   hx-include="#active-cart-form, #paid, #disc, #customerInfo, #paymentMethod, #paymentReference, #supplierInfo, #remaining"
-                   hx-target="#cart-zone" hx-swap="outerHTML" hx-trigger="keydown[key=='Enter']"
-                   hx-on::after-request="this.value=''; this.focus()"
-                   th:placeholder="#{pos.scan.placeholder}">
-            <div id="scan-error"></div>
+
             
             <label for="search-bar" th:text="#{pos.search.items}"></label>
 
